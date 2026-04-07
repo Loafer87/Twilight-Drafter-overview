@@ -1,0 +1,2439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TI4 Faction Draft</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600&family=Rajdhani:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #03020a;
+    --deep: #08051a;
+    --nebula: #0d0a25;
+    --gold: #c9a227;
+    --gold-light: #f0cc6a;
+    --gold-dim: #7a600f;
+    --red: #b03030;
+    --red-glow: #ff4444;
+    --blue: #1a5fa0;
+    --blue-glow: #4da6ff;
+    --green: #1a7a3a;
+    --green-glow: #44cc77;
+    --text: #d4c8a8;
+    --text-dim: #7a6f55;
+    --border: rgba(201, 162, 39, 0.25);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--void);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Starfield */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 25% 40%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 40% 10%, rgba(255,255,255,0.7) 0%, transparent 100%),
+      radial-gradient(1px 1px at 55% 70%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 25%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 80% 55%, rgba(255,255,255,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 85%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 5% 75%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 35% 90%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 62% 45%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 15% 55%, rgba(255,255,255,0.2) 0%, transparent 100%),
+      radial-gradient(1px 1px at 47% 30%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 73% 68%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 88% 20%, rgba(255,255,255,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 20% 95%, rgba(255,255,255,0.3) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Nebula glow */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 30%, rgba(26, 95, 160, 0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 60% at 80% 70%, rgba(176, 48, 48, 0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 30% at 50% 90%, rgba(201, 162, 39, 0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .title-eyebrow {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(22px, 5vw, 44px);
+    font-weight: 900;
+    color: var(--gold);
+    text-shadow: 0 0 40px rgba(201, 162, 39, 0.4), 0 0 80px rgba(201, 162, 39, 0.15);
+    line-height: 1.1;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+
+  .subtitle {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 20px auto;
+    max-width: 400px;
+  }
+
+  .divider-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--gold-dim));
+  }
+
+  .divider-line:last-child {
+    background: linear-gradient(to left, transparent, var(--gold-dim));
+  }
+
+  .divider-diamond {
+    width: 6px;
+    height: 6px;
+    background: var(--gold);
+    transform: rotate(45deg);
+    box-shadow: 0 0 8px var(--gold);
+  }
+
+  /* Panel */
+  .panel {
+    background: rgba(13, 10, 37, 0.7);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px;
+    margin-bottom: 24px;
+    position: relative;
+    backdrop-filter: blur(8px);
+  }
+
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(201, 162, 39, 0.5), transparent);
+  }
+
+  .panel-title {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 16px;
+  }
+
+  /* Expansion toggles */
+  .expansion-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+  }
+
+  .exp-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 10px 14px;
+    border: 1px solid rgba(201, 162, 39, 0.15);
+    border-radius: 3px;
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .exp-toggle:hover {
+    border-color: rgba(201, 162, 39, 0.4);
+    background: rgba(201, 162, 39, 0.05);
+  }
+
+  .exp-toggle.active {
+    border-color: rgba(201, 162, 39, 0.6);
+    background: rgba(201, 162, 39, 0.08);
+  }
+
+  .toggle-box {
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--gold-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+
+  .exp-toggle.active .toggle-box {
+    border-color: var(--gold);
+    background: var(--gold);
+  }
+
+  .toggle-check {
+    font-size: 10px;
+    color: var(--void);
+    font-weight: 900;
+    display: none;
+  }
+
+  .exp-toggle.active .toggle-check { display: block; }
+
+  .exp-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .exp-count {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-left: auto;
+  }
+
+  /* Player config */
+  .player-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .player-row label {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    color: var(--gold-dim);
+    letter-spacing: 2px;
+    white-space: nowrap;
+  }
+
+  .player-stepper {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 1px solid var(--border);
+  }
+
+  .stepper-btn {
+    width: 36px;
+    height: 36px;
+    background: transparent;
+    border: none;
+    color: var(--gold);
+    font-size: 18px;
+    cursor: pointer;
+    font-family: 'Cinzel', serif;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .stepper-btn:hover { background: rgba(201, 162, 39, 0.1); }
+
+  .stepper-val {
+    width: 48px;
+    text-align: center;
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 18px;
+    color: var(--gold-light);
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    padding: 4px 0;
+    line-height: 28px;
+  }
+
+  .draft-options {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+
+  .option-btn {
+    padding: 7px 16px;
+    border: 1px solid rgba(201, 162, 39, 0.25);
+    background: transparent;
+    color: var(--text-dim);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+  }
+
+  .option-btn.active, .option-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: rgba(201, 162, 39, 0.07);
+  }
+
+  /* Draft button */
+  .draft-btn {
+    display: block;
+    width: 100%;
+    padding: 18px;
+    background: linear-gradient(135deg, rgba(201,162,39,0.15), rgba(201,162,39,0.05));
+    border: 1px solid var(--gold);
+    color: var(--gold-light);
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .draft-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(201,162,39,0.2), transparent);
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+
+  .draft-btn:hover::before { opacity: 1; }
+  .draft-btn:hover {
+    box-shadow: 0 0 30px rgba(201, 162, 39, 0.3);
+    text-shadow: 0 0 15px rgba(201, 162, 39, 0.6);
+  }
+
+  .draft-btn:active { transform: scale(0.99); }
+
+  /* Results */
+  #results { display: none; }
+
+  .results-header {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--gold-dim);
+    text-align: center;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .player-results {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .player-card {
+    background: rgba(8, 5, 26, 0.8);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 16px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .player-card:nth-child(1) { animation-delay: 0.05s; }
+  .player-card:nth-child(2) { animation-delay: 0.1s; }
+  .player-card:nth-child(3) { animation-delay: 0.15s; }
+  .player-card:nth-child(4) { animation-delay: 0.2s; }
+  .player-card:nth-child(5) { animation-delay: 0.25s; }
+  .player-card:nth-child(6) { animation-delay: 0.3s; }
+  .player-card:nth-child(7) { animation-delay: 0.35s; }
+  .player-card:nth-child(8) { animation-delay: 0.4s; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .player-num {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  /* Draft mode: faction options per player */
+  .faction-options {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .faction-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.18s;
+    position: relative;
+  }
+
+  .faction-option:hover {
+    border-color: rgba(201, 162, 39, 0.3);
+    background: rgba(201, 162, 39, 0.04);
+  }
+
+  .faction-option.selected {
+    border-color: var(--gold);
+    background: rgba(201, 162, 39, 0.1);
+  }
+
+  .faction-option.locked {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .faction-color {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .faction-name-text {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .faction-exp-badge {
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 2px 5px;
+    border-radius: 2px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  /* Assigned faction display */
+  .assigned-faction {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .assigned-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .assigned-name {
+    font-family: 'Cinzel', serif;
+    font-size: 15px;
+    color: var(--gold-light);
+    font-weight: 600;
+  }
+
+  .assigned-exp {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 2px;
+    letter-spacing: 1px;
+  }
+
+  /* Pool display */
+  .pool-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .pool-chip {
+    padding: 4px 10px;
+    border: 1px solid rgba(201, 162, 39, 0.2);
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--text-dim);
+    font-family: 'Rajdhani', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    animation: fadeIn 0.3s ease both;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .pool-chip-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+  }
+
+  /* Action row */
+  .action-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .action-btn {
+    padding: 10px 24px;
+    border: 1px solid;
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .action-btn.primary {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: rgba(201, 162, 39, 0.08);
+  }
+
+  .action-btn.primary:hover {
+    background: rgba(201, 162, 39, 0.15);
+    box-shadow: 0 0 20px rgba(201, 162, 39, 0.2);
+  }
+
+  .action-btn.secondary {
+    border-color: rgba(255,255,255,0.12);
+    color: var(--text-dim);
+    background: transparent;
+  }
+
+  .action-btn.secondary:hover {
+    border-color: rgba(255,255,255,0.25);
+    color: var(--text);
+  }
+
+  .status-bar {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    color: var(--text-dim);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  .status-bar span { color: var(--gold); font-weight: 600; }
+
+  /* Confirm button */
+  .confirm-btn {
+    padding: 8px 20px;
+    border: 1px solid var(--green-glow);
+    background: rgba(26, 122, 58, 0.15);
+    color: var(--green-glow);
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    margin-top: 10px;
+    width: 100%;
+  }
+
+  .confirm-btn:hover {
+    background: rgba(26, 122, 58, 0.25);
+    box-shadow: 0 0 15px rgba(68, 204, 119, 0.2);
+  }
+
+  .confirm-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  /* Final results */
+  .final-card {
+    background: rgba(8, 5, 26, 0.85);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 20px;
+    animation: fadeUp 0.5s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .final-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(to right, transparent, var(--gold), transparent);
+    opacity: 0.5;
+  }
+
+  .warning {
+    font-size: 12px;
+    color: #cc8800;
+    font-family: 'Rajdhani', sans-serif;
+    text-align: center;
+    padding: 10px;
+    border: 1px solid rgba(204, 136, 0, 0.3);
+    border-radius: 3px;
+    margin-bottom: 16px;
+  }
+
+  /* Player name inputs */
+  .player-names-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+  }
+
+  .name-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .name-label {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  .name-input {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(201, 162, 39, 0.2);
+    border-radius: 2px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+
+  .name-input::placeholder {
+    color: var(--text-dim);
+    opacity: 0.5;
+  }
+
+  .name-input:focus {
+    border-color: rgba(201, 162, 39, 0.55);
+    background: rgba(201, 162, 39, 0.04);
+  }
+
+  /* Loading overlay */
+  #loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--void);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  #loading-overlay.active { display: flex; }
+
+  .loader-svg {
+    width: 200px;
+    height: 200px;
+    position: relative;
+  }
+
+  /* Outer ring */
+  .ring-outer {
+    animation: spinSlow 8s linear infinite;
+    transform-origin: center;
+  }
+
+  /* Inner ring */
+  .ring-inner {
+    animation: spinSlow 5s linear infinite reverse;
+    transform-origin: center;
+  }
+
+  /* Hex pulse */
+  .hex-core {
+    animation: hexPulse 2s ease-in-out infinite;
+    transform-origin: center;
+  }
+
+  @keyframes spinSlow {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  @keyframes hexPulse {
+    0%, 100% { opacity: 0.7; transform: scale(1); }
+    50%       { opacity: 1;   transform: scale(1.06); }
+  }
+
+  /* Scanning line */
+  .scan-line {
+    animation: scan 2s ease-in-out infinite;
+    transform-origin: center;
+  }
+
+  @keyframes scan {
+    0%   { transform: rotate(0deg);   opacity: 1; }
+    100% { transform: rotate(360deg); opacity: 1; }
+  }
+
+  /* Node dots on outer ring */
+  .node-dot {
+    animation: nodePulse 2s ease-in-out infinite;
+  }
+  .node-dot:nth-child(2) { animation-delay: 0.33s; }
+  .node-dot:nth-child(3) { animation-delay: 0.66s; }
+  .node-dot:nth-child(4) { animation-delay: 1s; }
+  .node-dot:nth-child(5) { animation-delay: 1.33s; }
+  .node-dot:nth-child(6) { animation-delay: 1.66s; }
+
+  @keyframes nodePulse {
+    0%, 100% { opacity: 0.3; r: 3; }
+    50%       { opacity: 1;   r: 5; }
+  }
+
+  .loader-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 18px;
+    color: var(--gold);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    text-shadow: 0 0 30px rgba(201, 162, 39, 0.6);
+    animation: titlePulse 2s ease-in-out infinite;
+  }
+
+  @keyframes titlePulse {
+    0%, 100% { opacity: 0.7; }
+    50%       { opacity: 1; }
+  }
+
+  .loader-sub {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    letter-spacing: 5px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    animation: subFade 1.5s ease-in-out infinite;
+    margin-top: -20px;
+  }
+
+  @keyframes subFade {
+    0%, 100% { opacity: 0.3; }
+    50%       { opacity: 0.8; }
+  }
+
+  /* Warp lines burst */
+  .warp-lines {
+    position: absolute;
+    inset: 0;
+    animation: warpSpin 3s linear infinite;
+    transform-origin: center;
+  }
+
+  @keyframes warpSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  /* Playstyle tooltip */
+  .faction-tip {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    color: var(--text-dim);
+    font-style: italic;
+    margin-top: 4px;
+    line-height: 1.4;
+    padding-left: 18px;
+    border-left: 2px solid rgba(201,162,39,0.2);
+  }
+
+  .playstyle-tag {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 2px;
+    margin-bottom: 4px;
+    font-style: normal;
+  }
+
+  .tag-beginner  { background: rgba(68,204,119,0.15); color: #44cc77; }
+  .tag-political { background: rgba(77,166,255,0.15); color: #4da6ff; }
+  .tag-military  { background: rgba(255,80,80,0.15);  color: #ff6060; }
+  .tag-economic  { background: rgba(201,162,39,0.15); color: #c9a227; }
+  .tag-tech      { background: rgba(160,80,200,0.15); color: #c080ff; }
+  .tag-tricky    { background: rgba(255,140,0,0.15);  color: #ff8c00; }
+
+  /* Faction option with tip */
+  .faction-option .faction-tip { display: none; }
+  .faction-option.selected .faction-tip { display: block; }
+
+  /* Final card tip */
+  .final-tip {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    color: var(--text-dim);
+    font-style: italic;
+    margin-top: 6px;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.03);
+    border-left: 2px solid rgba(201,162,39,0.25);
+    border-radius: 0 2px 2px 0;
+    line-height: 1.5;
+  }
+
+  /* Speaker order section */
+  #speaker-section {
+    margin-top: 32px;
+  }
+
+  .speaker-btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, rgba(77,166,255,0.1), rgba(77,166,255,0.03));
+    border: 1px solid rgba(77,166,255,0.4);
+    color: #4da6ff;
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.25s;
+    margin-bottom: 16px;
+  }
+
+  .speaker-btn:hover {
+    box-shadow: 0 0 25px rgba(77,166,255,0.25);
+    background: linear-gradient(135deg, rgba(77,166,255,0.15), rgba(77,166,255,0.05));
+  }
+
+  .speaker-results {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+  }
+
+  .speaker-card {
+    background: rgba(8,5,26,0.8);
+    border: 1px solid rgba(77,166,255,0.2);
+    border-radius: 3px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .speaker-num {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 22px;
+    color: #4da6ff;
+    text-shadow: 0 0 20px rgba(77,166,255,0.5);
+    min-width: 32px;
+    text-align: center;
+    line-height: 1;
+  }
+
+  .speaker-num.first {
+    color: var(--gold-light);
+    text-shadow: 0 0 20px rgba(201,162,39,0.6);
+  }
+
+  .speaker-info { flex: 1; }
+
+  .speaker-name {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .speaker-faction {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .speaker-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .speaker-label {
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    opacity: 0.7;
+  }
+
+  /* Clickable faction row with expandable tip */
+  .faction-row {
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background 0.15s;
+    margin-bottom: 8px;
+  }
+
+  .faction-row:last-child { margin-bottom: 0; }
+
+  .faction-row:hover .faction-row-main {
+    background: rgba(201,162,39,0.05);
+  }
+
+  .faction-row-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 2px;
+    transition: background 0.15s;
+  }
+
+  .faction-row-chevron {
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-left: auto;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+
+  .faction-row.open .faction-row-chevron {
+    transform: rotate(180deg);
+  }
+
+  .faction-row-tip {
+    display: none;
+    padding: 8px 10px 10px 26px;
+    border-left: 2px solid rgba(201,162,39,0.2);
+    margin: 0 8px 4px 8px;
+    font-size: 12px;
+    color: var(--text-dim);
+    font-style: italic;
+    line-height: 1.5;
+    animation: tipSlide 0.2s ease;
+  }
+
+  .faction-row.open .faction-row-tip { display: block; }
+
+  @keyframes tipSlide {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Staggered card reveal */
+  .final-card {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+
+  .final-card.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Scrollable faction list */
+  .faction-scroll {
+    max-height: 240px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gold-dim) transparent;
+  }
+
+  .faction-scroll::-webkit-scrollbar { width: 3px; }
+  .faction-scroll::-webkit-scrollbar-thumb { background: var(--gold-dim); }
+
+  /* ── TAB NAV ── */
+  .tab-nav {
+    display: flex;
+    gap: 0;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab-btn {
+    padding: 12px 28px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-dim);
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: -1px;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* ── CHEAT SHEET ── */
+  .cs-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; align-items: center; }
+  .cs-search {
+    flex: 1; min-width: 200px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border); border-radius: 2px;
+    padding: 10px 14px; color: var(--text);
+    font-family: 'Rajdhani', sans-serif; font-size: 14px; outline: none;
+    transition: border-color 0.2s;
+  }
+  .cs-search:focus { border-color: rgba(201,162,39,0.5); }
+  .cs-search::placeholder { color: var(--text-dim); opacity: 0.5; }
+  .cs-filter {
+    padding: 8px 14px; border: 1px solid rgba(201,162,39,0.2);
+    background: transparent; color: var(--text-dim);
+    font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 500;
+    cursor: pointer; border-radius: 2px; transition: all 0.2s; white-space: nowrap;
+  }
+  .cs-filter.active, .cs-filter:hover { border-color: var(--gold); color: var(--gold); background: rgba(201,162,39,0.07); }
+  .cs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+  .cs-card {
+    background: rgba(8,5,26,0.85); border: 1px solid var(--border);
+    border-radius: 4px; overflow: hidden; transition: border-color 0.2s;
+  }
+  .cs-card:hover { border-color: rgba(201,162,39,0.45); }
+  .cs-card.unverified { border-color: rgba(255,140,0,0.3); }
+  .cs-card.unverified:hover { border-color: rgba(255,140,0,0.6); }
+  .cs-header {
+    display: flex; align-items: stretch; min-height: 84px;
+    position: relative; overflow: hidden;
+  }
+  .cs-color-bar { width: 4px; flex-shrink: 0; }
+  .cs-faction-img { width: 84px; height: 84px; object-fit: cover; flex-shrink: 0; filter: saturate(0.75) brightness(0.8); }
+  .cs-faction-img-placeholder {
+    width: 84px; height: 84px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 30px; opacity: 0.35;
+  }
+  .cs-header-info { flex: 1; padding: 12px 14px; display: flex; flex-direction: column; justify-content: center; }
+  .cs-faction-name { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 600; color: var(--gold-light); line-height: 1.2; margin-bottom: 6px; }
+  .cs-badges { display: flex; gap: 5px; flex-wrap: wrap; }
+  .cs-exp-badge { font-size: 9px; letter-spacing: 1px; padding: 2px 6px; border-radius: 2px; font-weight: 700; text-transform: uppercase; background: rgba(255,255,255,0.07); color: var(--text-dim); }
+  .cs-unverified-badge { font-size: 9px; letter-spacing: 1px; padding: 2px 6px; border-radius: 2px; font-weight: 700; background: rgba(255,140,0,0.15); color: #ff8c00; }
+  .cs-body { padding: 14px; border-top: 1px solid rgba(255,255,255,0.05); }
+  .cs-section { margin-bottom: 12px; }
+  .cs-section:last-child { margin-bottom: 0; }
+  .cs-section-label { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 3px; color: var(--gold-dim); text-transform: uppercase; margin-bottom: 5px; }
+  .cs-text { font-family: 'Rajdhani', sans-serif; font-size: 13px; color: var(--text); line-height: 1.5; }
+  .cs-tech-list { display: flex; flex-direction: column; gap: 4px; }
+  .cs-tech { display: flex; align-items: flex-start; gap: 7px; font-size: 12px; line-height: 1.4; }
+  .cs-tech-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+  .tech-red { background: #cc4444; } .tech-blue { background: #4488cc; } .tech-green { background: #44aa66; } .tech-yellow { background: #ccaa22; }
+  .cs-tech-name { color: var(--text); font-weight: 600; font-family: 'Rajdhani', sans-serif; }
+  .cs-tech-desc { color: var(--text-dim); font-family: 'Rajdhani', sans-serif; }
+  .cs-flagship { background: rgba(201,162,39,0.05); border: 1px solid rgba(201,162,39,0.15); border-radius: 3px; padding: 8px 10px; }
+  .cs-flagship-name { font-family: 'Cinzel', serif; font-size: 11px; color: var(--gold); margin-bottom: 3px; }
+  .cs-flagship-stats { font-size: 11px; color: var(--text-dim); font-family: 'Rajdhani', sans-serif; margin-bottom: 4px; }
+  .cs-flagship-ability { font-size: 12px; color: var(--text); font-family: 'Rajdhani', sans-serif; line-height: 1.4; }
+  .cs-leader { display: flex; gap: 8px; margin-bottom: 6px; padding: 7px 9px; background: rgba(255,255,255,0.02); border-radius: 2px; border-left: 2px solid rgba(201,162,39,0.2); }
+  .cs-leader:last-child { margin-bottom: 0; }
+  .cs-leader-role { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; font-weight: 700; font-family: 'Rajdhani', sans-serif; color: var(--text-dim); white-space: nowrap; padding-top: 1px; min-width: 62px; }
+  .cs-leader-body { flex: 1; }
+  .cs-leader-name { font-family: 'Cinzel', serif; font-size: 11px; color: var(--text); margin-bottom: 2px; }
+  .cs-leader-ability { font-size: 12px; color: var(--text-dim); font-family: 'Rajdhani', sans-serif; line-height: 1.4; }
+  .cs-ability { font-size: 12px; color: var(--text); font-family: 'Rajdhani', sans-serif; line-height: 1.4; padding-left: 12px; position: relative; margin-bottom: 3px; }
+  .cs-ability::before { content: '▸'; position: absolute; left: 0; color: var(--gold-dim); font-size: 9px; top: 2px; }
+  .cs-empty { text-align: center; padding: 60px 20px; color: var(--text-dim); font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 2px; }
+</style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay">
+  <div style="position:relative;width:220px;height:220px;display:flex;align-items:center;justify-content:center;">
+    <svg width="220" height="220" viewBox="0 0 220 220" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;">
+
+      <!-- Warp burst lines -->
+      <g class="warp-lines" style="opacity:0.12">
+        <line x1="110" y1="110" x2="110" y2="10"  stroke="#c9a227" stroke-width="0.5"/>
+        <line x1="110" y1="110" x2="197" y2="60"  stroke="#c9a227" stroke-width="0.5"/>
+        <line x1="110" y1="110" x2="197" y2="160" stroke="#c9a227" stroke-width="0.5"/>
+        <line x1="110" y1="110" x2="110" y2="210" stroke="#c9a227" stroke-width="0.5"/>
+        <line x1="110" y1="110" x2="23"  y2="160" stroke="#c9a227" stroke-width="0.5"/>
+        <line x1="110" y1="110" x2="23"  y2="60"  stroke="#c9a227" stroke-width="0.5"/>
+        <line x1="110" y1="110" x2="155" y2="15"  stroke="#c9a227" stroke-width="0.3"/>
+        <line x1="110" y1="110" x2="210" y2="110" stroke="#c9a227" stroke-width="0.3"/>
+        <line x1="110" y1="110" x2="155" y2="205" stroke="#c9a227" stroke-width="0.3"/>
+        <line x1="110" y1="110" x2="65"  y2="205" stroke="#c9a227" stroke-width="0.3"/>
+        <line x1="110" y1="110" x2="10"  y2="110" stroke="#c9a227" stroke-width="0.3"/>
+        <line x1="110" y1="110" x2="65"  y2="15"  stroke="#c9a227" stroke-width="0.3"/>
+      </g>
+
+      <!-- Outer dashed ring with nodes -->
+      <g class="ring-outer">
+        <circle cx="110" cy="110" r="95" stroke="#c9a227" stroke-width="0.75" stroke-dasharray="4 6" opacity="0.4"/>
+        <!-- 6 node dots at hex points on r=95 -->
+        <circle class="node-dot" cx="110"    cy="15"    r="3" fill="#c9a227"/>
+        <circle class="node-dot" cx="192.3"  cy="57.5"  r="3" fill="#c9a227"/>
+        <circle class="node-dot" cx="192.3"  cy="162.5" r="3" fill="#c9a227"/>
+        <circle class="node-dot" cx="110"    cy="205"   r="3" fill="#c9a227"/>
+        <circle class="node-dot" cx="27.7"   cy="162.5" r="3" fill="#c9a227"/>
+        <circle class="node-dot" cx="27.7"   cy="57.5"  r="3" fill="#c9a227"/>
+      </g>
+
+      <!-- Mid ring -->
+      <g class="ring-inner">
+        <circle cx="110" cy="110" r="70" stroke="#c9a227" stroke-width="0.5" stroke-dasharray="2 8" opacity="0.3"/>
+        <!-- tick marks -->
+        <line x1="110" y1="40"  x2="110" y2="46"  stroke="#c9a227" stroke-width="1" opacity="0.5"/>
+        <line x1="110" y1="174" x2="110" y2="180" stroke="#c9a227" stroke-width="1" opacity="0.5"/>
+        <line x1="40"  y1="110" x2="46"  y2="110" stroke="#c9a227" stroke-width="1" opacity="0.5"/>
+        <line x1="174" y1="110" x2="180" y2="110" stroke="#c9a227" stroke-width="1" opacity="0.5"/>
+      </g>
+
+      <!-- Inner glow ring -->
+      <circle cx="110" cy="110" r="50" stroke="#c9a227" stroke-width="1" opacity="0.15"/>
+
+      <!-- Scanning sweep line -->
+      <g class="scan-line">
+        <line x1="110" y1="110" x2="110" y2="20" stroke="url(#scanGrad)" stroke-width="1.5" opacity="0.8"/>
+      </g>
+
+      <!-- Core hexagon -->
+      <g class="hex-core">
+        <!-- Hex shape: flat-top, r=38 -->
+        <polygon
+          points="110,72 142.9,91 142.9,129 110,148 77.1,129 77.1,91"
+          stroke="#c9a227" stroke-width="1.5" fill="rgba(201,162,39,0.05)"
+          filter="url(#hexGlow)"
+        />
+        <!-- Inner hex -->
+        <polygon
+          points="110,83 130.8,94.5 130.8,117.5 110,129 89.2,117.5 89.2,94.5"
+          stroke="#c9a227" stroke-width="0.75" fill="rgba(201,162,39,0.08)" opacity="0.6"
+        />
+        <!-- Centre dot -->
+        <circle cx="110" cy="110" r="4" fill="#c9a227" opacity="0.9" filter="url(#hexGlow)"/>
+        <!-- TI-style cross hairs -->
+        <line x1="110" y1="90"  x2="110" y2="100" stroke="#c9a227" stroke-width="0.75" opacity="0.5"/>
+        <line x1="110" y1="120" x2="110" y2="130" stroke="#c9a227" stroke-width="0.75" opacity="0.5"/>
+        <line x1="90"  y1="110" x2="100" y2="110" stroke="#c9a227" stroke-width="0.75" opacity="0.5"/>
+        <line x1="120" y1="110" x2="130" y2="110" stroke="#c9a227" stroke-width="0.75" opacity="0.5"/>
+      </g>
+
+      <defs>
+        <radialGradient id="scanGrad" cx="50%" cy="100%" r="100%">
+          <stop offset="0%" stop-color="#c9a227" stop-opacity="0"/>
+          <stop offset="100%" stop-color="#c9a227" stop-opacity="0.9"/>
+        </radialGradient>
+        <filter id="hexGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+    </svg>
+  </div>
+
+  <div style="text-align:center">
+    <div class="loader-title">Calculating Fates</div>
+    <div class="loader-sub" id="loader-sub-text">Scanning the galaxy…</div>
+  </div>
+</div>
+
+<div class="container">
+  <header>
+    <div class="title-eyebrow">Prophecy of Kings · Thunder's Edge · Discordant Stars</div>
+    <h1>Twilight Imperium</h1>
+    <div class="subtitle">Faction Draft System</div>
+    <div class="divider">
+      <div class="divider-line"></div>
+      <div class="divider-diamond"></div>
+      <div class="divider-line"></div>
+    </div>
+  </header>
+
+  <!-- Tab Nav -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('draft')">⬡ Draft</button>
+    <button class="tab-btn" onclick="switchTab('cheatsheet')">⬡ Faction Guide</button>
+  </nav>
+
+  <!-- Draft Tab -->
+  <div id="tab-draft" class="tab-pane active">
+  <div id="config-panel">
+    <!-- Expansions -->
+    <div class="panel">
+      <div class="panel-title">▸ Expansions &amp; Content</div>
+      <div class="expansion-grid" id="exp-grid"></div>
+    </div>
+
+    <!-- Player Names -->
+    <div class="panel">
+      <div class="panel-title">▸ Player Names</div>
+      <div class="player-names-grid" id="names-grid"></div>
+    </div>
+
+    <!-- Players & Mode -->
+    <div class="panel">
+      <div class="panel-title">▸ Draft Configuration</div>
+      <div class="player-row">
+        <label>Players</label>
+        <div class="player-stepper">
+          <button class="stepper-btn" onclick="adjustPlayers(-1)">−</button>
+          <div class="stepper-val" id="player-count">6</div>
+          <button class="stepper-btn" onclick="adjustPlayers(1)">+</button>
+        </div>
+        <label style="margin-left:20px">Factions per player</label>
+        <div class="player-stepper">
+          <button class="stepper-btn" onclick="adjustPerPlayer(-1)">−</button>
+          <div class="stepper-val" id="per-player-count">3</div>
+          <button class="stepper-btn" onclick="adjustPerPlayer(1)">+</button>
+        </div>
+      </div>
+
+      <div class="draft-options" style="margin-top:20px">
+        <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold-dim);letter-spacing:2px;width:100%;margin-bottom:4px">DRAFT MODE</div>
+        <button class="option-btn active" id="mode-random" onclick="setMode('random')">Random Assign</button>
+        <button class="option-btn" id="mode-draft" onclick="setMode('draft')">Pick from Options</button>
+      </div>
+    </div>
+
+    <button class="draft-btn" onclick="startDraft()">⬡ BEGIN THE DRAFT ⬡</button>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+    <div id="results-random" style="display:none">
+      <div class="results-header">— The Galaxy Has Spoken —</div>
+      <div class="player-results" id="random-results"></div>
+      <div id="speaker-section" style="display:none">
+        <div class="divider" style="margin:24px auto"><div class="divider-line"></div><div class="divider-diamond"></div><div class="divider-line"></div></div>
+        <button class="speaker-btn" onclick="rollSpeakerOrder()">⬡ Randomize Speaker Order ⬡</button>
+        <div id="speaker-results"></div>
+      </div>
+      <div class="action-row" style="margin-top:24px">
+        <button class="action-btn primary" onclick="startDraft()">Redraft</button>
+        <button class="action-btn secondary" onclick="resetAll()">← Back to Config</button>
+      </div>
+    </div>
+
+    <div id="results-draft" style="display:none">
+      <div class="results-header">— Choose Your Destiny —</div>
+      <div class="status-bar" id="draft-status"></div>
+      <div id="draft-warning" class="warning" style="display:none"></div>
+      <div class="player-results" id="draft-results"></div>
+      <div class="action-row" style="margin-top:8px">
+        <button class="action-btn secondary" onclick="resetAll()">← Back to Config</button>
+      </div>
+    </div>
+  </div>
+
+  </div> <!-- /tab-draft -->
+
+  <!-- Cheat Sheet Tab -->
+  <div id="tab-cheatsheet" class="tab-pane">
+    <div class="cs-controls">
+      <input class="cs-search" id="cs-search" type="text" placeholder="Search factions…" oninput="renderCheatSheet()">
+      <button class="cs-filter active" data-filter="all" onclick="setCSFilter(this,'all')">All</button>
+      <button class="cs-filter" data-filter="base" onclick="setCSFilter(this,'base')">Base</button>
+      <button class="cs-filter" data-filter="pok" onclick="setCSFilter(this,'pok')">PoK</button>
+      <button class="cs-filter" data-filter="te" onclick="setCSFilter(this,'te')">Thunder's Edge</button>
+    </div>
+    <div class="cs-grid" id="cs-grid"></div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// ─── PLAYSTYLE TIPS ──────────────────────────────────────────────────────────
+const FACTION_TIPS = {
+  'The Arborec':               { tag:'military',  tip:'Grow your forces from planets. Slow start but snowballs with infantry production.' },
+  'The Barony of Letnev':      { tag:'military',  tip:'Dreadnought powerhouse with strong tech. Expensive but hits hard in every fight.' },
+  'The Clan of Saar':          { tag:'tricky',    tip:'Nomadic raiders — no home system. Harass neighbours and never stop moving.' },
+  'The Embers of Muaat':       { tag:'military',  tip:'Build a War Sun empire from scratch. Slow ramp-up, devastating late game.' },
+  'The Emirates of Hacan':     { tag:'economic',  tip:'Galactic trade kings. Control resources and deal your way to victory.' },
+  'The Federation of Sol':     { tag:'beginner',  tip:'Versatile and forgiving. Strong infantry and fleet — great for new players.' },
+  'The Ghosts of Creuss':      { tag:'tricky',    tip:'Wormhole manipulators. Rewrite the map to your advantage — high skill ceiling.' },
+  'The L1Z1X Mindnet':         { tag:'military',  tip:'Pure aggression. Flagship and Dreadnoughts dominate; win through relentless pressure.' },
+  'The Mentak Coalition':      { tag:'tricky',    tip:'Pirates with style. Steal resources and get free shots at enemies passing by.' },
+  'The Naalu Collective':      { tag:'political', tip:'Start every round with the initiative token. Master of agendas and subtlety.' },
+  'The Nekro Virus':           { tag:'tricky',    tip:'Convert enemy units and steal technologies. A unique and dangerous late-game threat.' },
+  'Sardakk N\'orr':            { tag:'military',  tip:'Worst starting stats — but buffs stack fast. Pure combat faction that rewards aggression.' },
+  'The Universities of Jol-Nar': { tag:'tech',   tip:'Best tech faction in the game. Research everything and snowball into unstoppable power.' },
+  'The Winnu':                 { tag:'political', tip:'Focus on Mecatol Rex and score big. Thrive with fewer planets than anyone else.' },
+  'The Xxcha Kingdom':         { tag:'political', tip:'Diplomatic veto power and slow enemies. Win through politics, not war.' },
+  'The Yin Brotherhood':       { tag:'tricky',    tip:'Convert enemy ships and sacrifice your own. Unorthodox and unpredictable.' },
+  'The Yssaril Tribes':        { tag:'political', tip:'Card advantage and action skips. Out-maneuver opponents with information and flexibility.' },
+  'The Argent Flight':         { tag:'military',  tip:'Fast, aggressive fleet that scales with allies. Dominate space lanes early and often.' },
+  'The Empyrean':              { tag:'political', tip:'Command the void between systems. Control the fringe and win the long game.' },
+  'The Mahact Gene-Sorcerers': { tag:'tricky',    tip:'Copy enemy commanders and curse opponents. High risk, enormous reward.' },
+  'The Naaz-Rokha Alliance':   { tag:'tricky',    tip:'Mech-based swarm fighter. Elusive and hard to pin down in open combat.' },
+  'The Nomad':                 { tag:'military',  tip:'The Flagship is your win condition. Rebuild it endlessly — it never truly dies.' },
+  'The Titans of Ul':          { tag:'economic',  tip:'Your home system is a planet. Fortify and build an economic fortress.' },
+  'The Vuil\'raith Cabal':     { tag:'military',  tip:'Rip holes in space and ambush enemies. Chaotic and devastating at close range.' },
+  'The Council Keleres':       { tag:'political', tip:'Master of the Galactic Council. Accumulate influence and dominate every vote.' },
+  'The Augurs of Illusoria':   { tag:'political', tip:'Prophecy and prediction. Prepare for objectives before they\'re revealed.' },
+  'The Celdauri Trade Confederation': { tag:'economic', tip:'Commerce-driven expansion. Build trade across factions and fund a war machine.' },
+  'The Cheiran Hordes':        { tag:'military',  tip:'Bioweapon specialists. Corrupt enemy units and overwhelm with numbers.' },
+  'The Dih-Mohn Flotilla':     { tag:'economic',  tip:'Carrier-heavy faction with deep pockets. Supply lines power everything.' },
+  'The Edyn Mandate':          { tag:'political', tip:'Forge alliances and honor them. Gain bonuses for keeping diplomatic promises.' },
+  'The Florzen Profiteer':     { tag:'economic',  tip:'Profit from every exchange. Tax trade routes and bankroll the winning side.' },
+  'The Free Systems Compact':  { tag:'political', tip:'Lead a coalition of independents. Leverage shared objectives with allies.' },
+  'The Ghemina Raiders':       { tag:'military',  tip:'Hit-and-run warriors who strike fast and retreat. Never get locked into a siege.' },
+  'The Ghoti Wayfarers':       { tag:'tricky',    tip:'Exist only in space — no planets. Score through pure fleet dominance.' },
+  'The Gledge Union':          { tag:'economic',  tip:'Mercantile faction that monetizes every transaction. Control the economy, win the galaxy.' },
+  'The Glimmer of Mortheus':   { tag:'tricky',    tip:'Interdimensional faction with unique timing tricks. Rewards deep game knowledge.' },
+  'The Kollecc Society':       { tag:'tricky',    tip:'Collector of relics and artifacts. Hoard power-ups and unleash them at the right moment.' },
+  'The Kortali Tribunal':      { tag:'political', tip:'Judicial power over the galaxy. Control what laws get passed and bent.' },
+  'The Kyro Sodality':         { tag:'tech',      tip:'Upgrade obsessives. Stack improvements until your units outclass everyone else.' },
+  'The Lanefir Remnants':      { tag:'tricky',    tip:'Ancient survivors with powerful relics. Rediscover lost tech to forge a new empire.' },
+  'The Li-Zho Dynasty':        { tag:'political', tip:'Espionage and agent networks. Gather intel, manipulate rivals, win without fighting.' },
+  'The L\'tokk Khrask':        { tag:'military',  tip:'Warrior culture that grows stronger through victories. Never stop attacking.' },
+  'The Mirveda Protectorate':  { tag:'tech',      tip:'Bio-mechanical tech wizards. Combine organic and machine in unsettling ways.' },
+  'The Monks of Kolume':       { tag:'political', tip:'Philosophical order that earns VPs through wisdom and restraint, not warfare.' },
+  'The Myko-Mentari':          { tag:'tricky',    tip:'Fungal hivemind. Spread across the galaxy and link planets into a living network.' },
+  'The Nivyn Star Kings':      { tag:'military',  tip:'Legendary warriors who inspire nearby fleets. Lead from the front.' },
+  'The Nokar Salvagers':       { tag:'economic',  tip:'Scavengers who profit from destruction. The more chaos around you, the richer you get.' },
+  'The Olradin League':        { tag:'political', tip:'Coalition builders who gain from shared scoring. Make everyone your ally.' },
+  'The Roh\'Dhna Mecatol':     { tag:'political', tip:'Mecatol-focused faction that bends the council to its will permanently.' },
+  'The Savages of Cymiae':     { tag:'military',  tip:'Relentless berserkers. Charge in early and never let the pressure off.' },
+  'The Shipwrights of Axis':   { tag:'economic',  tip:'Master shipbuilders who produce faster and cheaper than anyone in the galaxy.' },
+  'The Zelian Purifier':       { tag:'military',  tip:'Zealots who destroy rather than conquer. Raze systems and deny resources to rivals.' },
+};
+
+const TAG_LABELS = {
+  beginner: 'Beginner Friendly',
+  political: 'Political',
+  military: 'Military',
+  economic: 'Economic',
+  tech: 'Tech',
+  tricky: 'High Skill',
+};
+
+function getTipHTML(faction) {
+  const t = FACTION_TIPS[faction];
+  if (!t) return '';
+  return `<div class="playstyle-tag tag-${t.tag}">${TAG_LABELS[t.tag]}</div><br>${t.tip}`;
+}
+
+// ─── DATA ───────────────────────────────────────────────────────────────────
+const EXPANSIONS = [
+  { id: 'base',    name: 'Base Game',         short: 'BASE',  enabled: true,  required: true },
+  { id: 'pok',     name: 'Prophecy of Kings', short: 'PoK',   enabled: false },
+  { id: 'codex3',  name: 'Codex III',         short: 'CX3',   enabled: false },
+  { id: 'ds',      name: 'Discordant Stars',  short: 'DS',    enabled: false },
+];
+
+const FACTION_COLORS = {
+  'The Arborec':               '#5a8a3c',
+  'The Barony of Letnev':      '#4a4a6a',
+  'The Clan of Saar':          '#c87840',
+  'The Embers of Muaat':       '#cc3030',
+  'The Emirates of Hacan':     '#c9a227',
+  'The Federation of Sol':     '#3a8ac4',
+  'The Ghosts of Creuss':      '#60b8d8',
+  'The L1Z1X Mindnet':         '#8060c8',
+  'The Mentak Coalition':      '#c85030',
+  'The Naalu Collective':      '#5a8a50',
+  'The Nekro Virus':           '#7a3a7a',
+  'Sardakk N\'orr':            '#8a6040',
+  'The Universities of Jol-Nar': '#4060b0',
+  'The Winnu':                 '#a05080',
+  'The Xxcha Kingdom':         '#60a060',
+  'The Yin Brotherhood':       '#c8a860',
+  'The Yssaril Tribes':        '#508050',
+  'The Argent Flight':         '#e8b030',
+  'The Empyrean':              '#6040a0',
+  'The Mahact Gene-Sorcerers': '#a8884c',
+  'The Naaz-Rokha Alliance':   '#708040',
+  'The Nomad':                 '#3060a0',
+  'The Titans of Ul':          '#808080',
+  'The Vuil\'raith Cabal':     '#a03030',
+  'The Council Keleres':       '#4878a0',
+  'The Augurs of Illusoria':   '#b090d0',
+  'The Celdauri Trade Confederation': '#d0a030',
+  'The Cheiran Hordes':        '#a05030',
+  'The Dih-Mohn Flotilla':     '#5090b0',
+  'The Edyn Mandate':          '#80a050',
+  'The Florzen Profiteer':     '#c08040',
+  'The Free Systems Compact':  '#5080c0',
+  'The Ghemina Raiders':       '#a06060',
+  'The Ghoti Wayfarers':       '#40a090',
+  'The Gledge Union':          '#908060',
+  'The Glimmer of Mortheus':   '#8050a0',
+  'The Kollecc Society':       '#c07040',
+  'The Kortali Tribunal':      '#5060a0',
+  'The Kyro Sodality':         '#70a060',
+  'The Lanefir Remnants':      '#b07080',
+  'The Li-Zho Dynasty':        '#d09040',
+  'The L\'tokk Khrask':        '#609050',
+  'The Mirveda Protectorate':  '#6080b0',
+  'The Monks of Kolume':       '#a09060',
+  'The Myko-Mentari':          '#70a070',
+  'The Nivyn Star Kings':      '#9070b0',
+  'The Nokar Salvagers':       '#908070',
+  'The Olradin League':        '#c0a050',
+  'The Roh\'Dhna Mecatol':     '#7050a0',
+  'The Savages of Cymiae':     '#b06050',
+  'The Shipwrights of Axis':   '#5070a0',
+  'The Zelian Purifier':       '#c05040',
+};
+
+const FACTIONS = {
+  base: [
+    'The Arborec','The Barony of Letnev','The Clan of Saar','The Embers of Muaat',
+    'The Emirates of Hacan','The Federation of Sol','The Ghosts of Creuss',
+    'The L1Z1X Mindnet','The Mentak Coalition','The Naalu Collective',
+    'The Nekro Virus','Sardakk N\'orr','The Universities of Jol-Nar','The Winnu',
+    'The Xxcha Kingdom','The Yin Brotherhood','The Yssaril Tribes',
+  ],
+  pok: [
+    'The Argent Flight','The Empyrean','The Mahact Gene-Sorcerers',
+    'The Naaz-Rokha Alliance','The Nomad','The Titans of Ul','The Vuil\'raith Cabal',
+  ],
+  codex3: ['The Council Keleres'],
+  ds: [
+    'The Augurs of Illusoria','The Celdauri Trade Confederation','The Cheiran Hordes',
+    'The Dih-Mohn Flotilla','The Edyn Mandate','The Florzen Profiteer',
+    'The Free Systems Compact','The Ghemina Raiders','The Ghoti Wayfarers',
+    'The Gledge Union','The Glimmer of Mortheus','The Kollecc Society',
+    'The Kortali Tribunal','The Kyro Sodality','The Lanefir Remnants',
+    'The Li-Zho Dynasty','The L\'tokk Khrask','The Mirveda Protectorate',
+    'The Monks of Kolume','The Myko-Mentari','The Nivyn Star Kings',
+    'The Nokar Salvagers','The Olradin League','The Roh\'Dhna Mecatol',
+    'The Savages of Cymiae','The Shipwrights of Axis','The Zelian Purifier',
+  ],
+};
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let state = {
+  players: 6,
+  perPlayer: 3,
+  mode: 'random',
+  expansions: { base: true, pok: false, codex3: false, ds: false },
+  names: ['','','','','','','',''],
+  draftPool: [],
+  assignments: [],
+  currentPlayer: 0,
+  finalFactions: [], // [{name, faction}] — filled after draft complete
+};
+
+// ─── FACTION TIP TOGGLE ──────────────────────────────────────────────────────
+function toggleFactionTip(el) {
+  el.classList.toggle('open');
+}
+
+let animFrame = null;
+
+// ─── STAGGERED REVEAL ────────────────────────────────────────────────────────
+function revealCards(container, onDone) {
+  const cards = container.querySelectorAll('.final-card');
+  cards.forEach((card, i) => {
+    setTimeout(() => {
+      card.classList.add('revealed');
+      if (i === cards.length - 1 && onDone) onDone();
+    }, 150 + i * 200);
+  });
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+function init() {
+  renderExpansions();
+  renderNames();
+}
+
+function renderExpansions() {
+  const grid = document.getElementById('exp-grid');
+  grid.innerHTML = '';
+  EXPANSIONS.forEach(exp => {
+    const count = FACTIONS[exp.id].length;
+    const el = document.createElement('div');
+    el.className = 'exp-toggle' + (state.expansions[exp.id] ? ' active' : '');
+    if (exp.required) el.style.opacity = '0.6';
+    el.innerHTML = `
+      <div class="toggle-box"><span class="toggle-check">✓</span></div>
+      <span class="exp-name">${exp.name}</span>
+      <span class="exp-count">${count}f</span>
+    `;
+    if (!exp.required) {
+      el.onclick = () => {
+        state.expansions[exp.id] = !state.expansions[exp.id];
+        el.classList.toggle('active', state.expansions[exp.id]);
+      };
+    }
+    grid.appendChild(el);
+  });
+}
+
+function renderNames() {
+  const grid = document.getElementById('names-grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < state.players; i++) {
+    const field = document.createElement('div');
+    field.className = 'name-field';
+    field.innerHTML = `
+      <div class="name-label">Player ${i + 1}</div>
+      <input class="name-input" type="text" maxlength="20" placeholder="Enter name…"
+        value="${state.names[i] || ''}"
+        oninput="state.names[${i}] = this.value.trim()"
+      />
+    `;
+    grid.appendChild(field);
+  }
+}
+
+function adjustPlayers(d) {
+  state.players = Math.max(2, Math.min(8, state.players + d));
+  document.getElementById('player-count').textContent = state.players;
+  renderNames();
+}
+
+function adjustPerPlayer(d) {
+  state.perPlayer = Math.max(1, Math.min(5, state.perPlayer + d));
+  document.getElementById('per-player-count').textContent = state.perPlayer;
+}
+
+function setMode(m) {
+  state.mode = m;
+  document.getElementById('mode-random').classList.toggle('active', m === 'random');
+  document.getElementById('mode-draft').classList.toggle('active', m === 'draft');
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function getAvailableFactions() {
+  let pool = [];
+  Object.keys(state.expansions).forEach(k => {
+    if (state.expansions[k]) pool = pool.concat(FACTIONS[k]);
+  });
+  return pool;
+}
+
+function playerName(idx) {
+  return (state.names[idx] && state.names[idx].trim()) ? state.names[idx].trim() : `Player ${idx + 1}`;
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function factionColor(name) {
+  return FACTION_COLORS[name] || '#888888';
+}
+
+function factionExpBadge(name) {
+  for (const [k, list] of Object.entries(FACTIONS)) {
+    if (list.includes(name)) {
+      const exp = EXPANSIONS.find(e => e.id === k);
+      if (exp && k !== 'base') {
+        return `<span class="faction-exp-badge" style="background:rgba(255,255,255,0.08);color:var(--text-dim)">${exp.short}</span>`;
+      }
+    }
+  }
+  return '';
+}
+
+function getExpName(faction) {
+  for (const [k, list] of Object.entries(FACTIONS)) {
+    if (list.includes(faction)) {
+      const exp = EXPANSIONS.find(e => e.id === k);
+      return exp ? exp.name : '';
+    }
+  }
+  return '';
+}
+
+// ─── DRAFT LOGIC ─────────────────────────────────────────────────────────────
+const LOADER_LINES = [
+  'Scanning the galaxy…',
+  'Consulting the oracle…',
+  'Aligning hyperlanes…',
+  'Awakening ancient races…',
+  'Charting the Mecatol system…',
+  'Shuffling the fates…',
+  'The Prophecy stirs…',
+];
+
+function startDraft() {
+  const available = getAvailableFactions();
+  const needed = state.players * state.perPlayer;
+
+  const overlay = document.getElementById('loading-overlay');
+  const subText = document.getElementById('loader-sub-text');
+  overlay.classList.add('active');
+
+  let lineIdx = 0;
+  const cycleText = setInterval(() => {
+    lineIdx = (lineIdx + 1) % LOADER_LINES.length;
+    subText.textContent = LOADER_LINES[lineIdx];
+  }, 400);
+
+  setTimeout(() => {
+    clearInterval(cycleText);
+    overlay.classList.remove('active');
+
+    document.getElementById('config-panel').style.display = 'none';
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('speaker-section').style.display = 'none';
+    document.getElementById('speaker-results').innerHTML = '';
+
+    if (state.mode === 'random') {
+      doRandomDraft(available);
+    } else {
+      doDraftMode(available, needed);
+    }
+  }, 2200);
+}
+
+function factionRowHTML(f) {
+  const tip = FACTION_TIPS[f];
+  return `
+    <div class="faction-row" onclick="toggleFactionTip(this)">
+      <div class="faction-row-main">
+        <div class="assigned-dot" style="background:${factionColor(f)}"></div>
+        <div style="flex:1">
+          <div class="assigned-name">${f}</div>
+          <div class="assigned-exp">${getExpName(f)}</div>
+        </div>
+        ${tip ? `<span class="playstyle-tag tag-${tip.tag}" style="margin-right:4px">${TAG_LABELS[tip.tag]}</span>` : ''}
+        ${tip ? `<span class="faction-row-chevron">▼</span>` : ''}
+      </div>
+      ${tip ? `<div class="faction-row-tip">${tip.tip}</div>` : ''}
+    </div>
+  `;
+}
+
+function doRandomDraft(available) {
+  document.getElementById('results-random').style.display = 'block';
+  document.getElementById('results-draft').style.display = 'none';
+
+  const shuffled = shuffle(available);
+  const needed = state.players * state.perPlayer;
+  const warn = needed > available.length;
+
+  const container = document.getElementById('random-results');
+  container.innerHTML = '';
+
+  if (warn) {
+    const w = document.createElement('div');
+    w.className = 'warning';
+    w.textContent = `⚠ Only ${available.length} factions available — some players may receive fewer options.`;
+    container.before(w);
+  }
+
+  state.finalFactions = [];
+
+  for (let p = 0; p < state.players; p++) {
+    const playerFactions = shuffled.slice(p * state.perPlayer, (p + 1) * state.perPlayer);
+    state.finalFactions.push({ name: playerName(p), faction: playerFactions[0] || null, options: playerFactions });
+
+    const card = document.createElement('div');
+    card.className = 'final-card';
+    card.innerHTML = `
+      <div class="player-num">${playerName(p)}</div>
+      ${playerFactions.map(f => factionRowHTML(f)).join('')}
+    `;
+    container.appendChild(card);
+  }
+
+  revealCards(container, () => {
+    document.getElementById('speaker-section').style.display = 'block';
+  });
+}
+
+function doDraftMode(available, needed) {
+  document.getElementById('results-random').style.display = 'none';
+  document.getElementById('results-draft').style.display = 'block';
+
+  const shuffled = shuffle(available);
+  const pool = shuffled.slice(0, Math.min(needed, available.length));
+
+  state.draftPool = pool;
+  state.assignments = Array.from({ length: state.players }, (_, i) => ({
+    player: i + 1,
+    name: playerName(i),
+    factionOptions: pool.slice(i * state.perPlayer, (i + 1) * state.perPlayer),
+    chosen: null,
+  }));
+  state.currentPlayer = 0;
+  state.finalFactions = [];
+
+  const warn = needed > available.length;
+  const warnEl = document.getElementById('draft-warning');
+  if (warn) {
+    warnEl.style.display = 'block';
+    warnEl.textContent = `⚠ Only ${available.length} factions available — some players may have fewer choices.`;
+  } else {
+    warnEl.style.display = 'none';
+  }
+
+  renderDraftState();
+}
+
+function renderDraftState() {
+  updateDraftStatus();
+  const container = document.getElementById('draft-results');
+  container.innerHTML = '';
+
+  state.assignments.forEach((assignment, idx) => {
+    const card = document.createElement('div');
+    card.className = 'player-card';
+
+    if (assignment.chosen) {
+      card.innerHTML = `
+        <div class="player-num">${assignment.name}</div>
+        ${factionRowHTML(assignment.chosen)}
+      `;
+    } else if (idx === state.currentPlayer) {
+      card.style.borderColor = 'rgba(201,162,39,0.5)';
+      card.style.background = 'rgba(201,162,39,0.05)';
+      const chosenByOthers = state.assignments.filter(a => a.chosen).map(a => a.chosen);
+
+      card.innerHTML = `
+        <div class="player-num" style="color:var(--gold)">${assignment.name} — Choose Your Faction</div>
+        <div class="faction-scroll">
+          <div class="faction-options" id="options-${idx}">
+            ${assignment.factionOptions.map(f => {
+              const locked = chosenByOthers.includes(f);
+              const tip = FACTION_TIPS[f];
+              return `<div class="faction-option${locked ? ' locked' : ''}" onclick="selectFaction(${idx}, '${f.replace(/'/g, "\\'")}')">
+                <div class="faction-color" style="background:${factionColor(f)}"></div>
+                <div style="flex:1">
+                  <span class="faction-name-text">${f}</span>
+                  ${tip ? `<div class="faction-tip"><div class="playstyle-tag tag-${tip.tag}">${TAG_LABELS[tip.tag]}</div><br>${tip.tip}</div>` : ''}
+                </div>
+                ${factionExpBadge(f)}
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+        <button class="confirm-btn" id="confirm-${idx}" disabled onclick="confirmFaction(${idx})">Confirm Selection</button>
+      `;
+    } else {
+      card.style.opacity = '0.5';
+      card.innerHTML = `
+        <div class="player-num">${assignment.name}</div>
+        <div style="font-size:13px;color:var(--text-dim);font-style:italic">Awaiting their turn…</div>
+      `;
+    }
+
+    container.appendChild(card);
+  });
+}
+
+let pendingChoice = {};
+
+function selectFaction(playerIdx, faction) {
+  pendingChoice[playerIdx] = faction;
+  document.querySelectorAll(`#options-${playerIdx} .faction-option`).forEach(el => {
+    el.classList.toggle('selected', el.querySelector('.faction-name-text').textContent === faction);
+  });
+  const btn = document.getElementById(`confirm-${playerIdx}`);
+  if (btn) btn.disabled = false;
+}
+
+function confirmFaction(playerIdx) {
+  const chosen = pendingChoice[playerIdx];
+  if (!chosen) return;
+  state.assignments[playerIdx].chosen = chosen;
+  delete pendingChoice[playerIdx];
+  state.currentPlayer++;
+  if (state.currentPlayer >= state.players) {
+    showFinalResults();
+  } else {
+    renderDraftState();
+  }
+}
+
+function showFinalResults() {
+  document.getElementById('results-draft').style.display = 'none';
+  document.getElementById('results-random').style.display = 'block';
+  document.getElementById('results-random').querySelector('.results-header').textContent = '— Factions Chosen —';
+
+  const container = document.getElementById('random-results');
+  container.innerHTML = '';
+  state.finalFactions = [];
+
+  state.assignments.forEach((a) => {
+    state.finalFactions.push({ name: a.name, faction: a.chosen });
+    const card = document.createElement('div');
+    card.className = 'final-card';
+    card.innerHTML = `
+      <div class="player-num">${a.name}</div>
+      ${factionRowHTML(a.chosen)}
+    `;
+    container.appendChild(card);
+  });
+
+  revealCards(container, () => {
+    document.getElementById('speaker-section').style.display = 'block';
+  });
+}
+
+// ─── SPEAKER ORDER ───────────────────────────────────────────────────────────
+function rollSpeakerOrder() {
+  const shuffled = shuffle([...state.finalFactions]);
+  const container = document.getElementById('speaker-results');
+  container.innerHTML = `<div class="speaker-label">▸ Speaker Order</div><div class="speaker-results" id="speaker-cards"></div>`;
+  const grid = document.getElementById('speaker-cards');
+
+  shuffled.forEach((player, i) => {
+    const card = document.createElement('div');
+    card.className = 'speaker-card';
+    card.style.animationDelay = (i * 0.1) + 's';
+    const isFirst = i === 0;
+    card.innerHTML = `
+      <div class="speaker-num${isFirst ? ' first' : ''}">${i + 1}</div>
+      <div class="speaker-info">
+        <div class="speaker-name">${player.name}</div>
+        <div class="speaker-faction">
+          ${player.faction ? `<div class="speaker-dot" style="background:${factionColor(player.faction)}"></div>${player.faction}` : '—'}
+        </div>
+      </div>
+      ${isFirst ? `<div style="font-size:10px;letter-spacing:2px;color:var(--gold);font-family:'Cinzel',serif">SPEAKER</div>` : ''}
+    `;
+    grid.appendChild(card);
+  });
+
+  // Small burst on speaker reveal — removed (particles scrapped)
+}
+
+function updateDraftStatus() {
+  const done = state.assignments.filter(a => a.chosen).length;
+  const el = document.getElementById('draft-status');
+  if (el) el.innerHTML = `<span>${done}</span> of <span>${state.players}</span> players have selected · <span>${state.assignments[state.currentPlayer]?.name || ''}</span> is choosing`;
+}
+
+function resetAll() {
+  document.getElementById('config-panel').style.display = 'block';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('results-random').style.display = 'none';
+  document.getElementById('results-draft').style.display = 'none';
+  document.getElementById('random-results').innerHTML = '';
+  document.getElementById('speaker-results').innerHTML = '';
+  document.getElementById('speaker-section').style.display = 'none';
+  const old = document.querySelector('.container > .warning');
+  if (old) old.remove();
+  const rh = document.querySelector('#results-random .results-header');
+  if (rh) rh.textContent = '— The Galaxy Has Spoken —';
+  state.currentPlayer = 0;
+  state.finalFactions = [];
+  pendingChoice = {};
+  if (animFrame) { cancelAnimationFrame(animFrame); }
+}
+
+// ─── TAB SWITCHING ───────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    if (b.getAttribute('onclick').includes(tab)) b.classList.add('active');
+  });
+  if (tab === 'cheatsheet') renderCheatSheet();
+}
+
+// ─── CHEAT SHEET DATA ────────────────────────────────────────────────────────
+let csActiveFilter = 'all';
+
+function setCSFilter(el, filter) {
+  csActiveFilter = filter;
+  document.querySelectorAll('.cs-filter').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderCheatSheet();
+}
+
+const FACTION_DB = [
+  // ── BASE GAME ──
+  {
+    id: 'arborec', name: 'The Arborec', exp: 'base', color: '#5a8a3c',
+    emoji: '🌿',
+    abilities: ['Mitosis — At the end of the Status phase, place 1 infantry on a planet you control', 'Propagation — After a player passes, you may place 1 infantry on a planet you control (once per round)'],
+    flagship: { name: 'Duha Menaimon', stats: '2 capacity, 2 combat (×2), Anti-Fighter Barrage 8 (×3)', ability: 'After a round of combat, you may place 1 infantry on this ship\'s planet.' },
+    techs: [
+      { color: 'green', name: 'Bioplasmosis', desc: 'At end of Status phase, move any number of your infantry to adjacent planets.' },
+      { color: 'green', name: 'Letani Warrior II', desc: 'Upgrade: Letani Warrior mech gains +1 combat and can produce infantry.' },
+    ],
+    commander: { name: 'Trr\'n', ability: 'When you produce infantry, produce 1 additional infantry for free.' },
+    hero: { name: 'Letani Behemoth', ability: 'Action: Place 1 infantry on each planet you control. Exhaust.' },
+    playstyle: 'Slow-building bio-army. Produce infantry from your planets via Mitosis and snowball into overwhelming numbers. Avoid early fights — get to mid-game and flood the board.',
+  },
+  {
+    id: 'letnev', name: 'The Barony of Letnev', exp: 'base', color: '#4a4a6a',
+    emoji: '⚔️',
+    abilities: ['Munitions Reserves — Once per round, you may spend 1 trade good to use 1 additional round of bombardment', 'Armada — Your ships may have up to 2 additional capacity', 'Imperia — You start with the Custodians Token'],
+    flagship: { name: 'Arc Secundus', stats: '3 capacity, 5 combat (×2), Bombardment 5 (×3)', ability: 'Before a combat round, repair all your damaged ships in this system.' },
+    techs: [
+      { color: 'red', name: 'L4 Disruptors', desc: 'Your ships may move through asteroid fields.' },
+      { color: 'red', name: 'Non-Euclidean Shielding', desc: 'When your flagship or dreadnoughts would be destroyed, roll a die. On an 8+, prevent that damage.' },
+      { color: 'blue', name: 'Duranium Armor', desc: 'During combat, after each round, repair 1 of your damaged ships.' },
+      { color: 'yellow', name: 'Predictive Intelligence', desc: 'At the start of your turn, exhaust to gain trade goods equal to the round number.' },
+    ],
+    commander: { name: 'Viscount Unlenn', ability: 'When you win a combat, gain 1 command token.' },
+    hero: { name: 'Rear Admiral Navarch', ability: 'Action: Move any number of your ships from any systems into one system.' },
+    playstyle: 'Raw military power. Expensive but devastating dreadnoughts, great tech, and one of the best flagships in the game. Bully your neighbours early and snowball through superior firepower.',
+  },
+  {
+    id: 'saar', name: 'The Clan of Saar', exp: 'base', color: '#c87840',
+    emoji: '🌪️',
+    abilities: ['Scavenge — After you win a space combat, gain 1 trade good', 'Nomadic — Your ships may retreat to adjacent systems you control even if you have no structures there', 'Chaos Mapping — Adjacent players cannot establish systems as home systems'],
+    flagship: { name: 'Loncara Ssodu', stats: '3 capacity, 5 combat (×2), Anti-Fighter Barrage 6 (×3)', ability: 'While this ship is in a system, other players\' ships cannot move through this system.' },
+    techs: [
+      { color: 'red', name: 'Chaos Mapping', desc: 'Included as ability. Tech slot: Floating Factory II — Your space docks may move with your ships.' },
+      { color: 'yellow', name: 'Chaos Mapping (TE)', desc: 'Floating Factory II: Your space dock may move with your fleet at end of tactical action.' },
+    ],
+    commander: { name: 'Gurno Aggero', ability: 'When you gain trade goods from combat, gain 1 additional.' },
+    hero: { name: 'Gurno Aggero (Hero)', ability: 'Action: Move all your space docks to adjacent systems.' },
+    playstyle: 'Hit-and-run nomadic raiders. You have no home system to defend — roam the galaxy, steal trade goods from fights, and never let anyone pin you down. The Floating Factory lets your production follow your fleet.',
+  },
+  {
+    id: 'muaat', name: 'The Embers of Muaat', exp: 'base', color: '#cc3030',
+    emoji: '🌞',
+    abilities: ['Star Forge — Action: Spend 1 token from your fleet pool to place 1 fighter or 1 mech on your flagship', 'Magmus Reactor — Your War Suns have +1 capacity and can sustain 2 damage'],
+    flagship: { name: 'The Inferno', stats: '4 capacity, 5 combat (×2), Bombardment 5 (×3)', ability: 'Other players\' fighters in this system are destroyed.' },
+    techs: [
+      { color: 'red', name: 'Magmus Reactor II', desc: 'Your War Suns have Anti-Fighter Barrage 6 (×3).' },
+      { color: 'red', name: 'Vortex', desc: 'Action: Remove 1 of your command tokens from the board to capture 1 enemy mech.' },
+      { color: 'red', name: 'Supercharge', desc: 'At the start of a combat round, you may exhaust to give all your ships +1 combat for that round.' },
+    ],
+    commander: { name: 'Magmus', ability: 'After your War Sun moves, you may place 1 fighter with it.' },
+    hero: { name: 'Adjudicator Baal', ability: 'Action: Place 1 War Sun in your home system for free.' },
+    playstyle: 'Slow build to a War Sun armada. Start weak, spend the first few rounds teching and building, then unleash devastating fleets that can one-shot most opposition. Patience is rewarded.',
+  },
+  {
+    id: 'hacan', name: 'The Emirates of Hacan', exp: 'base', color: '#c9a227',
+    emoji: '🦁',
+    abilities: ['Masters of Trade — You may negotiate trades on others\' turns and refuse any trade agreement', 'Arbiters — Your promissory notes may be traded to any player', 'Arbitration — When you exhaust planets for trade goods in the bargain step, gain 2 extra'],
+    flagship: { name: 'Wrath of Kenara', stats: '3 capacity, 7 combat (×2)', ability: 'At the start of each combat round, you may spend 1 trade good to add 1 die to your rolls.' },
+    techs: [
+      { color: 'yellow', name: 'Quantum Entanglement', desc: 'At the start of your turn, you may exhaust to move 1 of your ships in any other system to a system adjacent to your flagship.' },
+      { color: 'yellow', name: 'Production Biomes', desc: 'When you exhaust this card to produce ships, you may produce 2 additional ships of any type.' },
+      { color: 'yellow', name: 'Sling Relay', desc: 'Your ships may move through supernova systems.' },
+    ],
+    commander: { name: 'Gila the Silvertongue', ability: 'When you make a deal, gain 1 trade good.' },
+    hero: { name: 'Harrugh Gefhara', ability: 'Action: Gain trade goods equal to your commodity value, and each other player may do the same.' },
+    playstyle: 'Economic kingpin. Stockpile trade goods, deal with everyone, and buy your way to victory. Hacan doesn\'t need to fight — just make sure everyone needs something from you.',
+  },
+  {
+    id: 'sol', name: 'The Federation of Sol', exp: 'base', color: '#3a8ac4',
+    emoji: '🌍',
+    abilities: ['Orbital Drop — Action: Spend 1 token from your strategy pool to place 2 infantry on a planet you control', 'Neuroglaive — After another player activates a system, you may exhaust to place 1 fighter in an adjacent system'],
+    flagship: { name: 'Genesis', stats: '4 capacity, 9 combat', ability: 'At the end of the Status phase, place 1 infantry on this ship. This ship has Sustain Damage.' },
+    techs: [
+      { color: 'blue', name: 'Neural Motivator II', desc: 'When you draw action cards, draw 2 additional.' },
+      { color: 'green', name: 'Spec Ops II', desc: 'Your infantry have +1 combat and can roll 2 dice.' },
+      { color: 'blue', name: 'Aerie Hololattice', desc: 'After each Status phase, place 1 fighter in any system containing one of your ships.' },
+    ],
+    commander: { name: 'Claire Gibson', ability: 'When you produce infantry, produce 2 additional for free (once per turn).' },
+    hero: { name: 'Jace X. 4th Air Legion', ability: 'Action: Move any number of your ground forces on any planets to adjacent planets.' },
+    playstyle: 'The beginner faction — balanced, forgiving, and powerful. Exceptional infantry production and fleet development. Strong in combat and flexible enough to adapt to any situation.',
+  },
+  {
+    id: 'creuss', name: 'The Ghosts of Creuss', exp: 'base', color: '#60b8d8',
+    emoji: '👻',
+    abilities: ['Quantum Entanglement — Your ships may move through wormholes as if they were adjacent', 'Slipstream — At the start of your turn, you may spend 1 trade good to place a wormhole token in any system', 'Creuss Iff — You start with 1 Creuss wormhole token in your home system'],
+    flagship: { name: 'Epsilon Cannae', stats: '3 capacity, 5 combat (×2)', ability: 'While your flagship is in a system with a wormhole, you may treat all other wormhole systems as adjacent.' },
+    techs: [
+      { color: 'blue', name: 'Wormhole Generator II', desc: 'Action: Place or move a Creuss wormhole token into any non-home system.' },
+      { color: 'blue', name: 'Creuss Rift Cannon', desc: 'Your dreadnoughts have Space Cannon 5 (×3).' },
+    ],
+    commander: { name: 'Sai Seravus', ability: 'After you place a wormhole, gain 1 command token.' },
+    hero: { name: 'Emissary Taivra', ability: 'Action: Place 1 wormhole token in each system adjacent to your flagship.' },
+    playstyle: 'Master of the map. Manipulate wormholes to connect distant systems, strike anywhere in the galaxy, and make your home system impossible to assault. Very high skill ceiling — rewards creative thinking.',
+  },
+  {
+    id: 'l1z1x', name: 'The L1Z1X Mindnet', exp: 'base', color: '#8060c8',
+    emoji: '🤖',
+    abilities: ['Assimilate — When you win a ground combat, you may replace 1 of your opponent\'s structures with your own', 'Cybernetic Enhancements — Your dreadnoughts and flagship have +1 capacity', 'Inheritance Systems — Your flagship and dreadnoughts have Sustain Damage'],
+    flagship: { name: '[0.0.1] "The Flagship"', stats: '5 capacity, 5 combat (×2)', ability: 'After each combat round, repair all your ships in this system.' },
+    techs: [
+      { color: 'red', name: 'Super-Dreadnought II', desc: 'Upgrade: Dreadnought has 4 combat, Bombardment 4 (×3), 2 capacity.' },
+      { color: 'blue', name: 'Inheritance Systems II', desc: 'Your flagship may move through and stop in systems with black holes.' },
+      { color: 'green', name: 'Quantum Datahub Node', desc: 'At the start of a combat round, place 1 infantry on this planet from your reinforcements.' },
+    ],
+    commander: { name: 'Tungstantus', ability: 'When you win a combat, gain 1 command token.' },
+    hero: { name: 'I\'il-Kuls Valefar', ability: 'Action: Destroy all of your infantry in a system to replace 1 enemy structure with one of yours.' },
+    playstyle: 'Pure brute force. Best dreadnoughts in the game when fully upgraded, combined with a flagship that never stays damaged. Charge in, hit hard, and use Assimilate to claim enemy infrastructure.',
+  },
+  {
+    id: 'mentak', name: 'The Mentak Coalition', exp: 'base', color: '#c85030',
+    emoji: '🐍',
+    abilities: ['Pillage — After any player passes, gain 1 trade good from that player', 'Ambush — Before the first round of space combat, roll 2 dice for each of your cruisers and destroyers — on 9+ score a hit', 'Mirror Computing — When you spend trade goods, spend 1 fewer per transaction'],
+    flagship: { name: 'Fourth Moon', stats: '3 capacity, 7 combat (×2)', ability: 'Before the first round of combat, your ships may each make 1 combat roll against your opponent\'s ships.' },
+    techs: [
+      { color: 'red', name: 'Salvage Operations', desc: 'After you win a space combat, gain 1 trade good for each non-fighter ship you destroyed.' },
+      { color: 'yellow', name: 'Mirror Computing II', desc: 'When you spend trade goods, each trade good is worth 2 resources or influence.' },
+    ],
+    commander: { name: 'Iperia', ability: 'When you Pillage, steal 2 trade goods or 1 commodity instead of 1.' },
+    hero: { name: 'Suffi An', ability: 'Action: Place 1 flagship in your home system for free, and attack an adjacent enemy immediately.' },
+    playstyle: 'Sneaky pirate-politicians. Ambush punishes anyone who moves ships near you, Pillage taxes anyone who passes, and Mirror Computing makes your trade goods go further. Best played opportunistically.',
+  },
+  {
+    id: 'naalu', name: 'The Naalu Collective', exp: 'base', color: '#5a8a50',
+    emoji: '🐉',
+    abilities: ['Gift of Prescience — At the start of the Strategy phase, place the "0" initiative token — you go first in the Agenda phase', 'Telepathic — At the start of each Agenda phase, you may draw 1 secret objective', 'Oracle AI — After you resolve your primary, you may resolve your secondary for free'],
+    flagship: { name: 'Matriarch', stats: '3 capacity, 9 combat', ability: 'Before combat, your opponent must discard 1 action card.' },
+    techs: [
+      { color: 'blue', name: 'Neuroglaive', desc: 'After another player activates a system, you may exhaust to place 1 fighter there.' },
+      { color: 'green', name: 'Vortex', desc: 'Your ships may move through systems containing other players\' ships.' },
+    ],
+    commander: { name: 'Z\'eu', ability: 'When you draw an action card, draw 2 and keep 1.' },
+    hero: { name: 'The Oracle', ability: 'Action: Look at all secret objectives and rearrange them. Draw 1.' },
+    playstyle: 'Political masters who always go first in the agenda phase. Leverage your 0-token to control who wins every vote. Pair with strong political action cards to lock down the Galactic Council completely.',
+  },
+  {
+    id: 'nekro', name: 'The Nekro Virus', exp: 'base', color: '#7a3a7a',
+    emoji: '💀',
+    abilities: ['Propagation — When any player\'s non-fighter ship is destroyed in combat, place 1 of your fighters there', 'Galactic Threat — You cannot vote on agendas', 'Technological Singularity — Once per game, steal 1 technology from a player you defeated'],
+    flagship: { name: 'Nekro Malleon', stats: '3 capacity, 9 combat', ability: 'After this ship destroys an enemy ship, place 1 fighter in this system.' },
+    techs: [
+      { color: 'red', name: 'Vortex', desc: 'Action: Remove 1 of your command tokens to capture 1 enemy mech in an adjacent system.' },
+      { color: 'blue', name: 'Inheritance Systems', desc: 'Your Contagion lets you copy faction technologies from eliminated factions.' },
+    ],
+    commander: { name: 'Nekro Acidos', ability: 'After you destroy an enemy ship, gain 1 trade good.' },
+    hero: { name: 'Nekro Decimator', ability: 'Action: Destroy all non-fighter ships in a system. Gain fighters equal to ships destroyed.' },
+    playstyle: 'Cannot vote but can steal faction techs. Build a fighter swarm from your enemies\' destroyed ships, then steal the best technologies in the game. Wins through sheer attrition.',
+  },
+  {
+    id: 'sardakk', name: "Sardakk N'orr", exp: 'base', color: '#8a6040',
+    emoji: '🦂',
+    abilities: ['Unrelenting — All your units get +1 to combat rolls', 'Unrelenting 2 — Your ships may sustain 1 hit before being destroyed during the first round of combat only'],
+    flagship: { name: 'C\'morran N\'orr', stats: '3 capacity, 9 combat (×2)', ability: 'Apply +1 to the result of each of your combat rolls in this system.' },
+    techs: [
+      { color: 'red', name: 'Valefar Assimilator X', desc: 'Copy a faction ability from an eliminated faction.' },
+      { color: 'red', name: 'Valefar Assimilator Y', desc: 'Copy a second faction ability from an eliminated faction.' },
+      { color: 'green', name: 'Exotrireme II', desc: 'Upgrade: Your dreadnoughts have Bombardment 4 (×2) and can produce 1 unit per move.' },
+    ],
+    commander: { name: 'Trr\'n', ability: 'Your ships get an additional +1 to combat rolls when outnumbered.' },
+    hero: { name: 'S\'ula Mentarion', ability: 'Action: Place 3 dreadnoughts in your home system.' },
+    playstyle: 'Worst starting stats but scales through Assimilators and buffs. Pure combat faction — charge in early, steal abilities from eliminated factions, and grind the galaxy to dust.',
+  },
+  {
+    id: 'jolnar', name: 'The Universities of Jol-Nar', exp: 'base', color: '#4060b0',
+    emoji: '🔬',
+    abilities: ['Brilliant — When you research a technology, draw 1 action card', 'Analytical — You may spend 3 resources to research any technology without fulfilling prerequisites', 'Fragile — All hits from your enemy count as critical hits against your ships'],
+    flagship: { name: 'J\'iiy', stats: '2 capacity, 9 combat', ability: 'Your ships in this system may move through systems without expending command tokens.' },
+    techs: [
+      { color: 'blue', name: 'E-Res Siphons', desc: 'After another player gains trade goods from a transaction, gain 1 trade good.' },
+      { color: 'blue', name: 'Spacial Conduit Cylinder', desc: 'Once per round, you may exhaust to move 1 of your units to an adjacent system.' },
+      { color: 'red', name: 'Inheritance Systems', desc: 'When you research technology, you may look at the top 3 cards of the technology deck.' },
+      { color: 'green', name: 'Biotics Field Testing (Spec Ops II equivalent)', desc: 'When you research technology, research 1 additional technology from the same color.' },
+    ],
+    commander: { name: 'Agnlan Oln', ability: 'When you research a technology, you may ignore 1 prerequisite.' },
+    hero: { name: 'Ta Zern', ability: 'Action: Research 1 technology from the technology deck for free.' },
+    playstyle: 'Best tech faction. Research faster than anyone else, unlock devastating upgrades, and overcome the Fragile penalty by winning before your enemies can exploit it. Punishes passive play.',
+  },
+  {
+    id: 'winnu', name: 'The Winnu', exp: 'base', color: '#a05080',
+    emoji: '🌸',
+    abilities: ['Blood Ties — You may always vote on agendas, even if you don\'t control planets', 'Reclamation — After you control Mecatol Rex, place 1 structure there for free each Status phase', 'Welfare State — Each player who has a trade agreement with you gains 1 trade good after the Strategy phase'],
+    flagship: { name: 'Salai Sai Corian', stats: '3 capacity, 9 combat', ability: 'Combat roll results of 9 or 10 count as 2 hits.' },
+    techs: [
+      { color: 'blue', name: 'Hegemonic Trade Policy', desc: 'Exhaust to cancel a transaction between two other players.' },
+      { color: 'yellow', name: 'Lazax Gate Folding', desc: 'During your turn, you may remove 1 of your command tokens from a system with a planet to place a ship there.' },
+    ],
+    commander: { name: 'Mathis Faolan', ability: 'When you score an objective, gain 1 trade good.' },
+    hero: { name: 'Mathis Faolan (Hero)', ability: 'Action: Score 1 public objective you don\'t control planets for.' },
+    playstyle: 'Mecatol Rex specialist. Rush to the centre, fortify it, and score massive points while the flagship\'s extra hits punish anyone who tries to dislodge you.',
+  },
+  {
+    id: 'xxcha', name: 'The Xxcha Kingdom', exp: 'base', color: '#60a060',
+    emoji: '🐢',
+    abilities: ['Peace Accords — When you exhaust a planet for votes, gain 1 additional vote', 'Political Favor — Exhaust to cancel an agenda before it resolves (once per agenda phase)', 'Quash — When an agenda is revealed, exhaust to discard it'],
+    flagship: { name: 'Xxcha Hero', stats: '3 capacity, 7 combat (×2)', ability: 'At the start of the Agenda phase, draw 2 action cards. You may play 1 immediately.' },
+    techs: [
+      { color: 'yellow', name: 'Instinct Training', desc: 'Exhaust to cancel a hit on your ships.' },
+      { color: 'yellow', name: 'Transparasteel Plating', desc: 'Players cannot play action cards during the Agenda phase.' },
+    ],
+    commander: { name: 'Xxekir Grom', ability: 'Before an agenda is voted on, you may exhaust planets for double their influence value.' },
+    hero: { name: 'Xxcha Hero', ability: 'Action: Elect a player to lose 1 victory point and pass their next turn.' },
+    playstyle: 'Diplomatic iron fist. Control the agenda phase absolutely — veto dangerous laws, double your influence, and quietly score victory points while everyone else fights.',
+  },
+  {
+    id: 'yin', name: 'The Yin Brotherhood', exp: 'base', color: '#c8a860',
+    emoji: '☯️',
+    abilities: ['Indoctrination — After you win a ground combat, convert 1 enemy infantry to yours', 'Devotion — At the end of each round of combat, you may destroy 1 of your ships to remove all of your opponent\'s fighters', 'Zeal — You always go first in the Strategy phase'],
+    flagship: { name: 'Van Hauge', stats: '3 capacity, 9 combat', ability: 'After movement, convert all of your opponent\'s fighters in this system to your own.' },
+    techs: [
+      { color: 'blue', name: 'Impulse Core', desc: 'Your carriers have +1 move.' },
+      { color: 'yellow', name: 'Chaos Mapping', desc: 'Adjacent players cannot establish home systems in adjacent systems.' },
+    ],
+    commander: { name: 'Brother Milor', ability: 'When you use Devotion, convert all fighters instead of removing them.' },
+    hero: { name: 'Brother Omar', ability: 'Action: Convert all of any player\'s infantry in one system to your own.' },
+    playstyle: 'Conversion specialists. Steal your enemies\' forces mid-combat, sacrifice your own ships to wipe out fighter screens, and surprise everyone by having more troops than you started with.',
+  },
+  {
+    id: 'yssaril', name: 'The Yssaril Tribes', exp: 'base', color: '#508050',
+    emoji: '🍃',
+    abilities: ['Crafty — You may have any number of action cards in hand', 'Stall Tactics — You may exhaust to skip your turn in the Action phase (once per round)', 'Scheming — When you draw action cards, draw 2 and discard 1', 'Crafty 2 — When another player passes, draw 1 action card'],
+    flagship: { name: 'Yssaril Flagship', stats: '5 capacity, 9 combat', ability: 'When you activate a system, you may place 1 fighter or 1 infantry in that system.' },
+    techs: [
+      { color: 'green', name: 'Mageon Implants', desc: 'Action: Steal 1 action card from any player.' },
+      { color: 'green', name: 'Transparasteel Plating', desc: 'Players cannot play action cards during the Agenda phase.' },
+      { color: 'blue', name: 'Neuroglaive', desc: 'After another player activates a system, exhaust to place 1 fighter in that system.' },
+    ],
+    commander: { name: 'So Ata', ability: 'When you draw an action card, draw 1 additional.' },
+    hero: { name: 'Kyver, Blade and Key', ability: 'Action: Take control of all of another player\'s action cards.' },
+    playstyle: 'Information and flexibility. Hoard action cards, skip turns to deny opponents initiative, and deploy them at the worst possible moments. The sneakiest faction in the game.',
+  },
+
+  // ── PROPHECY OF KINGS ──
+  {
+    id: 'argent', name: 'The Argent Flight', exp: 'pok', color: '#e8b030',
+    emoji: '🦅',
+    abilities: ['Zeal — You always go first in the Strategy phase', 'Racial Unity — During setup, take 1 extra strategy card', 'Unrelenting — Your ships have +1 to combat rolls'],
+    flagship: { name: 'Quetzecoatl', stats: '3 capacity, 9 combat (×2)', ability: 'Hits from this ship cannot be assigned to fighters.' },
+    techs: [
+      { color: 'red', name: 'Strike Wing Ambuscade II', desc: 'Upgrade: Your destroyers have Anti-Fighter Barrage 5 (×3) and can move after combat.' },
+      { color: 'green', name: 'Vortex', desc: 'Before combat, destroy 1 enemy fighter for each of your destroyers in this system.' },
+      { color: 'yellow', name: 'Aerie Hololattice', desc: 'After each Status phase, place 1 fighter in a system adjacent to your home system.' },
+    ],
+    commander: { name: 'Trr\'n', ability: 'When you produce fighters, produce 2 additional for free.' },
+    hero: { name: 'Mirik Aun Sissiri', ability: 'Action: Move all your ships from one system to an adjacent system.' },
+    playstyle: 'Fast aggressive fleet-builder. Go first every round, swarm with destroyers and fighters, and punish slow opponents before they can set up defences. Scale with your fleet count.',
+  },
+  {
+    id: 'empyrean', name: 'The Empyrean', exp: 'pok', color: '#6040a0',
+    emoji: '🌌',
+    abilities: ['Voidborn — Your ships may move through and remain in supernovas and asteroid fields', 'Aetherpassage — At the start of your turn, you may place 1 fighter in any system adjacent to your controlled systems', 'Stall Tactics — Once per round, you may exhaust to skip your turn'],
+    flagship: { name: 'Voidbringer', stats: '3 capacity, 9 combat', ability: 'Other players\' ships cannot move through this system.' },
+    techs: [
+      { color: 'red', name: 'Vortex', desc: 'Action: Remove 1 command token from your strategy pool to place it in any system.' },
+      { color: 'blue', name: 'Aetherpassage Cannon', desc: 'Your ships may make Space Cannon attacks through adjacent wormholes.' },
+    ],
+    commander: { name: 'Acamar', ability: 'When you place a fighter, place 1 additional fighter.' },
+    hero: { name: 'Conservator Procyon', ability: 'Action: Place 1 flagship in any empty system on the board.' },
+    playstyle: 'Fringe controller and attrition machine. Occupy hazardous systems nobody else can enter, slowly build fighter webs across the map, and win by controlling space lanes your enemies must cross.',
+  },
+  {
+    id: 'mahact', name: 'The Mahact Gene-Sorcerers', exp: 'pok', color: '#a8884c',
+    emoji: '👑',
+    abilities: ['Edict — At the start of each round, choose 1 law in play; that law is suspended for this round', 'Imperia — Your flagship has +1 capacity for each Imperial Seal you control', 'Hubris — You cannot have political favor. After each status phase, return 1 command token from your fleet pool to your reinforcements'],
+    flagship: { name: 'Rin, the Master\'s Legacy', stats: '3 capacity, 5 combat (×2)', ability: 'After you win a space combat, place the commander of the other player\'s faction under this card.' },
+    techs: [
+      { color: 'blue', name: 'Bio-Stims', desc: 'You may exhaust this card after you activate a system to ready 1 of your planets in that system.' },
+      { color: 'red', name: 'Impulsion Core', desc: 'Your dreadnoughts have +1 move.' },
+      { color: 'yellow', name: 'Genetic Recombination', desc: 'When another player casts votes on an agenda, you may exhaust to add your total votes to theirs.' },
+    ],
+    commander: { name: 'Illaro', ability: 'After you capture a commander, gain 1 trade good and draw 1 action card.' },
+    hero: { name: 'Airo Shir Aur', ability: 'Action: Return all captured commanders. Each player whose commander you return loses 1 VP.' },
+    playstyle: 'Commander thieves. Capture enemy leaders to deny their faction abilities, then hold them hostage or return them for political gain. One of the highest skill-ceiling factions in the game.',
+  },
+  {
+    id: 'naazrokha', name: 'The Naaz-Rokha Alliance', exp: 'pok', color: '#708040',
+    emoji: '🏹',
+    abilities: ['Distant Suns — You may deploy mechs to any planet you control without using a transport action', 'Crafty — You may have any number of action cards in hand', 'Forward Supply Base — Your mechs may move without carriers'],
+    flagship: { name: 'Visz el Vir', stats: '3 capacity, 9 combat', ability: 'After you activate this system, you may place up to 2 mechs on planets in this system.' },
+    techs: [
+      { color: 'green', name: 'Supercharge', desc: 'Before your mechs enter combat, they may each roll 1 additional die.' },
+      { color: 'red', name: 'Vortex', desc: 'Action: Capture 1 enemy mech in an adjacent system.' },
+    ],
+    commander: { name: 'Dart and Tai', ability: 'When your mechs win a ground combat, gain 1 trade good.' },
+    hero: { name: 'Gg (The Rokha)', ability: 'Action: Move all your mechs to any systems they\'re adjacent to.' },
+    playstyle: 'Mech-based hit squad. Deploy ground forces anywhere instantly, raid enemy planets without traditional transport, and stay evasive. Rewards aggressive flanking over traditional fleet combat.',
+  },
+  {
+    id: 'nomad', name: 'The Nomad', exp: 'pok', color: '#3060a0',
+    emoji: '🚀',
+    abilities: ['Future Sight — After you reveal a secret objective, you may immediately score it if you have already fulfilled it', 'The Nomad\'s Legacy — After your flagship is destroyed, place it in your home system at the start of the next Status phase'],
+    flagship: { name: 'The Cavalry', stats: '5 capacity, 5 combat (×2)', ability: 'Your flagship may be built from your home system without a space dock.' },
+    techs: [
+      { color: 'blue', name: 'Sling Relay', desc: 'When you produce ships, you may place them in any system containing your ships.' },
+      { color: 'yellow', name: 'Temporal Command Suite', desc: 'After each Status phase, place 1 fighter in your home system.' },
+    ],
+    commander: { name: 'Field Captain', ability: 'When your flagship wins a combat, place 1 fighter in this system.' },
+    hero: { name: 'The Cavalry (Hero)', ability: 'Action: Move your flagship to any system, ignoring move limits.' },
+    playstyle: 'Unkillable flagship. The Cavalry respawns every round — use it as a battering ram across the galaxy. Score secret objectives early with Future Sight for surprise victories.',
+  },
+  {
+    id: 'titans', name: 'The Titans of Ul', exp: 'pok', color: '#808080',
+    emoji: '🪐',
+    abilities: ['Terragenesis — At the start of each Status phase, place 1 industry token on your home planet', 'Awaken — Once per round, you may build on your home planet as if you had a space dock there', 'Awaken 2 — Your flagship may remain in the asteroid field adjacent to your home system'],
+    flagship: { name: 'Ouranos', stats: '3 capacity, 7 combat (×2)', ability: 'This ship may be built without a space dock. Sustain Damage.' },
+    techs: [
+      { color: 'red', name: 'Hecatoncheires', desc: 'Your PDS units have +1 range and may fire through wormholes.' },
+      { color: 'blue', name: 'Saturn Engine II', desc: 'Upgrade: Your flagship and dreadnoughts have +1 move and capacity.' },
+      { color: 'yellow', name: 'Vortex', desc: 'Action: Gain 1 trade good for each planet you control with a structure.' },
+    ],
+    commander: { name: 'Tungstantus', ability: 'When you build on your home system, produce 1 additional unit for free.' },
+    hero: { name: 'Ul the Progenitor', ability: 'Action: Place 1 space dock and 3 destroyers in any system you control.' },
+    playstyle: 'Fortress home system. Treat Xxcha as a fortified production base — build everything from your asteroid belt, then emerge with a fleet nobody can stop. Slow to get going, almost impossible to dislodge.',
+  },
+  {
+    id: 'vuil', name: "The Vuil'raith Cabal", exp: 'pok', color: '#a03030',
+    emoji: '🕳️',
+    abilities: ['Devour — When you destroy any unit, place its token under your flagship', 'Ragh\'s Call — Action: Spend 3 resources and place 1 dimensional tear token in a system adjacent to your flagship', 'Rift Cannon — Your cruisers and dreadnoughts have Space Cannon 5'],
+    flagship: { name: 'The Terror Between', stats: '3 capacity, 5 combat (×2)', ability: 'When you activate this system, you may place 1 dimensional tear in any adjacent system.' },
+    techs: [
+      { color: 'red', name: 'Vortex', desc: 'At the start of your turn, you may remove 1 dimensional tear and place fighters equal to the units inside it.' },
+      { color: 'red', name: 'Rift Cannon II', desc: 'Your Space Cannon attacks roll 2 dice.' },
+    ],
+    commander: { name: 'Ggrucoto Ragnank', ability: 'When you place a dimensional tear, you may place 2 fighters in that system.' },
+    hero: { name: 'Adjudicator Baal', ability: 'Action: Place a dimensional tear in every system adjacent to your flagship.' },
+    playstyle: 'Dimensional tear chaos engine. Rip holes in space to deny access, harvest units destroyed inside them, and use Space Cannons to punish anything that comes near. Unpredictable and terrifying.',
+  },
+  {
+    id: 'keleres', name: 'The Council Keleres', exp: 'codex3', color: '#4878a0',
+    emoji: '⚖️',
+    abilities: ['Custodia Vigilia — You begin the game with 1 Command Token on each planet in Mecatol Rex\'s system', 'Imperia — Gain 1 trade good when any agenda is resolved', 'Magistracy — You may look at secret objectives before drawing', 'Executive Order — Once per Agenda phase, after an agenda is voted on, you may vote again'],
+    flagship: { name: 'Artemiris', stats: '3 capacity, 7 combat (×2)', ability: 'After you win a combat, gain 1 trade good for each law in play.' },
+    techs: [
+      { color: 'blue', name: 'Agency Supply Network', desc: 'When you research a technology, you may also research 1 technology of the same color.' },
+      { color: 'yellow', name: 'Mirrors of Reason', desc: 'When you cast votes, cast 3 additional votes.' },
+    ],
+    commander: { name: 'Suffi An', ability: 'When you score a secret objective, draw 1 action card.' },
+    hero: { name: 'Keleres Emissary', ability: 'Action: Immediately resolve 1 agenda from the discard pile.' },
+    playstyle: 'Galactic Council controllers. Start controlling Mecatol Rex, profit from every agenda, and dominate every vote. A political powerhouse that can win without ever firing a shot.',
+  },
+
+  // ── THUNDER'S EDGE (flag as unverified) ──
+  {
+    id: 'lastbastion', name: 'Last Bastion', exp: 'te', color: '#5a90c0', unverified: true,
+    emoji: '🛡️',
+    abilities: ['Liberate — When you take control of a planet with enough infantry, immediately ready it', 'Galvanize — Your units may roll an additional die when galvanized', 'Salient Sun — Your space docks increase the effective resource value of planets'],
+    flagship: { name: 'Egeiro', stats: '3 capacity, ~7 combat (×2)', ability: 'Gains +1 combat for each non-home system you\'ve placed a flag in.' },
+    techs: [
+      { color: 'green', name: 'A3 Valiance', desc: 'When a galvanized unit is destroyed, it may attack all enemies in the system.' },
+      { color: 'red', name: '4X41C "Helios" VI (Space Dock upgrade)', desc: 'Space docks increase resource value of planets in their system.' },
+    ],
+    commander: { name: 'Unknown', ability: 'Unlockable — verify against your faction sheet.' },
+    hero: { name: 'Unknown', ability: 'Unlockable — verify against your faction sheet.' },
+    playstyle: 'Resilient coalition fighters. Get the most from limited planets via Liberate and Galvanize, then snowball into a powerhouse once your Egeiro flagship spreads across the board.',
+  },
+  {
+    id: 'deepwrought', name: 'The Deepwrought Scholarate', exp: 'te', color: '#6080b0', unverified: true,
+    emoji: '🧪',
+    abilities: ['Coexistence — When you commit ground forces to a planet, choose to coexist peacefully (gain ocean cards instead of controlling)', 'Ocean Cards — Gain special resource/influence cards from coexistence', 'Waveform Arbitrator — Break Mahact-style mind control effects'],
+    flagship: { name: 'Unknown', stats: 'Verify against faction sheet', ability: 'Technology-themed ability — verify against your faction sheet.' },
+    techs: [
+      { color: 'blue', name: 'Waveform Arbitrator', desc: 'Break control effects on units. Exact wording — verify against faction sheet.' },
+      { color: 'green', name: 'Coexistence Protocol', desc: 'Gain additional ocean cards when coexisting. Verify against faction sheet.' },
+    ],
+    commander: { name: 'Unknown', ability: 'Verify against your faction sheet.' },
+    hero: { name: 'Unknown', ability: 'Verify against your faction sheet.' },
+    playstyle: 'Tech-focused diplomats who coexist on planets rather than conquering them. Build a powerful ocean card engine for resources and influence without triggering wars.',
+  },
+  {
+    id: 'crimson', name: 'The Crimson Rebellion', exp: 'te', color: '#b03030', unverified: true,
+    emoji: '🔴',
+    abilities: ['The Fracture — Access a special extra-dimensional combat space', 'Planesplitter — Force The Fracture into play', 'Dimensional Combat — Units in The Fracture follow special rules'],
+    flagship: { name: 'Unknown', stats: 'Verify against faction sheet', ability: 'Combat bonus in The Fracture — verify against your faction sheet.' },
+    techs: [
+      { color: 'red', name: 'Planesplitter', desc: 'Force The Fracture into play during combat.' },
+      { color: 'red', name: 'Obsidian Counterpart', desc: 'Move ingress tokens (entry points into The Fracture).' },
+    ],
+    commander: { name: 'Aroz Hollow', ability: 'Boosts combat rolls of units in The Fracture.' },
+    hero: { name: 'Unknown', ability: 'Verify against your faction sheet.' },
+    playstyle: 'Former Mahact thralls who fight through a dimensional rift. Force enemies into The Fracture for brutal close-quarters combat where Crimson Rebellion units excel.',
+  },
+  {
+    id: 'ralnelconsortium', name: 'The Ral Nel Consortium', exp: 'te', color: '#c08030', unverified: true,
+    emoji: '🤝',
+    abilities: ['Trade Network — Benefit from complex trade arrangements with multiple players', 'Consortium Deals — Gain bonuses from negotiating with multiple factions simultaneously'],
+    flagship: { name: 'Unknown', stats: 'Verify against faction sheet', ability: 'Trade-related ability — verify against your faction sheet.' },
+    techs: [
+      { color: 'yellow', name: 'Consortium Protocol', desc: 'Gain trade goods when multiple players trade through you. Verify exact text.' },
+    ],
+    commander: { name: 'Unknown', ability: 'Verify against your faction sheet.' },
+    hero: { name: 'Unknown', ability: 'Verify against your faction sheet.' },
+    playstyle: 'Trade specialists who profit from being the hub of galactic commerce. The more everyone trades, the richer the Consortium gets.',
+  },
+  {
+    id: 'firmament', name: 'The Firmament / The Obsidian', exp: 'te', color: '#7060a0', unverified: true,
+    emoji: '⚖️',
+    abilities: ['Dual Faction — Two linked factions that interact with each other', 'The Sowing / The Reaping — Invest trade goods now (Firmament) to gain double back later (Obsidian)', 'Coexistence (Viper Mech) — Firmament mech can borrow Deepwrought\'s coexistence ability', 'Planet Flip — Obsidian\'s mech flips control of coexisted planets'],
+    flagship: { name: 'Unknown', stats: 'Verify against faction sheet', ability: 'Unique dual-faction mechanic — verify against your faction sheet.' },
+    techs: [
+      { color: 'yellow', name: 'The Sowing', desc: 'Invest trade goods; flip to The Reaping to gain double back.' },
+      { color: 'red', name: 'Viper EX-23 (Firmament Mech)', desc: 'Can borrow Deepwrought coexistence ability.' },
+      { color: 'red', name: 'Viper Hollow (Obsidian Mech)', desc: 'Flips control of coexisted planets.' },
+    ],
+    commander: { name: 'Unknown', ability: 'Verify against your faction sheet.' },
+    hero: { name: 'Unknown', ability: 'Verify against your faction sheet.' },
+    playstyle: 'Economic investment engine. Spend resources as the Firmament to multiply them back as the Obsidian, while using unique mechs to control planets in unexpected ways.',
+  },
+];
+
+function renderCheatSheet() {
+  const query = (document.getElementById('cs-search')?.value || '').toLowerCase();
+  const grid = document.getElementById('cs-grid');
+  if (!grid) return;
+
+  const filtered = FACTION_DB.filter(f => {
+    const matchFilter = csActiveFilter === 'all' || f.exp === csActiveFilter;
+    const matchSearch = !query || f.name.toLowerCase().includes(query) || f.playstyle.toLowerCase().includes(query);
+    return matchFilter && matchSearch;
+  });
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="cs-empty">No factions match your search.</div>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map(f => csCardHTML(f)).join('');
+}
+
+function expLabel(exp) {
+  return { base: 'Base Game', pok: 'Prophecy of Kings', codex3: 'Codex III', te: "Thunder's Edge" }[exp] || exp;
+}
+
+function csCardHTML(f) {
+  const imgUrl = csImageUrl(f);
+  const colorBar = `<div style="height:3px;background:${f.color};opacity:0.8;"></div>`;
+
+  const imgHTML = imgUrl
+    ? `<img class="cs-faction-img" src="${imgUrl}" alt="${f.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+    : '';
+  const placeholder = `<div class="cs-faction-img-placeholder" style="${imgUrl ? 'display:none' : ''}">${f.emoji}</div>`;
+
+  const techs = f.techs.map(t => `
+    <div class="cs-tech">
+      <div class="cs-tech-dot tech-${t.color}"></div>
+      <div><span class="cs-tech-name">${t.name}: </span><span class="cs-tech-desc">${t.desc}</span></div>
+    </div>`).join('');
+
+  const abilities = f.abilities.map(a => `<div class="cs-ability">${a}</div>`).join('');
+
+  const leaders = [
+    f.commander ? { role: 'Commander', name: f.commander.name, ability: f.commander.ability } : null,
+    f.hero ? { role: 'Hero', name: f.hero.name, ability: f.hero.ability } : null,
+  ].filter(Boolean).map(l => `
+    <div class="cs-leader">
+      <div class="cs-leader-role">${l.role}</div>
+      <div class="cs-leader-body">
+        <div class="cs-leader-name">${l.name}</div>
+        <div class="cs-leader-ability">${l.ability}</div>
+      </div>
+    </div>`).join('');
+
+  return `
+  <div class="cs-card${f.unverified ? ' unverified' : ''}">
+    ${colorBar}
+    <div class="cs-header">
+      ${imgHTML}${placeholder}
+      <div class="cs-header-info" style="background:linear-gradient(to right, ${f.color}22, transparent)">
+        <div class="cs-faction-name">${f.name}</div>
+        <div class="cs-badges">
+          <span class="cs-exp-badge">${expLabel(f.exp)}</span>
+          ${f.unverified ? '<span class="cs-unverified-badge">⚠ Verify stats</span>' : ''}
+          ${FACTION_TIPS[f.name] ? `<span class="playstyle-tag tag-${FACTION_TIPS[f.name].tag}">${TAG_LABELS[FACTION_TIPS[f.name].tag]}</span>` : ''}
+        </div>
+      </div>
+    </div>
+    <div class="cs-body">
+      <div class="cs-section">
+        <div class="cs-section-label">Playstyle</div>
+        <div class="cs-text">${f.playstyle}</div>
+      </div>
+      <div class="cs-section">
+        <div class="cs-section-label">Faction Abilities</div>
+        ${abilities}
+      </div>
+      <div class="cs-section">
+        <div class="cs-section-label">Flagship — ${f.flagship.name}</div>
+        <div class="cs-flagship">
+          <div class="cs-flagship-stats">${f.flagship.stats}</div>
+          <div class="cs-flagship-ability">${f.flagship.ability}</div>
+        </div>
+      </div>
+      <div class="cs-section">
+        <div class="cs-section-label">Faction Technologies</div>
+        <div class="cs-tech-list">${techs}</div>
+      </div>
+      <div class="cs-section">
+        <div class="cs-section-label">Leaders</div>
+        ${leaders}
+      </div>
+    </div>
+  </div>`;
+}
+
+function csImageUrl(f) {
+  // Use Twilight Imperium wiki faction art (public domain fan wiki images)
+  const wikiNames = {
+    'arborec': 'Arborec', 'letnev': 'Letnev', 'saar': 'Saar', 'muaat': 'Muaat',
+    'hacan': 'Hacan', 'sol': 'Sol', 'creuss': 'Creuss', 'l1z1x': 'L1Z1X',
+    'mentak': 'Mentak', 'naalu': 'Naalu', 'nekro': 'Nekro', 'sardakk': 'Sardakk',
+    'jolnar': 'Jol-Nar', 'winnu': 'Winnu', 'xxcha': 'Xxcha', 'yin': 'Yin',
+    'yssaril': 'Yssaril', 'argent': 'Argent', 'empyrean': 'Empyrean',
+    'mahact': 'Mahact', 'naazrokha': 'Naaz-Rokha', 'nomad': 'Nomad',
+    'titans': 'Titans', 'vuil': 'Vuil\'raith', 'keleres': 'Keleres',
+  };
+  // We'll use the TI4 reference card art from the wiki
+  const name = wikiNames[f.id];
+  if (!name) return null;
+  return `https://twilight-imperium.fandom.com/wiki/Special:FilePath/${encodeURIComponent(name + '_faction_icon.png')}`;
+}
+
+init();
+renderCheatSheet();
+</script>
+</body>
+</html>
