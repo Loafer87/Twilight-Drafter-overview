@@ -30,6 +30,7 @@
     background: var(--void);
     color: var(--text);
     font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
     min-height: 100vh;
     overflow-x: hidden;
     position: relative;
@@ -797,7 +798,7 @@
   /* Playstyle tooltip */
   .faction-tip {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-dim);
     font-style: italic;
     margin-top: 4px;
@@ -832,7 +833,7 @@
   /* Final card tip */
   .final-tip {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-dim);
     font-style: italic;
     margin-top: 6px;
@@ -978,7 +979,7 @@
     padding: 8px 10px 10px 26px;
     border-left: 2px solid rgba(201,162,39,0.2);
     margin: 0 8px 4px 8px;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-dim);
     font-style: italic;
     line-height: 1.5;
@@ -1087,24 +1088,24 @@
   .cs-section { margin-bottom: 12px; }
   .cs-section:last-child { margin-bottom: 0; }
   .cs-section-label { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 3px; color: var(--gold-dim); text-transform: uppercase; margin-bottom: 5px; }
-  .cs-text { font-family: 'Rajdhani', sans-serif; font-size: 13px; color: var(--text); line-height: 1.5; }
+  .cs-text { font-family: 'Rajdhani', sans-serif; font-size: 14px; color: var(--text); line-height: 1.5; }
   .cs-tech-list { display: flex; flex-direction: column; gap: 4px; }
-  .cs-tech { display: flex; align-items: flex-start; gap: 7px; font-size: 12px; line-height: 1.4; }
+  .cs-tech { display: flex; align-items: flex-start; gap: 7px; font-size: 13px; line-height: 1.4; }
   .cs-tech-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
   .tech-red { background: #cc4444; } .tech-blue { background: #4488cc; } .tech-green { background: #44aa66; } .tech-yellow { background: #ccaa22; }
   .cs-tech-name { color: var(--text); font-weight: 600; font-family: 'Rajdhani', sans-serif; }
   .cs-tech-desc { color: var(--text-dim); font-family: 'Rajdhani', sans-serif; }
   .cs-flagship { background: rgba(201,162,39,0.05); border: 1px solid rgba(201,162,39,0.15); border-radius: 3px; padding: 8px 10px; }
   .cs-flagship-name { font-family: 'Cinzel', serif; font-size: 11px; color: var(--gold); margin-bottom: 3px; }
-  .cs-flagship-stats { font-size: 11px; color: var(--text-dim); font-family: 'Rajdhani', sans-serif; margin-bottom: 4px; }
-  .cs-flagship-ability { font-size: 12px; color: var(--text); font-family: 'Rajdhani', sans-serif; line-height: 1.4; }
+  .cs-flagship-stats { font-size: 12px; color: var(--text-dim); font-family: 'Rajdhani', sans-serif; margin-bottom: 4px; }
+  .cs-flagship-ability { font-size: 13px; color: var(--text); font-family: 'Rajdhani', sans-serif; line-height: 1.4; }
   .cs-leader { display: flex; gap: 8px; margin-bottom: 6px; padding: 7px 9px; background: rgba(255,255,255,0.02); border-radius: 2px; border-left: 2px solid rgba(201,162,39,0.2); }
   .cs-leader:last-child { margin-bottom: 0; }
   .cs-leader-role { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; font-weight: 700; font-family: 'Rajdhani', sans-serif; color: var(--text-dim); white-space: nowrap; padding-top: 1px; min-width: 62px; }
   .cs-leader-body { flex: 1; }
   .cs-leader-name { font-family: 'Cinzel', serif; font-size: 11px; color: var(--text); margin-bottom: 2px; }
-  .cs-leader-ability { font-size: 12px; color: var(--text-dim); font-family: 'Rajdhani', sans-serif; line-height: 1.4; }
-  .cs-ability { font-size: 12px; color: var(--text); font-family: 'Rajdhani', sans-serif; line-height: 1.4; padding-left: 12px; position: relative; margin-bottom: 3px; }
+  .cs-leader-ability { font-size: 13px; color: var(--text-dim); font-family: 'Rajdhani', sans-serif; line-height: 1.4; }
+  .cs-ability { font-size: 13px; color: var(--text); font-family: 'Rajdhani', sans-serif; line-height: 1.4; padding-left: 12px; position: relative; margin-bottom: 3px; }
   .cs-ability::before { content: '▸'; position: absolute; left: 0; color: var(--gold-dim); font-size: 9px; top: 2px; }
   .cs-empty { text-align: center; padding: 60px 20px; color: var(--text-dim); font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 2px; }
 </style>
@@ -1381,10 +1382,11 @@ function getTipHTML(faction) {
 
 // ─── DATA ───────────────────────────────────────────────────────────────────
 const EXPANSIONS = [
-  { id: 'base',    name: 'Base Game',         short: 'BASE',  enabled: true,  required: true },
-  { id: 'pok',     name: 'Prophecy of Kings', short: 'PoK',   enabled: false },
-  { id: 'codex3',  name: 'Codex III',         short: 'CX3',   enabled: false },
-  { id: 'ds',      name: 'Discordant Stars',  short: 'DS',    enabled: false },
+  { id: 'base',    name: 'Base Game',          short: 'BASE', enabled: true,  required: true },
+  { id: 'pok',     name: 'Prophecy of Kings',  short: 'PoK',  enabled: false },
+  { id: 'codex3',  name: 'Codex III',          short: 'CX3',  enabled: false },
+  { id: 'te',      name: "Thunder's Edge",     short: 'TE',   enabled: false },
+  { id: 'ds',      name: 'Discordant Stars',   short: 'DS',   enabled: false },
 ];
 
 const FACTION_COLORS = {
@@ -1413,6 +1415,12 @@ const FACTION_COLORS = {
   'The Titans of Ul':          '#808080',
   'The Vuil\'raith Cabal':     '#a03030',
   'The Council Keleres':       '#4878a0',
+  // Thunder's Edge 5
+  'Last Bastion':              '#5a90c0',
+  'The Deepwrought Scholarate':'#6080b0',
+  'The Crimson Rebellion':     '#b03030',
+  'The Ral Nel Consortium':    '#c08030',
+  'The Firmament':             '#7060a0',
   'The Augurs of Illusoria':   '#b090d0',
   'The Celdauri Trade Confederation': '#d0a030',
   'The Cheiran Hordes':        '#a05030',
@@ -1455,6 +1463,10 @@ const FACTIONS = {
     'The Naaz-Rokha Alliance','The Nomad','The Titans of Ul','The Vuil\'raith Cabal',
   ],
   codex3: ['The Council Keleres'],
+  te: [
+    'Last Bastion','The Deepwrought Scholarate','The Crimson Rebellion',
+    'The Ral Nel Consortium','The Firmament',
+  ],
   ds: [
     'The Augurs of Illusoria','The Celdauri Trade Confederation','The Cheiran Hordes',
     'The Dih-Mohn Flotilla','The Edyn Mandate','The Florzen Profiteer',
@@ -1473,7 +1485,7 @@ let state = {
   players: 6,
   perPlayer: 3,
   mode: 'random',
-  expansions: { base: true, pok: false, codex3: false, ds: false },
+  expansions: { base: true, pok: false, codex3: false, te: false, ds: false },
   names: ['','','','','','','',''],
   draftPool: [],
   assignments: [],
