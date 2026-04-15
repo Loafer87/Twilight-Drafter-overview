@@ -637,7 +637,7 @@ let state = {
   players:6, perPlayer:3, mode:"random",
   expansions:{base:true,pok:false,codex3:false,te:false,ds:false},
   names:["","","","","","","",""],
-  draftPool:[], assignments:[], currentPlayer:0, finalFactions:[],
+  draftPool:[], assignments:[], currentPlayer:0, finalFactions:[], speakerOrder:[],
 };
 let guideFilter = "all";
 let animFrame = null;
@@ -756,12 +756,69 @@ function doDraftMode(available){
   const shuffled=shuffle(available);
   const pool=shuffled.slice(0,Math.min(needed,available.length));
   state.draftPool=pool;
-  state.assignments=Array.from({length:state.players},(_,i)=>({player:i+1,name:playerName(i),factionOptions:pool.slice(i*state.perPlayer,(i+1)*state.perPlayer),chosen:null}));
+
+  // Roll speaker order first — this becomes the draft pick order
+  const speakerOrder=shuffle(Array.from({length:state.players},(_,i)=>i));
+  state.speakerOrder=speakerOrder; // store for display
+
+  // Build assignments in speaker order
+  state.assignments=speakerOrder.map((playerIdx,pickPosition)=>({
+    player:playerIdx+1,
+    name:playerName(playerIdx),
+    pickPosition:pickPosition+1, // 1 = speaker / first pick
+    factionOptions:pool.slice(pickPosition*state.perPlayer,(pickPosition+1)*state.perPlayer),
+    chosen:null,
+  }));
   state.currentPlayer=0;state.finalFactions=[];
+
   const warn=needed>available.length;
   const we=document.getElementById("draft-warning");
   if(warn){we.style.display="block";we.textContent=`⚠ Only ${available.length} factions available — some players may have fewer choices.`}else we.style.display="none";
-  renderDraftState();
+
+  // Show speaker order reveal before picks begin
+  showSpeakerReveal();
+}
+
+function showSpeakerReveal(){
+  const container=document.getElementById("draft-results");
+  container.innerHTML="";
+  updateDraftStatus();
+
+  // Header
+  const header=document.createElement("div");
+  header.style.cssText="text-align:center;margin-bottom:20px";
+  header.innerHTML=`<div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:4px;color:var(--gold-dim);text-transform:uppercase;margin-bottom:16px">— Speaker Order Rolled —</div>
+    <div style="font-size:13px;color:var(--text-dim);margin-bottom:20px">This is also the draft pick order. Player 1 (Speaker) picks first.</div>`;
+  container.appendChild(header);
+
+  // Speaker order cards
+  const grid=document.createElement("div");
+  grid.className="speaker-grid";
+  grid.style.marginBottom="24px";
+  state.assignments.forEach((a,i)=>{
+    const card=document.createElement("div");
+    card.className="speaker-card";
+    card.style.animationDelay=(i*0.08)+"s";
+    const isFirst=i===0;
+    card.innerHTML=`
+      <div class="speaker-num${isFirst?" first":""}">${a.pickPosition}</div>
+      <div class="speaker-info">
+        <div class="speaker-name">${a.name}</div>
+        <div class="speaker-faction" style="color:var(--text-dim);font-size:12px">Pick #${a.pickPosition}${isFirst?" · Speaker":""}</div>
+      </div>
+      ${isFirst?`<div style="font-size:10px;letter-spacing:2px;color:var(--gold);font-family:'Cinzel',serif">SPEAKER</div>`:""}
+    `;
+    grid.appendChild(card);
+  });
+  container.appendChild(grid);
+
+  // Begin picks button
+  const btn=document.createElement("button");
+  btn.className="draft-btn";
+  btn.style.cssText="margin-top:8px;font-size:14px";
+  btn.textContent="⬡ Begin Faction Picks ⬡";
+  btn.onclick=()=>renderDraftState();
+  container.appendChild(btn);
 }
 
 function renderDraftState(){
@@ -775,7 +832,7 @@ function renderDraftState(){
     } else if(idx===state.currentPlayer){
       card.style.borderColor="rgba(201,162,39,0.5)";card.style.background="rgba(201,162,39,0.05)";
       const chosen=state.assignments.filter(x=>x.chosen).map(x=>x.chosen);
-      card.innerHTML=`<div class="player-num" style="color:var(--gold)">${a.name} — Choose Your Faction</div>
+      card.innerHTML=`<div class="player-num" style="color:var(--gold)">${a.name} — Pick #${a.pickPosition}${a.pickPosition===1?" · Speaker":""}</div>
         <div class="faction-scroll"><div class="faction-options" id="opts-${idx}">
           ${a.factionOptions.map(f=>{
             const locked=chosen.includes(f);
@@ -811,10 +868,21 @@ function showFinalResults(){
   document.getElementById("results-random").style.display="block";
   document.getElementById("results-random").querySelector(".results-header").textContent="— Factions Chosen —";
   const container=document.getElementById("random-results");container.innerHTML="";state.finalFactions=[];
-  state.assignments.forEach(a=>{
+
+  // Sort by pick position for display
+  const sorted=[...state.assignments].sort((a,b)=>a.pickPosition-b.pickPosition);
+  sorted.forEach(a=>{
     state.finalFactions.push({name:a.name,faction:a.chosen});
     const card=document.createElement("div");card.className="final-card";
-    card.innerHTML=`<div class="player-num">${a.name}</div>${factionRowHTML(a.chosen)}`;
+    const isFirst=a.pickPosition===1;
+    card.innerHTML=`
+      <div class="player-num" style="display:flex;align-items:center;gap:8px">
+        <span style="font-family:'Cinzel Decorative',serif;font-size:13px;color:${isFirst?"var(--gold-light)":"#4da6ff"}">${a.pickPosition}</span>
+        <span>${a.name}</span>
+        ${isFirst?`<span style="font-size:9px;letter-spacing:2px;color:var(--gold);font-family:'Cinzel',serif;margin-left:4px">SPEAKER</span>`:""}
+      </div>
+      ${factionRowHTML(a.chosen)}
+    `;
     container.appendChild(card);
   });
   revealCards(container,()=>{document.getElementById("speaker-section").style.display="block"});
@@ -822,7 +890,8 @@ function showFinalResults(){
 function updateDraftStatus(){
   const done=state.assignments.filter(a=>a.chosen).length;
   const el=document.getElementById("draft-status");
-  if(el)el.innerHTML=`<span>${done}</span> of <span>${state.players}</span> players selected · <span>${state.assignments[state.currentPlayer]?.name||""}</span> is choosing`;
+  const current=state.assignments[state.currentPlayer];
+  if(el&&current)el.innerHTML=`<span>${done}</span> of <span>${state.players}</span> picks made · <span>${current.name}</span> is choosing <em style="color:var(--text-dim);font-style:normal">(Pick #${current.pickPosition})</em>`;
 }
 
 // ── SPEAKER ORDER ─────────────────────────────────────────────────────────────
@@ -855,7 +924,7 @@ function resetAll(){
   document.getElementById("speaker-section").style.display="none";
   const rh=document.querySelector("#results-random .results-header");if(rh)rh.textContent="— The Galaxy Has Spoken —";
   const old=document.querySelector(".container>.warning");if(old)old.remove();
-  state.currentPlayer=0;state.finalFactions=[];pendingChoice={};
+  state.currentPlayer=0;state.finalFactions=[];state.speakerOrder=[];pendingChoice={};
   if(animFrame){cancelAnimationFrame(animFrame);animFrame=null}
 }
 
