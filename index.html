@@ -8,13 +8,13 @@
 <style>
 :root {
   --void:#03020a; --deep:#08051a; --gold:#c9a227; --gold-light:#f0cc6a; --gold-dim:#7a600f;
-  --blue-glow:#4da6ff; --green-glow:#44cc77; --text:#d4c8a8; --text-dim:#7a6f55;
+  --blue-glow:#4da6ff; --green-glow:#44cc77; --text:#e8dfc0; --text-dim:#9a8f72;
   --border:rgba(201,162,39,0.25);
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--void);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:15px;min-height:100vh;overflow-x:hidden;position:relative}
-body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(1px 1px at 10% 15%,rgba(255,255,255,0.6) 0%,transparent 100%),radial-gradient(1px 1px at 25% 40%,rgba(255,255,255,0.4) 0%,transparent 100%),radial-gradient(1.5px 1.5px at 40% 10%,rgba(255,255,255,0.7) 0%,transparent 100%),radial-gradient(1px 1px at 55% 70%,rgba(255,255,255,0.5) 0%,transparent 100%),radial-gradient(1px 1px at 70% 25%,rgba(255,255,255,0.4) 0%,transparent 100%),radial-gradient(1.5px 1.5px at 80% 55%,rgba(255,255,255,0.6) 0%,transparent 100%),radial-gradient(1px 1px at 90% 85%,rgba(255,255,255,0.5) 0%,transparent 100%),radial-gradient(1px 1px at 5% 75%,rgba(255,255,255,0.3) 0%,transparent 100%),radial-gradient(1px 1px at 35% 90%,rgba(255,255,255,0.4) 0%,transparent 100%),radial-gradient(1px 1px at 62% 45%,rgba(255,255,255,0.3) 0%,transparent 100%),radial-gradient(1px 1px at 15% 55%,rgba(255,255,255,0.2) 0%,transparent 100%),radial-gradient(1px 1px at 47% 30%,rgba(255,255,255,0.5) 0%,transparent 100%),radial-gradient(1.5px 1.5px at 73% 68%,rgba(255,255,255,0.4) 0%,transparent 100%),radial-gradient(1px 1px at 88% 20%,rgba(255,255,255,0.6) 0%,transparent 100%),radial-gradient(1px 1px at 20% 95%,rgba(255,255,255,0.3) 0%,transparent 100%);pointer-events:none;z-index:0}
-body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 20% 30%,rgba(26,95,160,0.08) 0%,transparent 60%),radial-gradient(ellipse 50% 60% at 80% 70%,rgba(176,48,48,0.07) 0%,transparent 60%),radial-gradient(ellipse 40% 30% at 50% 90%,rgba(201,162,39,0.05) 0%,transparent 60%);pointer-events:none;z-index:0}
+body{background:var(--void);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:600;min-height:100vh;overflow-x:hidden;position:relative}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;background:transparent;pointer-events:none;z-index:0}
 .container{max-width:1100px;margin:0 auto;padding:40px 20px;position:relative;z-index:1}
 header{text-align:center;margin-bottom:40px}
 .title-eyebrow{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:600;letter-spacing:6px;text-transform:uppercase;color:var(--gold-dim);margin-bottom:10px}
@@ -107,7 +107,7 @@ h1{font-family:'Cinzel Decorative',serif;font-size:clamp(22px,5vw,44px);font-wei
 .faction-row:hover .faction-row-main{background:rgba(201,162,39,0.05)}
 .faction-row-chevron{font-size:9px;color:var(--text-dim);margin-left:auto;transition:transform 0.2s;flex-shrink:0}
 .faction-row.open .faction-row-chevron{transform:rotate(180deg)}
-.faction-row-tip{display:none;padding:8px 10px 10px 26px;border-left:2px solid rgba(201,162,39,0.2);margin:0 8px 4px 8px;font-size:13px;color:var(--text-dim);font-style:italic;line-height:1.5;animation:tipSlide 0.2s ease}
+.faction-row-tip{display:none;padding:8px 10px 10px 26px;border-left:2px solid rgba(201,162,39,0.2);margin:0 8px 4px 8px;font-size:14px;color:var(--text-dim);font-style:italic;line-height:1.5;animation:tipSlide 0.2s ease}
 .faction-row.open .faction-row-tip{display:block}
 @keyframes tipSlide{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 
@@ -200,24 +200,24 @@ h1{font-family:'Cinzel Decorative',serif;font-size:clamp(22px,5vw,44px);font-wei
 .cs-section{margin-bottom:12px}
 .cs-section:last-child{margin-bottom:0}
 .cs-section-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;color:var(--gold-dim);text-transform:uppercase;margin-bottom:5px}
-.cs-text{font-family:'Rajdhani',sans-serif;font-size:14px;color:var(--text);line-height:1.5}
+.cs-text{font-family:'Rajdhani',sans-serif;font-size:15px;color:var(--text);line-height:1.5}
 .cs-tech-list{display:flex;flex-direction:column;gap:4px}
-.cs-tech{display:flex;align-items:flex-start;gap:7px;font-size:13px;line-height:1.4}
+.cs-tech{display:flex;align-items:flex-start;gap:7px;font-size:14px;line-height:1.4}
 .cs-tech-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px}
 .tech-red{background:#cc4444}.tech-blue{background:#4488cc}.tech-green{background:#44aa66}.tech-yellow{background:#ccaa22}
 .cs-tech-name{color:var(--text);font-weight:600;font-family:'Rajdhani',sans-serif}
 .cs-tech-desc{color:var(--text-dim);font-family:'Rajdhani',sans-serif}
 .cs-flagship{background:rgba(201,162,39,0.05);border:1px solid rgba(201,162,39,0.15);border-radius:3px;padding:8px 10px}
 .cs-flagship-name{font-family:'Cinzel',serif;font-size:11px;color:var(--gold);margin-bottom:3px}
-.cs-flagship-stats{font-size:12px;color:var(--text-dim);font-family:'Rajdhani',sans-serif;margin-bottom:4px}
-.cs-flagship-ability{font-size:13px;color:var(--text);font-family:'Rajdhani',sans-serif;line-height:1.4}
+.cs-flagship-stats{font-size:13px;color:var(--text-dim);font-family:'Rajdhani',sans-serif;margin-bottom:4px}
+.cs-flagship-ability{font-size:14px;color:var(--text);font-family:'Rajdhani',sans-serif;line-height:1.4}
 .cs-leader{display:flex;gap:8px;margin-bottom:6px;padding:7px 9px;background:rgba(255,255,255,0.02);border-radius:2px;border-left:2px solid rgba(201,162,39,0.2)}
 .cs-leader:last-child{margin-bottom:0}
 .cs-leader-role{font-size:9px;letter-spacing:1px;text-transform:uppercase;font-weight:700;font-family:'Rajdhani',sans-serif;color:var(--text-dim);white-space:nowrap;padding-top:1px;min-width:62px}
 .cs-leader-body{flex:1}
 .cs-leader-name{font-family:'Cinzel',serif;font-size:11px;color:var(--text);margin-bottom:2px}
-.cs-leader-ability{font-size:13px;color:var(--text-dim);font-family:'Rajdhani',sans-serif;line-height:1.4}
-.cs-ability{font-size:13px;color:var(--text);font-family:'Rajdhani',sans-serif;line-height:1.4;padding-left:12px;position:relative;margin-bottom:4px}
+.cs-leader-ability{font-size:14px;color:var(--text-dim);font-family:'Rajdhani',sans-serif;line-height:1.4}
+.cs-ability{font-size:14px;color:var(--text);font-family:'Rajdhani',sans-serif;line-height:1.4;padding-left:12px;position:relative;margin-bottom:4px}
 .cs-ability::before{content:'▸';position:absolute;left:0;color:var(--gold-dim);font-size:9px;top:3px}
 .cs-empty{text-align:center;padding:60px 20px;color:var(--text-dim);font-family:'Cinzel',serif;font-size:13px;letter-spacing:2px}
 </style>
@@ -276,6 +276,7 @@ h1{font-family:'Cinzel Decorative',serif;font-size:clamp(22px,5vw,44px);font-wei
   <nav class="tab-nav">
     <button class="tab-btn active" onclick="switchTab('draft',this)">⬡ Draft</button>
     <button class="tab-btn" onclick="switchTab('guide',this)">⬡ Faction Guide</button>
+    <button id="music-btn" onclick="toggleMusic()" style="margin-left:auto;padding:12px 20px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text-dim);font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;margin-bottom:-1px;white-space:nowrap">♪ Music Off</button>
   </nav>
 
   <!-- DRAFT TAB -->
@@ -324,7 +325,7 @@ h1{font-family:'Cinzel Decorative',serif;font-size:clamp(22px,5vw,44px);font-wei
           <div id="speaker-results"></div>
         </div>
         <div class="action-row" style="margin-top:24px">
-          <button class="action-btn primary" onclick="startDraft()">Redraft</button>
+          <button class="action-btn primary" onclick="redraft()">Redraft</button>
           <button class="action-btn secondary" onclick="resetAll()">← Back to Config</button>
         </div>
       </div>
@@ -914,6 +915,463 @@ function rollSpeakerOrder(){
 }
 
 // ── RESET ─────────────────────────────────────────────────────────────────────
+// ── REDRAFT ───────────────────────────────────────────────────────────────────
+function redraft(){
+  // Keep all player names, count, per-player count, expansions, and mode
+  // Just re-run the draft with the same config
+  document.getElementById("results-random").style.display="none";
+  document.getElementById("results-draft").style.display="none";
+  document.getElementById("results").style.display="none";
+  document.getElementById("random-results").innerHTML="";
+  document.getElementById("speaker-results").innerHTML="";
+  document.getElementById("speaker-section").style.display="none";
+  const rh=document.querySelector("#results-random .results-header");if(rh)rh.textContent="— The Galaxy Has Spoken —";
+  const old=document.querySelector(".container>.warning");if(old)old.remove();
+  state.currentPlayer=0;state.finalFactions=[];state.speakerOrder=[];pendingChoice={};
+  // Re-run with same settings — config panel stays hidden
+  startDraft();
+}
+
+// ── SPACE MUSIC ───────────────────────────────────────────────────────────────
+let audioCtx=null;
+let musicNodes=[];
+let musicPlaying=false;
+let masterGain=null;
+
+async function startMusic(){
+  try{
+    if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==="suspended") await audioCtx.resume();
+    if(musicPlaying)return;
+    musicPlaying=true;
+    musicNodes=[];
+
+    const now=audioCtx.currentTime;
+
+    // ── MASTER & REVERB CHAIN ───────────────────────────────────────────────
+    masterGain=audioCtx.createGain();
+    masterGain.gain.setValueAtTime(0,now);
+    masterGain.gain.linearRampToValueAtTime(0.7,now+4);
+    masterGain.connect(audioCtx.destination);
+
+    // Reverb: two long feedback delays panned slightly apart
+    function makeReverb(delayTime,feedback,cutoff,pan){
+      const d=audioCtx.createDelay(6);
+      d.delayTime.value=delayTime;
+      const fb=audioCtx.createGain();
+      fb.gain.value=feedback;
+      const f=audioCtx.createBiquadFilter();
+      f.type="lowpass"; f.frequency.value=cutoff;
+      const p=audioCtx.createStereoPanner();
+      p.pan.value=pan;
+      d.connect(f); f.connect(fb); fb.connect(d);
+      d.connect(p); p.connect(masterGain);
+      musicNodes.push(d,fb,f,p);
+      return d;
+    }
+    const rev1=makeReverb(1.8,0.55,2200,-0.3);
+    const rev2=makeReverb(2.6,0.45,1400, 0.3);
+
+    // Compressor to glue everything
+    const comp=audioCtx.createDynamicsCompressor();
+    comp.threshold.value=-18; comp.ratio.value=3;
+    comp.connect(audioCtx.destination);
+    masterGain.connect(comp);
+    musicNodes.push(comp);
+
+    // ── SCALE: D Dorian — spacey, modal, neither happy nor sad ─────────────
+    // Notes in Hz: D2=73.4, E2=82.4, F2=87.3, G2=98, A2=110, B2=123.5, C3=130.8, D3=146.8
+    // Upper octave multiples for melody
+    const scale=[73.4,82.4,87.3,98,110,123.5,130.8,146.8,
+                 147,164.8,174.6,196,220,247,261.6,293.7];
+
+    // ── 1. SUB BASS DRONE ───────────────────────────────────────────────────
+    function makeDrone(freq,gainVal,type,detune){
+      const osc=audioCtx.createOscillator();
+      const g=audioCtx.createGain();
+      const lpf=audioCtx.createBiquadFilter();
+      lpf.type="lowpass"; lpf.frequency.value=280;
+      osc.type=type; osc.frequency.value=freq; osc.detune.value=detune||0;
+      g.gain.value=gainVal;
+      osc.connect(lpf); lpf.connect(g); g.connect(masterGain); g.connect(rev1);
+      osc.start(now);
+      // Slow tremolo
+      const lfo=audioCtx.createOscillator();
+      const la=audioCtx.createGain();
+      lfo.frequency.value=0.15+Math.random()*0.08;
+      la.gain.value=gainVal*0.3;
+      lfo.connect(la); la.connect(g.gain); lfo.start(now);
+      musicNodes.push(osc,g,lpf,lfo,la);
+    }
+    makeDrone(36.7,0.18,"sine",0);     // D1 sub
+    makeDrone(73.4,0.14,"sine",2);     // D2
+    makeDrone(73.4,0.08,"triangle",-3);// D2 slight detune chorus
+
+    // ── 2. WARM PAD — slow attack, lush ────────────────────────────────────
+    function makePad(freq,gainVal,panVal,attackTime){
+      const osc1=audioCtx.createOscillator();
+      const osc2=audioCtx.createOscillator();
+      const g=audioCtx.createGain();
+      const lpf=audioCtx.createBiquadFilter();
+      const pan=audioCtx.createStereoPanner();
+      lpf.type="lowpass"; lpf.frequency.value=1800; lpf.Q.value=0.5;
+      pan.pan.value=panVal;
+      osc1.type="triangle"; osc1.frequency.value=freq; osc1.detune.value=5;
+      osc2.type="sine";     osc2.frequency.value=freq; osc2.detune.value=-5;
+      g.gain.setValueAtTime(0,now);
+      g.gain.linearRampToValueAtTime(gainVal,now+attackTime);
+      osc1.connect(lpf); osc2.connect(lpf);
+      lpf.connect(g); g.connect(pan); pan.connect(masterGain); g.connect(rev2);
+      osc1.start(now); osc2.start(now);
+      musicNodes.push(osc1,osc2,g,lpf,pan);
+      return g;
+    }
+    makePad(110,  0.11, -0.4, 6);  // A2
+    makePad(146.8,0.09,  0.4, 8);  // D3
+    makePad(196,  0.07,  0.0, 10); // G3
+    makePad(220,  0.05, -0.2, 12); // A3
+
+    // ── 3. HIGH SHIMMER PAD — airy, filtered ───────────────────────────────
+    const shimFreqs=[440,493.9,523.3,587.3]; // A4,B4,C5,D5
+    shimFreqs.forEach((f,i)=>{
+      const osc=audioCtx.createOscillator();
+      const g=audioCtx.createGain();
+      const bpf=audioCtx.createBiquadFilter();
+      const pan=audioCtx.createStereoPanner();
+      bpf.type="bandpass"; bpf.frequency.value=f*1.5; bpf.Q.value=4;
+      pan.pan.value=(i%2===0?-1:1)*0.5;
+      osc.type="triangle"; osc.frequency.value=f; osc.detune.value=(i-1.5)*8;
+      g.gain.setValueAtTime(0,now);
+      g.gain.linearRampToValueAtTime(0.028,now+8+i*2);
+      osc.connect(bpf); bpf.connect(g); g.connect(pan);
+      pan.connect(masterGain); g.connect(rev2);
+      osc.start(now);
+      // Very slow vibrato
+      const vib=audioCtx.createOscillator();
+      const va=audioCtx.createGain();
+      vib.frequency.value=0.06+i*0.01;
+      va.gain.value=3;
+      vib.connect(va); va.connect(osc.frequency); vib.start(now);
+      musicNodes.push(osc,g,bpf,pan,vib,va);
+    });
+
+    // ── 4. MELODIC ARPEGGIO — the "spacey" hook ─────────────────────────────
+    // Pentatonic subset of D Dorian: D E G A C  (dreamy, not too resolved)
+    const arpeggioNotes=[146.8,164.8,196,220,261.6,293.7,329.6,392];
+    let arpIdx=0;
+    let arpPattern=[0,2,4,5,7,5,4,2,1,3,5,4]; // index into arpeggioNotes
+
+    function playArpNote(){
+      if(!musicPlaying||!audioCtx||!masterGain)return;
+      const freq=arpeggioNotes[arpPattern[arpIdx%arpPattern.length]%arpeggioNotes.length];
+      arpIdx++;
+
+      const osc=audioCtx.createOscillator();
+      const env=audioCtx.createGain();
+      const lpf=audioCtx.createBiquadFilter();
+      const pan=audioCtx.createStereoPanner();
+
+      lpf.type="lowpass"; lpf.frequency.value=3000;
+      pan.pan.value=(Math.random()-0.5)*0.6;
+      osc.type="triangle";
+      osc.frequency.value=freq;
+      osc.detune.value=(Math.random()-0.5)*8; // slight humanization
+
+      const t0=audioCtx.currentTime;
+      env.gain.setValueAtTime(0,t0);
+      env.gain.linearRampToValueAtTime(0.055,t0+0.08);
+      env.gain.exponentialRampToValueAtTime(0.03,t0+0.4);
+      env.gain.exponentialRampToValueAtTime(0.0001,t0+2.2);
+
+      osc.connect(lpf); lpf.connect(env); env.connect(pan);
+      pan.connect(masterGain); env.connect(rev1); env.connect(rev2);
+      osc.start(t0); osc.stop(t0+2.5);
+
+      // Occasionally add a soft 5th harmonic above
+      if(Math.random()<0.3){
+        const h=audioCtx.createOscillator();
+        const hg=audioCtx.createGain();
+        h.type="sine"; h.frequency.value=freq*1.5;
+        hg.gain.setValueAtTime(0,t0);
+        hg.gain.linearRampToValueAtTime(0.018,t0+0.1);
+        hg.gain.exponentialRampToValueAtTime(0.0001,t0+1.8);
+        h.connect(hg); hg.connect(masterGain); hg.connect(rev2);
+        h.start(t0); h.stop(t0+1.8);
+        musicNodes.push(h,hg);
+      }
+
+      musicNodes.push(osc,env,lpf,pan);
+
+      // Variable timing: mostly 1.4s, occasionally pause for 2.8s or 0.7s
+      const r=Math.random();
+      const nextDelay = r<0.15 ? 2800 : r<0.25 ? 700 : 1400;
+      arpTimerRef=setTimeout(playArpNote,nextDelay);
+    }
+
+    // ── 5. SLOW MELODY LINE — wanders above the arpeggio ──────────────────
+    const melodyNotes=[293.7,329.6,349.2,392,440,392,349.2,329.6,293.7,261.6,293.7,392];
+    let melIdx=0;
+
+    function playMelodyNote(){
+      if(!musicPlaying||!audioCtx||!masterGain)return;
+      const freq=melodyNotes[melIdx%melodyNotes.length];
+      melIdx++;
+
+      const osc=audioCtx.createOscillator();
+      const env=audioCtx.createGain();
+      const lpf=audioCtx.createBiquadFilter();
+      lpf.type="lowpass"; lpf.frequency.value=4000;
+      osc.type="sine";
+      osc.frequency.value=freq;
+
+      const t0=audioCtx.currentTime;
+      env.gain.setValueAtTime(0,t0);
+      env.gain.linearRampToValueAtTime(0.07,t0+0.3);
+      env.gain.linearRampToValueAtTime(0.05,t0+1.2);
+      env.gain.exponentialRampToValueAtTime(0.0001,t0+3.5);
+
+      // Gentle vibrato on melody
+      const vib=audioCtx.createOscillator();
+      const va=audioCtx.createGain();
+      vib.frequency.value=4.5; va.gain.value=4;
+      vib.connect(va); va.connect(osc.frequency);
+      vib.start(t0+0.5); // vibrato kicks in after attack
+
+      osc.connect(lpf); lpf.connect(env);
+      env.connect(masterGain); env.connect(rev1); env.connect(rev2);
+      osc.start(t0); osc.stop(t0+4);
+      vib.stop(t0+4);
+
+      musicNodes.push(osc,env,lpf,vib,va);
+      melTimerRef=setTimeout(playMelodyNote, 3200+Math.random()*1600);
+    }
+
+    // ── 6. OCCASIONAL IMPACT SWELLS ────────────────────────────────────────
+    function scheduleImpact(){
+      if(!musicPlaying||!audioCtx||!masterGain)return;
+      const wait=14000+Math.random()*20000;
+      impactTimerRef=setTimeout(()=>{
+        if(!musicPlaying||!audioCtx||!masterGain)return;
+        const t0=audioCtx.currentTime;
+        // Low boom
+        const boom=audioCtx.createOscillator();
+        const bg=audioCtx.createGain();
+        boom.type="sine"; boom.frequency.setValueAtTime(80,t0);
+        boom.frequency.exponentialRampToValueAtTime(30,t0+2);
+        bg.gain.setValueAtTime(0,t0);
+        bg.gain.linearRampToValueAtTime(0.25,t0+0.1);
+        bg.gain.exponentialRampToValueAtTime(0.0001,t0+3);
+        boom.connect(bg); bg.connect(masterGain);
+        boom.start(t0); boom.stop(t0+3);
+        // High sweep
+        const sw=audioCtx.createOscillator();
+        const sg=audioCtx.createGain();
+        const sf=audioCtx.createBiquadFilter();
+        sf.type="bandpass"; sf.frequency.value=800; sf.Q.value=2;
+        sw.type="sawtooth"; sw.frequency.setValueAtTime(200,t0);
+        sw.frequency.exponentialRampToValueAtTime(1200,t0+2.5);
+        sg.gain.setValueAtTime(0,t0);
+        sg.gain.linearRampToValueAtTime(0.04,t0+0.2);
+        sg.gain.exponentialRampToValueAtTime(0.0001,t0+4);
+        sw.connect(sf); sf.connect(sg); sg.connect(rev2); sg.connect(masterGain);
+        sw.start(t0); sw.stop(t0+4);
+        musicNodes.push(boom,bg,sw,sg,sf);
+        scheduleImpact();
+      },wait);
+    }
+
+    // Start sequences with slight offsets for natural feel
+    setTimeout(()=>playArpNote(), 2000);
+    setTimeout(()=>playMelodyNote(), 5000);
+    scheduleImpact();
+    updateMusicBtn();
+  } catch(e){
+    console.warn("Audio error:",e);
+  }
+}
+
+let arpTimerRef=null, melTimerRef=null, impactTimerRef=null;
+
+function schedulePulse(){} // no longer used
+
+function stopMusic(){
+  if(!musicPlaying||!audioCtx)return;
+  musicPlaying=false;
+  clearTimeout(arpTimerRef);
+  clearTimeout(melTimerRef);
+  clearTimeout(impactTimerRef);
+  try{
+    masterGain.gain.linearRampToValueAtTime(0,audioCtx.currentTime+2);
+    setTimeout(()=>{
+      musicNodes.forEach(n=>{try{if(n.stop)n.stop();n.disconnect()}catch(e){}});
+      musicNodes=[];
+      masterGain=null;
+    },2200);
+  }catch(e){}
+  updateMusicBtn();
+}
+
+function toggleMusic(){
+  if(musicPlaying)stopMusic();
+  else startMusic();
+}
+
+function updateMusicBtn(){
+  const btn=document.getElementById("music-btn");
+  if(!btn)return;
+  if(musicPlaying){
+    btn.textContent="♪ Music On";
+    btn.style.color="var(--gold)";
+    btn.style.borderColor="rgba(201,162,39,0.5)";
+  } else {
+    btn.textContent="♪ Music Off";
+    btn.style.color="var(--text-dim)";
+    btn.style.borderColor="transparent";
+  }
+}
+
+// ── MOUSE NEBULA BACKGROUND ───────────────────────────────────────────────────
+(function(){
+  const canvas=document.createElement("canvas");
+  canvas.style.cssText="position:fixed;inset:0;pointer-events:none;z-index:0";
+  document.body.insertBefore(canvas,document.body.firstChild);
+
+  const ctx2=canvas.getContext("2d");
+  let W,H;
+  let t=0;
+
+  // Mouse state
+  let mx=0.5, my=0.5;   // smoothed current position
+  let tx=0.5, ty=0.5;   // target position
+  let mouseActive=false;
+  let mouseTimer=null;
+
+  // Autonomous drift targets (update slowly over time)
+  let ax=0.5, ay=0.5;   // autonomous position (normalized)
+  let atx=0.3, aty=0.4; // autonomous target
+  let driftTimer=0;
+
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight}
+  resize();
+  window.addEventListener("resize",resize);
+
+  document.addEventListener("mousemove",e=>{
+    tx=e.clientX/window.innerWidth;
+    ty=e.clientY/window.innerHeight;
+    mouseActive=true;
+    clearTimeout(mouseTimer);
+    // After 3s of no movement, transition back to autonomous drift
+    mouseTimer=setTimeout(()=>{mouseActive=false},3000);
+  });
+
+  document.addEventListener("touchmove",e=>{
+    if(e.touches.length){
+      tx=e.touches[0].clientX/window.innerWidth;
+      ty=e.touches[0].clientY/window.innerHeight;
+      mouseActive=true;
+      clearTimeout(mouseTimer);
+      mouseTimer=setTimeout(()=>{mouseActive=false},3000);
+    }
+  },{passive:true});
+
+  // Generate new autonomous drift target every 6-12 seconds
+  function newDriftTarget(){
+    atx=0.15+Math.random()*0.7;
+    aty=0.15+Math.random()*0.7;
+  }
+  newDriftTarget();
+  setInterval(newDriftTarget, 8000+Math.random()*4000);
+
+  // Pre-generate stars once
+  const stars=Array.from({length:130},()=>({
+    x:Math.random(), y:Math.random(),
+    s:0.4+Math.random()*1.3,
+    b:0.25+Math.random()*0.75,
+    phase:Math.random()*Math.PI*2,
+    speed:0.2+Math.random()*0.7,
+  }));
+
+  function draw(){
+    requestAnimationFrame(draw);
+    t+=0.003;
+
+    // Update autonomous drift position (always moving slowly)
+    ax+=(atx-ax)*0.002;
+    ay+=(aty-ay)*0.002;
+
+    // Blend between mouse position and autonomous drift
+    const blendSpeed = mouseActive ? 0.045 : 0.008;
+    const targetX = mouseActive ? tx : ax;
+    const targetY = mouseActive ? ty : ay;
+    mx+=(targetX-mx)*blendSpeed;
+    my+=(targetY-my)*blendSpeed;
+
+    ctx2.clearRect(0,0,W,H);
+
+    // Deep space base
+    ctx2.fillStyle="#03020a";
+    ctx2.fillRect(0,0,W,H);
+
+    // Nebula 1 — deep purple, follows mx/my
+    const g1=ctx2.createRadialGradient(mx*W,my*H,0,mx*W,my*H,W*0.58);
+    g1.addColorStop(0,"rgba(65,18,130,0.38)");
+    g1.addColorStop(0.35,"rgba(35,8,90,0.20)");
+    g1.addColorStop(1,"rgba(0,0,0,0)");
+    ctx2.fillStyle=g1;
+    ctx2.fillRect(0,0,W,H);
+
+    // Nebula 2 — deep blue, counter to mx/my
+    const bx=(1-mx)*W*0.8+W*0.1;
+    const by=(1-my)*H*0.8+H*0.1;
+    const g2=ctx2.createRadialGradient(bx,by,0,bx,by,W*0.52);
+    g2.addColorStop(0,"rgba(8,35,130,0.32)");
+    g2.addColorStop(0.45,"rgba(5,18,75,0.16)");
+    g2.addColorStop(1,"rgba(0,0,0,0)");
+    ctx2.fillStyle=g2;
+    ctx2.fillRect(0,0,W,H);
+
+    // Nebula 3 — slow autonomous indigo drift (independent of mouse)
+    const sx=W*(0.5+Math.sin(t*0.55)*0.32);
+    const sy=H*(0.5+Math.cos(t*0.38)*0.28);
+    const g3=ctx2.createRadialGradient(sx,sy,0,sx,sy,W*0.42);
+    g3.addColorStop(0,"rgba(25,8,85,0.22)");
+    g3.addColorStop(0.5,"rgba(45,5,65,0.11)");
+    g3.addColorStop(1,"rgba(0,0,0,0)");
+    ctx2.fillStyle=g3;
+    ctx2.fillRect(0,0,W,H);
+
+    // Nebula 4 — violet accent, slow independent orbit
+    const vx=W*(0.5+Math.cos(t*0.3+1.2)*0.38);
+    const vy=H*(0.5+Math.sin(t*0.42+0.8)*0.30);
+    const g4=ctx2.createRadialGradient(vx,vy,0,vx,vy,W*0.30);
+    g4.addColorStop(0,"rgba(90,12,110,0.20)");
+    g4.addColorStop(0.6,"rgba(50,5,70,0.08)");
+    g4.addColorStop(1,"rgba(0,0,0,0)");
+    ctx2.fillStyle=g4;
+    ctx2.fillRect(0,0,W,H);
+
+    // Nebula 5 — cool steel blue, anchored loosely to mx offset
+    const cx2=W*(0.2+(1-mx)*0.4+Math.sin(t*0.25)*0.1);
+    const cy2=H*(0.15+(1-my)*0.35+Math.cos(t*0.3)*0.1);
+    const g5=ctx2.createRadialGradient(cx2,cy2,0,cx2,cy2,W*0.35);
+    g5.addColorStop(0,"rgba(15,50,140,0.18)");
+    g5.addColorStop(1,"rgba(0,0,0,0)");
+    ctx2.fillStyle=g5;
+    ctx2.fillRect(0,0,W,H);
+
+    // Stars
+    stars.forEach(s=>{
+      const flicker=s.b*(0.65+0.35*Math.sin(t*s.speed+s.phase));
+      ctx2.beginPath();
+      ctx2.arc(s.x*W,s.y*H,s.s,0,Math.PI*2);
+      ctx2.fillStyle=`rgba(255,255,255,${flicker.toFixed(2)})`;
+      ctx2.fill();
+    });
+  }
+
+  draw();
+})();
+
 function resetAll(){
   document.getElementById("config-panel").style.display="block";
   document.getElementById("results").style.display="none";
