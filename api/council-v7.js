@@ -40,6 +40,7 @@ function repairIncompleteBody(text){
   if(candidate.split(/\s+/).filter(Boolean).length<4||incompleteTransmission(candidate))return'';
   return candidate;
 }
+function salvageHardCut(text){const clean=removeAudiencePromptLeak(String(text||'').trim());const repaired=repairIncompleteBody(clean);if(repaired)return repaired;let stem=clean.replace(/[,:;\-—–“‘([{]+$/g,'').replace(/\s+\b(?:and|or|but|because|with|without|of|to|for|from|by|as|the|a|an|into|through|before|after|while|which|that|this|your|our|their)\b$/i,'').trim();if(stem.split(/\s+/).filter(Boolean).length<6)return'';if(stem.length>360){const cut=stem.lastIndexOf(' ',360);stem=stem.slice(0,cut>120?cut:360).trim()}return`${stem}… Fuck it. The Council has seen enough.`}
 function removeAudiencePromptLeak(text){return String(text||'').replace(/\bwhat the fuck,?\s*Council\b/gi,'what the fuck is wrong with me')}
 function verdictTooNarrow(payload,ctx={}){
   if(ctx.mode!=='verdict')return false;
@@ -79,7 +80,7 @@ function parseRescue(raw,ctx,mode){
   let headline=hm?String(hm[1]).trim().replace(/^["'`]+|["'`]+$/g,''):'';
   let commentary=bm?String(bm[1]).trim():clean.replace(/HEADLINE\s*:[^\n]+/i,'').replace(/^\s*BODY\s*:/i,'').trim();
   commentary=removeAudiencePromptLeak(commentary);
-  if(incompleteTransmission(commentary))commentary=repairIncompleteBody(commentary);
+  if(incompleteTransmission(commentary))commentary=salvageHardCut(commentary);
   const fallback=deterministicRescue(ctx,mode);
   if(!headline||headline.length>90)headline=fallback.headline;
   if(!commentary)commentary=fallback.commentary;
@@ -89,7 +90,7 @@ async function openingTake(ctx){
   const key=process.env.OPENAI_API_KEY,model=process.env.OPENAI_MODEL;if(!key||!model)return{...deterministicRescue(ctx,'opening'),source:'deterministic-opening'};
   const knowledge=knowledgeFor(ctx,'opening'),instructions=`You are COUNCIL INTELLIGENCE, an original adult dark-comedy machine host for a Twilight Imperium IV faction draft. This is the opening sting: be fast, concise and immediately entertaining. Do not recap every player. Be hostile, profane when natural, irrationally invested, and funny without becoming cute. Never invent personal facts. No slurs or protected-trait attacks. Output exactly two fields and nothing else:\nHEADLINE: <fresh 2-7 word dramatic title>\nBODY: <1-3 complete sentences, 18-75 words, ending cleanly>`,payload={mode:'opening',players:ctx.players||[],speaker:ctx.speaker||null,totalPlayers:ctx.totalPlayers||ctx.playerCount||null,tableLore:ctx.tableLore||[],gameKnowledge:knowledge};
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5600);
-  try{const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model,instructions,input:JSON.stringify(payload),max_output_tokens:210}),signal:controller.signal});if(!r.ok)throw new Error(`opening_${r.status}`);return{...parseRescue(outputText(await r.json()),ctx,'opening'),source:'ai-opening'}}catch(e){console.warn('[council-v7] fast opening fallback',e?.name||e?.message||e);return{...deterministicRescue(ctx,'opening'),source:'deterministic-opening'}}finally{clearTimeout(timer)}
+  try{const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model,instructions,input:JSON.stringify(payload),max_output_tokens:260,reasoning:{effort:'none'}}),signal:controller.signal});if(!r.ok)throw new Error(`opening_${r.status}`);return{...parseRescue(outputText(await r.json()),ctx,'opening'),source:'ai-opening'}}catch(e){console.warn('[council-v7] fast opening fallback',e?.name||e?.message||e);return{...deterministicRescue(ctx,'opening'),source:'deterministic-opening'}}finally{clearTimeout(timer)}
 }
 function immediateFallback(res,ctx,mode,reason,started){const fallback=deterministicRescue(ctx,mode);console.warn('[council-v7] immediate server fallback',{mode,reason});return res.status(200).json({commentary:fallback.commentary,title:fallback.headline,headline:fallback.headline,achievement:null,directorMode:'emergency-ruling',renderStyle:'burst',performanceShape:'emergency-ruling',bodyPattern:'emergency-ruling:other',apiVersion:'v7-director',completionGate:true,verdictSynthesisGate:mode==='verdict',qualityRetakes:0,serverFallback:true,fallbackReason:reason,elapsedMs:Date.now()-started})}
 module.exports=async function handler(req,res){
@@ -103,7 +104,7 @@ module.exports=async function handler(req,res){
   const {captured,proxy}=captureResponse(res);await councilV6(req,proxy);
   if(captured.statusCode!==200)return immediateFallback(res,req.body||{},mode,`upstream_${captured.body?.code||captured.statusCode}`,started);
   const body={...(captured.body||{})};body.commentary=removeAudiencePromptLeak(body.commentary);
-  if(incompleteTransmission(body.commentary)){const repaired=repairIncompleteBody(body.commentary);if(repaired){body.commentary=repaired;body.completionRepaired=true}else return immediateFallback(res,req.body||{},mode,'incomplete_unrepairable',started)}
+  if(incompleteTransmission(body.commentary)){const repaired=salvageHardCut(body.commentary);if(repaired){body.commentary=repaired;body.completionRepaired=true;body.hardCutSalvaged=true;console.info('[council-v7] converted hard cut into Council glitch',{mode})}else return immediateFallback(res,req.body||{},mode,'incomplete_unrepairable',started)}
   if(mode==='verdict'&&verdictTooNarrow(body,req.body||{}))return immediateFallback(res,req.body||{},mode,'verdict_too_narrow',started);
   console.info('[council-v7] single-pass success',{mode,elapsedMs:Date.now()-started,styleRelaxed:Boolean(body.styleRelaxed)});
   return res.status(200).json({...body,completionGate:true,verdictSynthesisGate:mode==='verdict',qualityRetakes:0,singlePass:true,elapsedMs:Date.now()-started});
