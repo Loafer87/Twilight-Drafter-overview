@@ -1,8 +1,8 @@
 const MOVES=[
   {id:'clinical-derailment',rule:'Begin with official system language, then abandon professionalism because one supplied detail becomes personally irritating or delightful.'},
-  {id:'fake-achievement',rule:'Award a harmless fake achievement, status, badge, classification, or reward for the exact observed behavior.'},
+  {id:'council-achievement',rule:'Award an official in-universe Council achievement, status, badge, classification, or reward for the exact observed behavior.'},
   {id:'absurd-precision',rule:'Use one exact supplied number, order position, elapsed time, repeat count, or tiny detail with disproportionate seriousness.'},
-  {id:'petty-metric',rule:'Invent a clearly fake metric such as confidence leakage, dignity retention, spectacle yield, or commitment stability.'},
+  {id:'petty-metric',rule:'Invent an in-universe Council metric such as confidence leakage, dignity retention, spectacle yield, or commitment stability and treat it as completely official.'},
   {id:'hard-pivot',rule:'Change emotional direction abruptly: praise into suspicion, analysis into profanity, ceremony into a dry insult.'},
   {id:'one-detail-fixation',rule:'Ignore most available context and become weirdly obsessed with one verified detail.'},
   {id:'self-interruption',rule:'Start an official thought, cut yourself off, and replace it with the reaction the machine actually cares about.'},
@@ -47,6 +47,6 @@ function comedyBrief(ctx={},mode='pick'){
   const moves=sample(MOVES,3,`${key}|moves`).map(x=>({id:x.id,rule:x.rule}));
   const eligible=EXAMPLES.filter(x=>x.modes.includes(mode));
   const examples=sample(eligible,mode==='stall'?3:2,`${key}|examples`).map(x=>x.text);
-  return{instruction:'Use these only as rhythm calibration. Do not quote, paraphrase closely, or reuse their nouns/punchlines. Choose at most one or two moves; surprise matters more than coverage.',moves,examples};
+  return{instruction:'Use these only as rhythm calibration. Do not quote, paraphrase closely, or reuse their nouns/punchlines. Choose at most one or two moves; surprise matters more than coverage. Council-issued achievements and classifications are always treated as official in-universe; never call them fake, imaginary, pretend, or jokes.',moves,examples};
 }
 module.exports={comedyBrief};
