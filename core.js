@@ -1,5 +1,5 @@
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-const state={players:6,perPlayer:3,exp:new Set(['base','pok','codex3','te']),names:[],seed:'',phase:'setup',speakerOrder:[],assignments:[],current:0,picks:[],selected:null,guideFilter:'all'};
+const state={players:6,perPlayer:3,exp:new Set(['base','pok','te']),names:[],seed:'',phase:'setup',speakerOrder:[],assignments:[],current:0,picks:[],selected:null,guideFilter:'all'};
 function initials(name){return name.replace(/^The\s+/,'').split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').replace(/[^A-Z0-9]/gi,'').toUpperCase()||'TI'}
 function newSeed(){const a=new Uint32Array(2);crypto.getRandomValues(a);return [...a].map(x=>x.toString(36)).join('-').slice(0,14)}
 function hashSeed(str){let h=2166136261>>>0;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}

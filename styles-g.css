@@ -1,0 +1,22 @@
+body.drafting .hero{display:none}
+body.drafting .nav{margin-top:4px;margin-bottom:26px}
+.order-stage{padding:28px 0 8px;animation:stageIn .45s ease both}
+.order-grid-ceremony{max-width:1280px;margin:0 auto;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.order-grid-ceremony .order-card{min-height:138px;padding:24px 20px;background:linear-gradient(145deg,rgba(19,12,45,.88),rgba(6,4,18,.86));backdrop-filter:blur(12px)}
+.order-grid-ceremony .order-name{font-size:18px}.muted-tag{color:var(--muted)}
+.order-loading{display:flex;align-items:center;justify-content:center;gap:10px;margin:28px auto 0;color:#8e856f;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2.5px;text-transform:uppercase}
+.order-loading span{width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 18px rgba(201,162,39,.75);animation:councilPulse 1.05s ease-in-out infinite alternate}
+.council-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px;margin:0 0 18px;padding:10px;border:1px solid rgba(201,162,39,.2);background:rgba(5,3,16,.72);border-radius:12px;backdrop-filter:blur(14px)}
+.council-chip{display:grid;grid-template-columns:30px 1fr;align-items:center;gap:9px;min-width:0;padding:10px 11px;border:1px solid rgba(255,255,255,.07);border-radius:9px;background:rgba(255,255,255,.025);opacity:.54;transition:.35s ease}
+.council-chip.active{opacity:1;border-color:rgba(201,162,39,.68);background:linear-gradient(135deg,rgba(201,162,39,.14),rgba(201,162,39,.035));box-shadow:0 0 28px rgba(201,162,39,.11)}
+.council-chip.done{opacity:.82;border-color:rgba(84,217,135,.26);background:rgba(84,217,135,.035)}
+.council-pos{width:28px;height:28px;display:grid;place-items:center;border-radius:50%;border:1px solid rgba(92,168,255,.28);font-family:'Cinzel Decorative',serif;font-size:11px;color:var(--blue)}
+.council-chip.active .council-pos{border-color:var(--gold);color:var(--gold2);box-shadow:0 0 18px rgba(201,162,39,.18)}
+.council-chip.done .council-pos{color:var(--green);border-color:rgba(84,217,135,.45)}
+.council-chip-copy{min-width:0}.council-chip-copy b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Cinzel',serif;font-size:11px;color:#e8dfcb}.council-chip-copy span{display:block;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#8f8674;font-size:10px}.council-chip.active .council-chip-copy span{color:var(--gold)}.council-chip.done .council-chip-copy span{color:#79c897}
+.pick-stage-enter{animation:stageIn .5s cubic-bezier(.2,.8,.25,1) both}.locked-count{text-align:right;font-size:10px;color:var(--muted);margin-top:5px}
+@keyframes stageIn{from{opacity:0;transform:translateY(12px) scale(.995)}to{opacity:1;transform:none}}
+@keyframes councilPulse{to{transform:scale(1.35);opacity:.45}}
+@media(max-width:900px){.council-strip{display:flex;overflow-x:auto;scrollbar-width:thin}.council-chip{min-width:165px}.order-grid-ceremony{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.order-grid-ceremony{grid-template-columns:1fr}.order-grid-ceremony .order-card{min-height:105px}.council-strip{margin-left:-4px;margin-right:-4px}.council-chip{min-width:150px}}
+@media(prefers-reduced-motion:reduce){.order-loading span,.order-stage,.pick-stage-enter{animation:none!important}}
