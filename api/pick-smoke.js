@@ -1,3 +1,4 @@
+// TEMPORARY production reliability probe; remove after verification.
 const councilV7=require('./council-v7');
 const CASES=[
   {player:'Joshua',faction:'The Ghosts of Creuss',tag:'mobility',rejected:['The Arborec','The Barony of Letnev']},
