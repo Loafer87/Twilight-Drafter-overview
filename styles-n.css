@@ -1,0 +1,10 @@
+/* Council Intelligence voice-state polish */
+.council-intel.voice-loading .intel-orb{filter:saturate(.85);opacity:.82}
+.council-intel.voice-loading .intel-orb:before{animation-duration:2.4s}
+.council-intel.voice-speaking .intel-orb{animation:intelVoicePulse .72s ease-in-out infinite alternate;box-shadow:0 0 0 1px rgba(255,107,209,.5),0 0 105px rgba(222,46,181,.44),inset 0 0 34px rgba(0,0,0,.65)}
+.council-intel.voice-speaking .intel-orb:before{animation-duration:2.1s;border-top-color:#ff8bdd;border-right-color:#7dc1ff;box-shadow:0 0 40px rgba(255,92,204,.2)}
+.council-intel.voice-speaking .intel-orb:after{animation:intelVoiceCore .62s ease-in-out infinite alternate;box-shadow:0 0 28px rgba(255,255,255,.18),inset 0 0 18px rgba(255,92,204,.22)}
+.council-intel.voice-speaking .intel-title{text-shadow:0 0 34px rgba(255,77,196,.3)}
+@keyframes intelVoicePulse{from{transform:scale(.985)}to{transform:scale(1.06)}}
+@keyframes intelVoiceCore{from{transform:scale(.94);opacity:.72}to{transform:scale(1.11);opacity:1}}
+@media(prefers-reduced-motion:reduce){.council-intel.voice-speaking .intel-orb,.council-intel.voice-speaking .intel-orb:before,.council-intel.voice-speaking .intel-orb:after{animation:none!important}}
