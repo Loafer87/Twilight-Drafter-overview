@@ -8,16 +8,25 @@
       card.setAttribute('aria-disabled',locked?'true':'false');
       card.setAttribute('aria-pressed',card.classList.contains('selected')?'true':'false');
       const name=card.dataset.faction||'Faction';
-      card.setAttribute('aria-label',`${name}${locked?' unavailable':card.classList.contains('selected')?' selected':' — activate to select or open'}`);
+      card.setAttribute('aria-label',`${name}${locked?' unavailable':card.classList.contains('selected')?' selected — activate again for full reference':' — activate to select and inspect'}`);
     });
   }
 
   function activateFactionCard(card){
     if(!card||card.classList.contains('locked')||card.getAttribute('aria-disabled')==='true')return;
     const name=card.dataset.faction;if(!name)return;
-    if(state.phase==='pick'&&$('#setupView').classList.contains('active'))selectFaction(name);
-    else openFaction(name);
+    if(state.phase==='pick'&&$('#setupView').classList.contains('active')){
+      if(state.selected===name)openFaction(name);else selectFaction(name);
+    }else openFaction(name);
   }
+
+  document.addEventListener('click',e=>{
+    const card=e.target.closest?.('.faction-card');
+    if(!card)return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    activateFactionCard(card);
+  },true);
 
   document.addEventListener('keydown',e=>{
     if(e.key!=='Enter'&&e.key!==' ')return;
