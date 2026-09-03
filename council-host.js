@@ -50,6 +50,23 @@ function councilRenderTransmission(raw,mode='pick'){
   const el=$('#intelText');if(!el)return;el.innerHTML='';const beats=councilTransmissionBeats(raw,mode);
   (beats.length?beats:[String(raw||'')]).forEach((beat,i)=>{const p=document.createElement('p');p.className='intel-beat';if(i===beats.length-1)p.classList.add('intel-beat-final');p.textContent=beat;el.appendChild(p)});
 }
+function councilVerdictRoster(ctx){
+  const text=$('#intelText');if(!text)return;
+  let roster=$('#intelVerdictRoster');
+  if(!roster){roster=document.createElement('div');roster.id='intelVerdictRoster';roster.className='verdict-roster';text.parentNode.insertBefore(roster,text)}
+  roster.hidden=false;roster.innerHTML='';
+  (ctx.players||[]).forEach((p,i)=>{
+    const faction=factions.find(f=>f.name===p.faction),card=document.createElement('div');card.className='verdict-pick'+(p.speaker?' speaker':'');
+    const art=document.createElement('div');art.className='verdict-faction-art';
+    if(faction?.portrait){art.style.backgroundImage=`url(${faction.portrait.url})`;art.style.backgroundSize=faction.portrait.size||'cover';art.style.backgroundPosition=faction.portrait.position||'center top';art.style.backgroundRepeat='no-repeat'}
+    else if(faction?.art){const img=document.createElement('img');img.src=faction.art;img.alt='';img.onerror=()=>{art.textContent=initials(p.faction||'TI')};art.appendChild(img)}
+    else art.textContent=initials(p.faction||'TI');
+    const copy=document.createElement('div'),player=document.createElement('b'),name=document.createElement('span'),meta=document.createElement('small');
+    player.className='verdict-player';player.textContent=p.name;name.className='verdict-faction';name.textContent=p.faction||'Unclassified';meta.className='verdict-pick-meta';meta.textContent=`PICK ${p.order}${p.speaker?' · SPEAKER':''}`;
+    copy.append(player,name,meta);card.append(art,copy);roster.appendChild(card);
+  });
+}
+function councilHideVerdictRoster(){const roster=$('#intelVerdictRoster');if(roster)roster.hidden=true}
 function councilSetSource(result){
   const source=$('#intelSource'),reason=String(result.reason||'uplink_failed').toUpperCase().replace(/_/g,' ');
   source.textContent=result.source==='llm'?'LIVE COGNITIVE LINK':`LOCAL CHAOS ENGINE // ${reason}`;
@@ -58,7 +75,7 @@ function councilSetSource(result){
 const councilPickScreen=showCouncilIntelligence;
 showCouncilIntelligence=function(result,ctx,achievement,done){
   const el=$('#councilIntel');
-  el.classList.remove('opening','verdict');
+  councilHideVerdictRoster();el.classList.remove('opening','verdict');
   $('.intel-status b').textContent='COUNCIL INTELLIGENCE // UNSOLICITED ANALYSIS';
   $('.intel-kicker').textContent='Behavioral Assessment';
   $('.intel-title').textContent='The Council Has Opinions';
@@ -69,7 +86,7 @@ showCouncilIntelligence=function(result,ctx,achievement,done){
 };
 function showCouncilOpening(result,ctx,done){
   const el=$('#councilIntel'),ach=$('#intelAchievement'),btn=$('#intelContinue');
-  el.classList.add('opening');el.classList.remove('verdict');
+  councilHideVerdictRoster();el.classList.add('opening');el.classList.remove('verdict');
   $('.intel-status b').textContent='COUNCIL INTELLIGENCE // SESSION AUTHORIZATION';
   $('.intel-kicker').textContent='Initial Delegation Assessment';
   $('.intel-title').textContent='Council Intelligence Online';
@@ -98,7 +115,7 @@ function showCouncilVerdict(result,ctx,done){
   $('.intel-kicker').textContent='Draft Classification Complete';
   $('.intel-title').textContent='Final Preliminary Verdict';
   $('#intelSubject').textContent=`${ctx.totalPlayers} FACTIONS LOCKED // APPEALS: DENIED`;
-  councilRenderTransmission(result.text,'verdict');councilSetSource(result);ach.hidden=true;ach.innerHTML='';
+  councilVerdictRoster(ctx);councilRenderTransmission(result.text,'verdict');councilSetSource(result);ach.hidden=true;ach.innerHTML='';
   btn.textContent='Reveal the Council Chamber →';btn.disabled=true;
   el.classList.remove('ready','leaving');el.classList.add('open');
   playCouncilStinger();requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('ready')));
