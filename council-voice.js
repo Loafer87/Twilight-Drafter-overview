@@ -13,12 +13,13 @@ function councilVoiceHold(el){if(!el)return;el.style.transition='opacity .13s ea
 function councilVoiceReveal(el){if(!el)return;el.style.transition='opacity .13s ease';el.style.opacity='1'}
 function councilAchievementHold(el){if(!el)return;$('#councilIntel')?.classList.remove('achievement-active');el.hidden=true;el.classList.remove('council-ach-pop');el.style.opacity=''}
 function councilAchievementReveal(el){if(!el)return;el.hidden=false;el.style.opacity='';$('#councilIntel')?.classList.add('achievement-active');el.classList.remove('council-ach-pop');void el.offsetWidth;requestAnimationFrame(()=>el.classList.add('council-ach-pop'))}
-async function councilFetchSpeechBytes(text,mode,signal=null){const opts={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:String(text).trim(),mode})};if(signal)opts.signal=signal;const r=await fetch(COUNCIL_VOICE_API,opts);if(!r.ok)throw new Error(`voice_${r.status}`);return r.arrayBuffer()}
-async function councilSpeak(text,mode='pick',onEnded=null,onStarted=null,onUnavailable=null,preparedBytesPromise=null){
+function councilVoiceDirectorMode(result){return String(result?.directorMode||result?.performanceShape||'').trim()}
+async function councilFetchSpeechBytes(text,mode,signal=null,directorMode=''){const opts={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:String(text).trim(),mode,directorMode:String(directorMode||'').trim()})};if(signal)opts.signal=signal;const r=await fetch(COUNCIL_VOICE_API,opts);if(!r.ok)throw new Error(`voice_${r.status}`);return r.arrayBuffer()}
+async function councilSpeak(text,mode='pick',onEnded=null,onStarted=null,onUnavailable=null,preparedBytesPromise=null,directorMode=''){
   if(!councilVoiceEnabled||!String(text||'').trim()){if(typeof onUnavailable==='function')onUnavailable();return}
   councilStopVoice(false);const requestId=++councilVoiceRequest,el=$('#councilIntel');el?.classList.add('voice-loading');let controller=null;
   try{
-    let bytes=null;if(preparedBytesPromise)bytes=await preparedBytesPromise;if(!bytes){controller=new AbortController();councilVoiceController=controller;bytes=await councilFetchSpeechBytes(text,mode,controller.signal)}
+    let bytes=null;if(preparedBytesPromise)bytes=await preparedBytesPromise;if(!bytes){controller=new AbortController();councilVoiceController=controller;bytes=await councilFetchSpeechBytes(text,mode,controller.signal,directorMode)}
     if(requestId!==councilVoiceRequest||!councilVoiceEnabled)return;ensureAudio();const buffer=await audioCtx.decodeAudioData(bytes.slice(0));if(requestId!==councilVoiceRequest||!councilVoiceEnabled)return;
     const source=audioCtx.createBufferSource(),gain=audioCtx.createGain(),comp=audioCtx.createDynamicsCompressor();gain.gain.value=Math.min(1.5,councilVoiceVolume*(mode==='achievement'?1.04:1));comp.threshold.value=-8;comp.knee.value=8;comp.ratio.value=3;comp.attack.value=.004;comp.release.value=.16;source.buffer=buffer;source.connect(gain);gain.connect(comp);comp.connect(audioCtx.destination);councilVoiceSource=source;councilVoiceGain=gain;councilVoiceController=null;
     el?.classList.remove('voice-loading');el?.classList.add('voice-speaking');duckMusic(Math.max(3.5,buffer.duration+.8));source.onended=()=>{const stillCurrent=requestId===councilVoiceRequest;if(councilVoiceSource===source)councilVoiceSource=null;if(councilVoiceGain===gain)councilVoiceGain=null;el?.classList.remove('voice-speaking');if(!stillCurrent)return;if(typeof onEnded==='function'&&councilVoiceEnabled){setTimeout(()=>{if(requestId===councilVoiceRequest&&councilVoiceEnabled)onEnded()},110)}else councilRestoreMusic()};
@@ -29,13 +30,13 @@ function councilToggleVoice(){councilVoiceEnabled=!councilVoiceEnabled;localStor
 function councilOfficialAchievement(result,legacy){const raw=legacy||result?.achievement||null;return typeof councilNormalizeAchievement==='function'?councilNormalizeAchievement(raw):raw}
 function councilAchievementSpeech(achievement){if(!achievement?.title)return'';return `ACHIEVEMENT UNLOCKED! ${achievement.title}. ${achievement.copy||''}`.trim()}
 function councilSpeakWithAchievement(result,mode,textEl,achievementEl,achievement){
-  const text=String(result?.text||'').trim(),achievementSpeech=councilAchievementSpeech(achievement),sync=councilVoiceEnabled&&Boolean(text);
+  const text=String(result?.text||'').trim(),achievementSpeech=councilAchievementSpeech(achievement),directorMode=councilVoiceDirectorMode(result),sync=councilVoiceEnabled&&Boolean(text);
   if(sync)councilVoiceHold(textEl);else councilVoiceReveal(textEl);
   if(achievement&&sync)councilAchievementHold(achievementEl);else if(achievement)councilAchievementReveal(achievementEl);
   const revealAll=()=>{councilVoiceReveal(textEl);if(achievement)councilAchievementReveal(achievementEl)};
-  const achievementAudio=achievementSpeech&&councilVoiceEnabled?councilFetchSpeechBytes(achievementSpeech,'achievement').catch(e=>{console.warn('Council achievement prefetch unavailable',e);return null}):null;
-  const speakAchievement=achievementSpeech?()=>councilSpeak(achievementSpeech,'achievement',null,()=>councilAchievementReveal(achievementEl),()=>{councilAchievementReveal(achievementEl);councilRestoreMusic()},achievementAudio):null;
-  councilSpeak(text,mode,speakAchievement,()=>councilVoiceReveal(textEl),revealAll);
+  const achievementAudio=achievementSpeech&&councilVoiceEnabled?councilFetchSpeechBytes(achievementSpeech,'achievement',null,'achievement-hijack').catch(e=>{console.warn('Council achievement prefetch unavailable',e);return null}):null;
+  const speakAchievement=achievementSpeech?()=>councilSpeak(achievementSpeech,'achievement',null,()=>councilAchievementReveal(achievementEl),()=>{councilAchievementReveal(achievementEl);councilRestoreMusic()},achievementAudio,'achievement-hijack'):null;
+  councilSpeak(text,mode,speakAchievement,()=>councilVoiceReveal(textEl),revealAll,null,directorMode);
 }
 
 const councilVoiceBasePick=showCouncilIntelligence;
