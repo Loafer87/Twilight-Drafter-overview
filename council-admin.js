@@ -42,6 +42,16 @@ if(councilProfileAdminBaseRender){
 /* Stacking removes the need to suppress legacy faction awards. */
 try{if(typeof councilLegacyAchievementFor==='function')councilAchievementFor=councilLegacyAchievementFor}catch(e){}
 
+/* Chris + Arborec is established table lore, not a generic plant joke. */
+const councilAchievementBeforeChrisPlant=typeof councilAchievementFor==='function'?councilAchievementFor:null;
+if(councilAchievementBeforeChrisPlant){
+  councilAchievementFor=function(ctx,afterHistory){
+    const player=String(ctx?.player||'').trim().toLowerCase();
+    if(ctx?.faction==='The Arborec'&&(player==='chris'||player==='chris collins'))return{title:"I'M JUST A PLANT",copy:'Chris has selected Arborec and invoked the ancient strategic defense: “I’m just a plant.”'};
+    return councilAchievementBeforeChrisPlant(ctx,afterHistory);
+  };
+}
+
 function councilAchievementSame(a,b){return Boolean(a?.title&&b?.title&&String(a.title).trim().toLowerCase()===String(b.title).trim().toLowerCase())}
 function councilAchievementStack(result,primary){
   const normalize=a=>typeof councilNormalizeAchievement==='function'?councilNormalizeAchievement(a):a;
