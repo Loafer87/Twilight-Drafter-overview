@@ -1,5 +1,6 @@
 const councilV6=require('./council-v6');
 const {flavorFor,flavorLore}=require('./council-faction-flavor');
+const {innuendoLore}=require('./council-innuendo');
 const {knowledgeFor}=require('./council-knowledge');
 
 function mergeUnique(a,b){const out=[];for(const x of [...(a||[]),...(b||[])]){const s=String(x||'').trim();if(s&&!out.some(y=>y.toLowerCase()===s.toLowerCase()))out.push(s)}return out}
@@ -14,7 +15,7 @@ function verdictDirective(ctx={}){
   ];
 }
 function enrich(ctx={}){
-  const extra=flavorLore(ctx);
+  const extra=[...flavorLore(ctx),...innuendoLore(ctx)];
   if(ctx.mode==='verdict')extra.push(...verdictDirective(ctx));
   return{...ctx,tableLore:mergeUnique(ctx.tableLore,extra),factionFlavor:{selected:flavorFor(ctx.faction),rejected:(ctx.rejected||[]).map(flavorFor).filter(Boolean).slice(0,2)}};
 }
@@ -101,7 +102,7 @@ async function rescueCouncilTake(ctx,mode,reason){
   const key=process.env.OPENAI_API_KEY,model=process.env.OPENAI_MODEL;
   if(!key||!model)return{...deterministicRescue(ctx,mode),source:'deterministic'};
   const knowledge=knowledgeFor(ctx,mode),roster=(ctx.players||[]).filter(p=>p?.faction).map(p=>`${p.name||'Unknown'} = ${p.faction}`);
-  const instructions=`You are COUNCIL INTELLIGENCE, an original adult dark-comedy machine host for a Twilight Imperium IV faction draft. This is an emergency rescue take because the normal performance director rejected its own outputs for style reasons: ${reason}. Be specific to the supplied game context, hostile, profane when natural, irrationally invested, and funny without becoming cute. Never invent personal facts. No slurs or protected-trait attacks. Use only supplied player history/table lore plus accurate supplied game knowledge. ${mode==='verdict'?'Judge the completed TABLE as a whole using at least three locked factions or their relationships; do not make the verdict about only the Speaker or one player.':''} Output exactly two fields and nothing else:\nHEADLINE: <fresh 2-7 word dramatic title>\nBODY: <1-4 complete sentences, 25-110 words, ending cleanly>`;
+  const instructions=`You are COUNCIL INTELLIGENCE, an original adult dark-comedy machine host for a Twilight Imperium IV faction draft. This is an emergency rescue take because the normal performance director rejected its own outputs for style reasons: ${reason}. Be specific to the supplied game context, hostile, profane when natural, irrationally invested, and funny without becoming cute. Adult double entendre and crude non-graphic innuendo are allowed when the supplied mechanics genuinely set them up; do not force a sex joke. Never invent personal facts. No slurs or protected-trait attacks. Use only supplied player history/table lore plus accurate supplied game knowledge. ${mode==='verdict'?'Judge the completed TABLE as a whole using at least three locked factions or their relationships; do not make the verdict about only the Speaker or one player.':''} Output exactly two fields and nothing else:\nHEADLINE: <fresh 2-7 word dramatic title>\nBODY: <1-4 complete sentences, 25-110 words, ending cleanly>`;
   const payload={mode,player:ctx.player||null,pickNumber:ctx.pickNumber||null,faction:ctx.faction||null,rejected:ctx.rejected||[],alreadyPicked:ctx.alreadyPicked||[],players:ctx.players||[],roster,tableLore:ctx.tableLore||[],draftSignals:ctx.draftSignals||{},gameKnowledge:knowledge};
   try{
     const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model,instructions,input:JSON.stringify(payload),max_output_tokens:320})});
