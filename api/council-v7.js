@@ -38,6 +38,7 @@ function repairIncompleteBody(text){
   if(candidate.split(/\s+/).filter(Boolean).length<4||incompleteTransmission(candidate))return'';
   return candidate;
 }
+function removeAudiencePromptLeak(text){return String(text||'').replace(/\bwhat the fuck,?\s*Council\b/gi,'what the fuck is wrong with me')}
 function verdictTooNarrow(payload,ctx={}){
   if(ctx.mode!=='verdict')return false;
   const players=(ctx.players||[]).filter(p=>p?.faction);if(players.length<3)return false;
@@ -89,6 +90,7 @@ module.exports=async function handler(req,res){
       return res.status(captured.statusCode).json(captured.body||{error:'Council Intelligence malfunction',code:'upstream_failure'});
     }
     const body={...(captured.body||{})};
+    body.commentary=removeAudiencePromptLeak(body.commentary);
     if(incompleteTransmission(body.commentary)){
       const repaired=repairIncompleteBody(body.commentary);
       if(repaired){body.commentary=repaired;body.completionRepaired=true;console.info('[council-v7] salvaged incomplete tail',{take});}
