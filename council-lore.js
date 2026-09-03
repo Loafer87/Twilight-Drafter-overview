@@ -24,3 +24,7 @@ const councilHistoryForBeforeLore=councilHistoryFor;
 councilHistoryFor=function(playerOrId){const h=councilHistoryForBeforeLore(playerOrId);return{...h,tableLore:h.profile?.lore?[...h.profile.lore]:[]}};
 const councilContextBeforeLore=councilContext;
 councilContext=function(a,f){const ctx=councilContextBeforeLore(a,f);ctx.history={...(ctx.history||{}),tableLore:councilLoreFor(ctx.playerId||ctx.player)};return ctx};
+if(typeof councilHistoryPayload==='function'){
+  const councilHistoryPayloadBeforeLore=councilHistoryPayload;
+  councilHistoryPayload=function(history){return{...councilHistoryPayloadBeforeLore(history),tableLore:[...(history.tableLore||history.profile?.lore||[])]}};
+}
