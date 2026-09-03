@@ -1,0 +1,40 @@
+/* Council readability pass: keep atmosphere around the panel, never blur the glyph layer. */
+.council-intel .intel-frame{
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+  transform:none;
+  will-change:auto;
+}
+.council-intel.ready .intel-frame{
+  animation:intelFrameCrisp .28s ease-out both;
+  transform:none;
+}
+@keyframes intelFrameCrisp{from{opacity:0}to{opacity:1}}
+
+.council-intel .intel-title,
+.council-intel .intel-text,
+.council-intel .intel-text *,
+.council-intel .intel-kicker,
+.council-intel .intel-subject,
+.council-intel .intel-status,
+.council-intel .intel-achievement{
+  filter:none;
+  text-shadow:none;
+  transform:none;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:geometricPrecision;
+}
+.council-intel .intel-title{
+  font-weight:700;
+  letter-spacing:.01em;
+}
+.council-intel .intel-text{
+  font-weight:600;
+  letter-spacing:.015em;
+  color:#f0e9f0;
+}
+.council-intel .intel-beat-final{color:#f5eef5}
+
+/* Preserve motion on the surrounding interface without leaving the text composited on a scaled layer. */
+.council-intel.leaving .intel-frame{animation:intelFrameCrispOut .28s ease-in both}
+@keyframes intelFrameCrispOut{from{opacity:1}to{opacity:0}}
