@@ -1,7 +1,13 @@
-const COUNCIL_TABLE_LORE_VERSION=1;
+const COUNCIL_TABLE_LORE_VERSION=2;
 const COUNCIL_TABLE_LORE={
   joshua:[
-    'Self-declared chaos goblin. Actively prefers spectacular, weird, risky, or disruptive game choices when they make the table more entertaining.'
+    'Self-declared chaos goblin. Actively prefers spectacular, weird, risky, or disruptive game choices when they make the table more entertaining.',
+    'Reigning Banana Tyrant after back-to-back victories. Treats the Golden Banana championship as evidence of a completely legitimate mandate to rule the table.',
+    'Self-appointed King of Twilight. Speaker tokens, victories, minor procedural advantages, and ceremonial attention are all liable to be interpreted as proof of sovereignty.',
+    'Petty grievance archivist. Harmless table slights have a habit of becoming vendettas, decrees, propaganda, treaties, or future memes.',
+    'Values entertainment above stability. Competent play is acceptable; competent play that also causes the table to yell is preferable.',
+    'Ceremonial narcissist in the game-night sense: deeply enjoys unnecessary theatricality, especially when the ceremony happens to concern him.',
+    'Possesses suspicious levels of confidence. Consecutive victories have not made him quieter, more cautious, or less convinced the evening has a protagonist.'
   ],
   chris:[
     'Coffee is life. Treat caffeine as a strategic resource, sacred object, and likely explanation for continued Council attendance.',
