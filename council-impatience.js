@@ -1,4 +1,4 @@
-const COUNCIL_IMPATIENCE_API=location.hostname==='loafer87.github.io'?'https://twilight-drafter-overview.vercel.app/api/council-stall':'/api/council-stall';
+const COUNCIL_IMPATIENCE_API=location.hostname==='loafer87.github.io'?'https://twilight-drafter-overview.vercel.app/api/council-stall-v2':'/api/council-stall-v2';
 const COUNCIL_IMPATIENCE_WINDOWS=[{min:240,max:300},{min:420,max:510},{min:600,max:720}];
 let councilImpatience=null;
 
