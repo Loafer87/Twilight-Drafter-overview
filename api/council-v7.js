@@ -29,6 +29,15 @@ function incompleteTransmission(text){
   const words=t.split(/\s+/).filter(Boolean);if(words.length<4)return true;
   return false;
 }
+function repairIncompleteBody(text){
+  const t=String(text||'').trim();if(!t||!incompleteTransmission(t))return t;
+  const re=/[.!?…][\"'”’\])}]*(?=\s|$)/g;let match,last=null;
+  while((match=re.exec(t)))last=match;
+  if(!last)return'';
+  const candidate=t.slice(0,last.index+last[0].length).trim();
+  if(candidate.split(/\s+/).filter(Boolean).length<4||incompleteTransmission(candidate))return'';
+  return candidate;
+}
 function verdictTooNarrow(payload,ctx={}){
   if(ctx.mode!=='verdict')return false;
   const players=(ctx.players||[]).filter(p=>p?.faction);if(players.length<3)return false;
@@ -54,6 +63,14 @@ function captureResponse(realRes){
 function isUpstreamQualityFailure(captured){
   return captured.statusCode===502&&captured.body?.error==='Council returned no director-approved take';
 }
+function relaxStyleGate(req,captured){
+  if(!req.body)return;
+  const code=String(captured.body?.code||''),reason=String(captured.body?.reason||'');
+  if(code==='recycled_headline')req.body.recentHeadlines=[];
+  if(code==='recycled_achievement')req.body.recentAchievements=[];
+  if(/repeated recent structure/i.test(reason))req.body.recentBodyPatterns=[];
+  if(/repeated recent structure|classification structure|monologue|shape failed/i.test(reason))req.body.recentPerformanceShapes=[];
+}
 module.exports=async function handler(req,res){
   if(req.method==='POST'&&req.body)req.body=enrich(req.body);
   if(req.method!=='POST')return councilV6(req,res);
@@ -65,13 +82,20 @@ module.exports=async function handler(req,res){
     if(captured.statusCode!==200){
       if(isUpstreamQualityFailure(captured)){
         lastIssue=`upstream-${captured.body?.code||'quality'}`;
+        relaxStyleGate(req,captured);
         console.info('[council-v7] retrying upstream quality failure',{take,code:captured.body?.code||null,reason:captured.body?.reason||null});
         continue;
       }
       return res.status(captured.statusCode).json(captured.body||{error:'Council Intelligence malfunction',code:'upstream_failure'});
     }
-    const body=captured.body||{};lastIssue=responseIssue(body,req.body);
+    const body={...(captured.body||{})};
+    if(incompleteTransmission(body.commentary)){
+      const repaired=repairIncompleteBody(body.commentary);
+      if(repaired){body.commentary=repaired;body.completionRepaired=true;console.info('[council-v7] salvaged incomplete tail',{take});}
+    }
+    lastIssue=responseIssue(body,req.body);
     if(!lastIssue)return res.status(200).json({...body,completionGate:true,verdictSynthesisGate:req.body?.mode==='verdict',qualityRetakes:take});
+    if(lastIssue==='incomplete'&&req.body)req.body.recentBodyPatterns=[];
     console.info('[council-v7] retrying response quality issue',{take,issue:lastIssue});
   }
   return res.status(502).json({error:'Council returned an unusable transmission after retakes',code:lastIssue.startsWith('upstream-')?'upstream_quality_exhausted':lastIssue==='verdict-too-narrow'?'verdict_too_narrow':'incomplete_transmission',reason:lastIssue,apiVersion:'v7-director'});
