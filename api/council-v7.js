@@ -52,34 +52,26 @@ function verdictTooNarrow(payload,ctx={}){
   if(pickReactionCue&&represented<2)return true;
   return false;
 }
-function responseIssue(payload,ctx){if(incompleteTransmission(payload?.commentary))return'incomplete';if(verdictTooNarrow(payload,ctx))return'verdict-too-narrow';return''}
 function captureResponse(realRes){
   const captured={statusCode:200,body:null,ended:false};
   const proxy={setHeader:(...args)=>{realRes.setHeader(...args);return proxy},status:code=>{captured.statusCode=code;return proxy},json:body=>{captured.body=body;captured.ended=true;return proxy},end:body=>{captured.body=body;captured.ended=true;return proxy}};
   return{captured,proxy};
 }
-function isUpstreamQualityFailure(captured){return captured.statusCode===502&&captured.body?.error==='Council returned no director-approved take'}
-function relaxStyleGate(req,captured){
-  if(!req.body)return;
-  const code=String(captured.body?.code||''),reason=String(captured.body?.reason||'');
-  if(code==='recycled_headline')req.body.recentHeadlines=[];
-  if(code==='recycled_achievement')req.body.recentAchievements=[];
-  if(/repeated recent structure/i.test(reason))req.body.recentBodyPatterns=[];
-  if(/repeated recent structure|classification structure|monologue|shape failed/i.test(reason))req.body.recentPerformanceShapes=[];
-}
 function outputText(data){if(typeof data?.output_text==='string')return data.output_text;for(const item of data?.output||[])for(const c of item.content||[])if(c.type==='output_text'&&c.text)return c.text;return''}
 function hash32(value){let h=2166136261>>>0;for(const ch of String(value||'')){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
-const RESCUE_HEADLINES={
-  opening:['THE DOORS ARE NOW A PROBLEM','FIVE SEATS, ZERO ALIBIS','HOPE ENTERS WITHOUT PERMISSION','THE CHAMBER HAS BAD IDEAS'],
-  pick:['THIS DECISION HAS CONSEQUENCES','THE PAPERWORK JUST FLINCHED','SOMEONE CHOSE VIOLENCE ADMINISTRATIVELY','THE TABLE ACQUIRES A PROBLEM'],
-  verdict:['THE GALAXY NEEDS COUNSEL','EVERYONE CONTRIBUTED TO THIS','THE TABLE IS NOW EVIDENCE','FIVE PLANS ENTER, DIGNITY LEAVES']
-};
-function rescueHeadline(ctx,mode){const recent=new Set((ctx.recentHeadlines||[]).map(x=>String(x).toLowerCase())),pool=RESCUE_HEADLINES[mode]||RESCUE_HEADLINES.pick,start=hash32(`${ctx.seed||''}|${mode}|${ctx.transmissionNonce||''}`)%pool.length;for(let i=0;i<pool.length;i++){const h=pool[(start+i)%pool.length];if(!recent.has(h.toLowerCase()))return h}return pool[start]}
+function countWord(n){return({2:'TWO',3:'THREE',4:'FOUR',5:'FIVE',6:'SIX',7:'SEVEN',8:'EIGHT'})[Number(n)]||String(n||'SEVERAL')}
+function rescueHeadline(ctx,mode){
+  const count=Number(ctx.playerCount||ctx.totalPlayers||(ctx.players||[]).length||0),recent=new Set((ctx.recentHeadlines||[]).map(x=>String(x).toLowerCase()));
+  const pool=mode==='opening'?[`${countWord(count)} SEATS, ZERO ALIBIS`,'THE DOORS ARE NOW A PROBLEM','HOPE ENTERS WITHOUT PERMISSION','THE CHAMBER HAS BAD IDEAS']:mode==='verdict'?['THE GALAXY NEEDS COUNSEL','EVERYONE CONTRIBUTED TO THIS','THE TABLE IS NOW EVIDENCE',`${countWord(count)} PLANS ENTER, DIGNITY LEAVES`]:['THIS DECISION HAS CONSEQUENCES','THE PAPERWORK JUST FLINCHED','SOMEONE CHOSE VIOLENCE ADMINISTRATIVELY','THE TABLE ACQUIRES A PROBLEM'];
+  const start=hash32(`${ctx.seed||''}|${mode}|${ctx.transmissionNonce||''}`)%pool.length;for(let i=0;i<pool.length;i++){const h=pool[(start+i)%pool.length];if(!recent.has(h.toLowerCase()))return h}return pool[start]
+}
 function deterministicRescue(ctx,mode){
   const headline=rescueHeadline(ctx,mode),count=Number(ctx.playerCount||ctx.totalPlayers||(ctx.players||[]).length||0);
   if(mode==='opening'){const speaker=ctx.speaker?` ${ctx.speaker} has the Speaker token and an immediately suspicious amount of authority.`:'';return{headline,commentary:`${count||'Several'} delegations are seated.${speaker} The draft is open. Make a fucking decision worth recording.`};}
   if(mode==='verdict'){const factions=(ctx.players||[]).map(p=>p?.faction).filter(Boolean),named=factions.slice(0,3).join(', ');return{headline,commentary:`The table is locked${named?`: ${named}, and the rest of the evidence`:''}. This is no longer a draft; it is a fucking liability map with warships. The Council approves of the consequences and denies responsibility for them.`};}
-  const player=ctx.player||'Contestant',faction=ctx.faction||'that faction';return{headline,commentary:`${player} locked ${faction}. The Council has reviewed the decision and determined that whatever happens next is now your fucking paperwork. No appeal. Proceed.`};
+  const player=ctx.player||'Contestant',faction=ctx.faction||'that faction',rejected=(ctx.rejected||[]).slice(0,1)[0];
+  const rejectLine=rejected?` You looked at ${rejected} and chose this instead, which is now evidence.`:'';
+  return{headline,commentary:`${player} locked ${faction}.${rejectLine} The Council has stamped the decision APPROVED / REGRETTABLE and transferred all future bullshit directly to you. Proceed.`};
 }
 function parseRescue(raw,ctx,mode){
   const clean=String(raw||'').trim().replace(/```(?:text|json)?/gi,'').replace(/```/g,'');
@@ -93,43 +85,26 @@ function parseRescue(raw,ctx,mode){
   if(!commentary)commentary=fallback.commentary;
   return{headline,commentary};
 }
-async function rescueCouncilTake(ctx,mode,reason,timeoutMs){
-  const key=process.env.OPENAI_API_KEY,model=process.env.OPENAI_MODEL;
-  if(!key||!model)return{...deterministicRescue(ctx,mode),source:'deterministic'};
-  const knowledge=knowledgeFor(ctx,mode),roster=(ctx.players||[]).filter(p=>p?.faction).map(p=>`${p.name||'Unknown'} = ${p.faction}`);
-  const instructions=`You are COUNCIL INTELLIGENCE, an original adult dark-comedy machine host for a Twilight Imperium IV faction draft. ${mode==='opening'?'This is the opening sting: be fast, concise and immediately entertaining. Do not recap every player.':'This is an emergency rescue take because the normal performance director rejected its own outputs for style reasons: '+reason+'.'} Be specific to the supplied game context, hostile, profane when natural, irrationally invested, and funny without becoming cute. Adult double entendre and crude non-graphic innuendo are allowed when the supplied mechanics genuinely set them up; do not force a sex joke. Never invent personal facts. No slurs or protected-trait attacks. Use only supplied player history/table lore plus accurate supplied game knowledge. ${mode==='verdict'?'Judge the completed TABLE as a whole using at least three locked factions or their relationships; do not make the verdict about only the Speaker or one player.':''} Output exactly two fields and nothing else:\nHEADLINE: <fresh 2-7 word dramatic title>\nBODY: <1-4 complete sentences, 20-90 words, ending cleanly>`;
-  const payload={mode,player:ctx.player||null,pickNumber:ctx.pickNumber||null,faction:ctx.faction||null,rejected:ctx.rejected||[],alreadyPicked:ctx.alreadyPicked||[],players:ctx.players||[],roster,tableLore:ctx.tableLore||[],draftSignals:ctx.draftSignals||{},speaker:ctx.speaker||null,gameKnowledge:knowledge};
-  const controller=new AbortController(),timer=timeoutMs?setTimeout(()=>controller.abort(),timeoutMs):null;
-  try{
-    const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model,instructions,input:JSON.stringify(payload),max_output_tokens:mode==='opening'?210:320}),signal:controller.signal});
-    if(!r.ok)throw new Error(`rescue_${r.status}`);
-    const parsed=parseRescue(outputText(await r.json()),ctx,mode);
-    if(mode==='verdict'&&verdictTooNarrow(parsed,ctx))return{...deterministicRescue(ctx,mode),source:'deterministic-verdict'};
-    return{...parsed,source:mode==='opening'?'ai-opening':'ai-rescue'};
-  }catch(e){console.warn('[council-v7] AI rescue failed',e?.name||e?.message||e);return{...deterministicRescue(ctx,mode),source:mode==='opening'?'deterministic-opening':'deterministic'};}finally{if(timer)clearTimeout(timer)}
+async function openingTake(ctx){
+  const key=process.env.OPENAI_API_KEY,model=process.env.OPENAI_MODEL;if(!key||!model)return{...deterministicRescue(ctx,'opening'),source:'deterministic-opening'};
+  const knowledge=knowledgeFor(ctx,'opening'),instructions=`You are COUNCIL INTELLIGENCE, an original adult dark-comedy machine host for a Twilight Imperium IV faction draft. This is the opening sting: be fast, concise and immediately entertaining. Do not recap every player. Be hostile, profane when natural, irrationally invested, and funny without becoming cute. Never invent personal facts. No slurs or protected-trait attacks. Output exactly two fields and nothing else:\nHEADLINE: <fresh 2-7 word dramatic title>\nBODY: <1-3 complete sentences, 18-75 words, ending cleanly>`,payload={mode:'opening',players:ctx.players||[],speaker:ctx.speaker||null,totalPlayers:ctx.totalPlayers||ctx.playerCount||null,tableLore:ctx.tableLore||[],gameKnowledge:knowledge};
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5600);
+  try{const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model,instructions,input:JSON.stringify(payload),max_output_tokens:210}),signal:controller.signal});if(!r.ok)throw new Error(`opening_${r.status}`);return{...parseRescue(outputText(await r.json()),ctx,'opening'),source:'ai-opening'}}catch(e){console.warn('[council-v7] fast opening fallback',e?.name||e?.message||e);return{...deterministicRescue(ctx,'opening'),source:'deterministic-opening'}}finally{clearTimeout(timer)}
 }
+function immediateFallback(res,ctx,mode,reason,started){const fallback=deterministicRescue(ctx,mode);console.warn('[council-v7] immediate server fallback',{mode,reason});return res.status(200).json({commentary:fallback.commentary,title:fallback.headline,headline:fallback.headline,achievement:null,directorMode:'emergency-ruling',renderStyle:'burst',performanceShape:'emergency-ruling',bodyPattern:'emergency-ruling:other',apiVersion:'v7-director',completionGate:true,verdictSynthesisGate:mode==='verdict',qualityRetakes:0,serverFallback:true,fallbackReason:reason,elapsedMs:Date.now()-started})}
 module.exports=async function handler(req,res){
   if(req.method==='POST'&&req.body)req.body=enrich(req.body);
   if(req.method!=='POST')return councilV6(req,res);
-  const originalNonce=req.body?.transmissionNonce||Date.now().toString(36);let lastIssue='',mode=req.body?.mode==='opening'?'opening':req.body?.mode==='verdict'?'verdict':'pick';
+  const started=Date.now(),mode=req.body?.mode==='opening'?'opening':req.body?.mode==='verdict'?'verdict':'pick';
   if(mode==='opening'){
-    const fast=await rescueCouncilTake(req.body||{},'opening','fast opening',5600);
-    console.info('[council-v7] fast opening',{source:fast.source});
-    return res.status(200).json({commentary:fast.commentary,title:fast.headline,headline:fast.headline,achievement:null,directorMode:'opening-sting',renderStyle:'burst',performanceShape:'opening-sting',bodyPattern:'opening-sting:short',apiVersion:'v7-director',completionGate:true,verdictSynthesisGate:false,qualityRetakes:0,fastOpening:true,fastOpeningSource:fast.source});
+    const fast=await openingTake(req.body||{});console.info('[council-v7] fast opening',{source:fast.source,elapsedMs:Date.now()-started});
+    return res.status(200).json({commentary:fast.commentary,title:fast.headline,headline:fast.headline,achievement:null,directorMode:'opening-sting',renderStyle:'burst',performanceShape:'opening-sting',bodyPattern:'opening-sting:short',apiVersion:'v7-director',completionGate:true,verdictSynthesisGate:false,qualityRetakes:0,fastOpening:true,fastOpeningSource:fast.source,elapsedMs:Date.now()-started});
   }
-  for(let take=0;take<3;take++){
-    if(take&&req.body){req.body={...req.body,transmissionNonce:`${originalNonce}-quality-retake-${take}`,seed:`${req.body.seed||''}|v7-retake-${take}`,recentBodyPatterns:[...(req.body.recentBodyPatterns||[]),`v7-rejected-${lastIssue||'quality'}-${take}`]}}
-    const {captured,proxy}=captureResponse(res);await councilV6(req,proxy);
-    if(captured.statusCode!==200){
-      if(isUpstreamQualityFailure(captured)){lastIssue=`upstream-${captured.body?.code||'quality'}`;relaxStyleGate(req,captured);console.info('[council-v7] retrying upstream quality failure',{take,code:captured.body?.code||null,reason:captured.body?.reason||null});continue;}
-      return res.status(captured.statusCode).json(captured.body||{error:'Council Intelligence malfunction',code:'upstream_failure'});
-    }
-    const body={...(captured.body||{})};body.commentary=removeAudiencePromptLeak(body.commentary);
-    if(incompleteTransmission(body.commentary)){const repaired=repairIncompleteBody(body.commentary);if(repaired){body.commentary=repaired;body.completionRepaired=true;console.info('[council-v7] salvaged incomplete tail',{take});}}
-    lastIssue=responseIssue(body,req.body);if(!lastIssue)return res.status(200).json({...body,completionGate:true,verdictSynthesisGate:mode==='verdict',qualityRetakes:take});
-    if(lastIssue==='incomplete'&&req.body)req.body.recentBodyPatterns=[];console.info('[council-v7] retrying response quality issue',{take,issue:lastIssue});
-  }
-  const rescue=await rescueCouncilTake(req.body||{},mode,lastIssue||'quality exhausted');
-  console.info('[council-v7] serving rescue take',{mode,reason:lastIssue,source:rescue.source});
-  return res.status(200).json({commentary:rescue.commentary,title:rescue.headline,headline:rescue.headline,achievement:null,directorMode:'rescue-ruling',renderStyle:'burst',performanceShape:'rescue-ruling',bodyPattern:'rescue-ruling:other',apiVersion:'v7-director',completionGate:true,verdictSynthesisGate:mode==='verdict',qualityRetakes:3,rescueMode:true,rescueSource:rescue.source,rescueReason:lastIssue});
+  const {captured,proxy}=captureResponse(res);await councilV6(req,proxy);
+  if(captured.statusCode!==200)return immediateFallback(res,req.body||{},mode,`upstream_${captured.body?.code||captured.statusCode}`,started);
+  const body={...(captured.body||{})};body.commentary=removeAudiencePromptLeak(body.commentary);
+  if(incompleteTransmission(body.commentary)){const repaired=repairIncompleteBody(body.commentary);if(repaired){body.commentary=repaired;body.completionRepaired=true}else return immediateFallback(res,req.body||{},mode,'incomplete_unrepairable',started)}
+  if(mode==='verdict'&&verdictTooNarrow(body,req.body||{}))return immediateFallback(res,req.body||{},mode,'verdict_too_narrow',started);
+  console.info('[council-v7] single-pass success',{mode,elapsedMs:Date.now()-started,styleRelaxed:Boolean(body.styleRelaxed)});
+  return res.status(200).json({...body,completionGate:true,verdictSynthesisGate:mode==='verdict',qualityRetakes:0,singlePass:true,elapsedMs:Date.now()-started});
 };
