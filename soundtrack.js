@@ -1,6 +1,6 @@
 const COUNCIL_SOUNDTRACKS=[
-  {name:'Event Horizon',type:'audio/mp4',parts:Array.from({length:5},(_,i)=>`audio-data/event-horizon/part-${String(i).padStart(2,'0')}.b64`)},
-  {name:'Cathedral of the Void',type:'audio/mp4',parts:Array.from({length:5},(_,i)=>`audio-data/cathedral-of-the-void/part-${String(i).padStart(2,'0')}.b64`)}
+  {name:'Event Horizon',type:'audio/ogg',parts:Array.from({length:11},(_,i)=>`audio-data/event-horizon/part-${String(i).padStart(2,'0')}.b64`)},
+  {name:'Cathedral of the Void',type:'audio/ogg',parts:Array.from({length:10},(_,i)=>`audio-data/cathedral-of-the-void/part-${String(i).padStart(2,'0')}.b64`)}
 ];
 const councilProceduralStart=startMusic,councilProceduralStop=stopMusic,councilProceduralUpdate=updateMusic,councilProceduralDuck=duckMusic;
 let councilTrackEls=[],councilTrackSources=[],councilTrackGains=[],councilTrackUrls=[],councilTrackIndex=0,councilCrossfading=false,councilSoundtrackReady=false,councilSoundtrackInitPromise=null,councilUsingProcedural=false;
