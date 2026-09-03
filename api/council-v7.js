@@ -40,7 +40,18 @@ function repairIncompleteBody(text){
   if(candidate.split(/\s+/).filter(Boolean).length<4||incompleteTransmission(candidate))return'';
   return candidate;
 }
-function salvageHardCut(text){const clean=removeAudiencePromptLeak(String(text||'').trim());const repaired=repairIncompleteBody(clean);if(repaired)return repaired;let stem=clean.replace(/[,:;\-—–“‘([{]+$/g,'').replace(/\s+\b(?:and|or|but|because|with|without|of|to|for|from|by|as|the|a|an|into|through|before|after|while|which|that|this|your|our|their)\b$/i,'').trim();if(stem.split(/\s+/).filter(Boolean).length<6)return'';if(stem.length>360){const cut=stem.lastIndexOf(' ',360);stem=stem.slice(0,cut>120?cut:360).trim()}return`${stem}… Fuck it. The Council has seen enough.`}
+function salvageHardCut(text){
+  const clean=removeAudiencePromptLeak(String(text||'').trim());
+  const repaired=repairIncompleteBody(clean);if(repaired)return repaired;
+  const boundary=/[.!?…][\"'”’\])}]*(?=\s|$)/g;let match,last=null;
+  while((match=boundary.exec(clean)))last=match;
+  if(last){const candidate=clean.slice(0,last.index+last[0].length).trim();if(candidate.split(/\s+/).filter(Boolean).length>=4)return candidate;}
+  let stem=clean.replace(/[,:;\-—–“‘([{]+$/g,'').replace(/\s+\b(?:and|or|but|because|with|without|of|to|for|from|by|as|the|a|an|into|through|before|after|while|which|that|this|your|our|their)\b$/i,'').trim();
+  if(stem.split(/\s+/).filter(Boolean).length<6)return'';
+  if(stem.length>360){const cut=stem.lastIndexOf(' ',360);stem=stem.slice(0,cut>120?cut:360).trim()}
+  stem=stem.replace(/[\s.?!…]+$/,'').trim();
+  return stem?`${stem}.`:'';
+}
 function removeAudiencePromptLeak(text){return String(text||'').replace(/\bwhat the fuck,?\s*Council\b/gi,'what the fuck is wrong with me')}
 function verdictTooNarrow(payload,ctx={}){
   if(ctx.mode!=='verdict')return false;
@@ -104,7 +115,7 @@ module.exports=async function handler(req,res){
   const {captured,proxy}=captureResponse(res);await councilV6(req,proxy);
   if(captured.statusCode!==200)return immediateFallback(res,req.body||{},mode,`upstream_${captured.body?.code||captured.statusCode}`,started);
   const body={...(captured.body||{})};body.commentary=removeAudiencePromptLeak(body.commentary);
-  if(incompleteTransmission(body.commentary)){const repaired=salvageHardCut(body.commentary);if(repaired){body.commentary=repaired;body.completionRepaired=true;body.hardCutSalvaged=true;console.info('[council-v7] converted hard cut into Council glitch',{mode})}else return immediateFallback(res,req.body||{},mode,'incomplete_unrepairable',started)}
+  if(incompleteTransmission(body.commentary)){const repaired=salvageHardCut(body.commentary);if(repaired){body.commentary=repaired;body.completionRepaired=true;body.hardCutSalvaged=true;console.info('[council-v7] salvaged hard cut without canned ending',{mode})}else return immediateFallback(res,req.body||{},mode,'incomplete_unrepairable',started)}
   if(mode==='verdict'&&verdictTooNarrow(body,req.body||{}))return immediateFallback(res,req.body||{},mode,'verdict_too_narrow',started);
   console.info('[council-v7] single-pass success',{mode,elapsedMs:Date.now()-started,styleRelaxed:Boolean(body.styleRelaxed)});
   return res.status(200).json({...body,completionGate:true,verdictSynthesisGate:mode==='verdict',qualityRetakes:0,singlePass:true,elapsedMs:Date.now()-started});
