@@ -1,7 +1,7 @@
 function councilOpeningContext(){
   const players=state.assignments.map((a,i)=>{
     const name=playerName(a.playerIdx),history=councilHistoryFor(name);
-    return {name:history.profile?.displayName||name,playerId:history.profile?.id||null,order:i+1,speaker:i===0,history:{totalDraftPicks:history.total,factions:history.factions,speakerCount:history.speakerCount,achievements:history.achievements,games:history.games,wins:history.wins,winRate:history.winRate,winStreak:history.winStreak,lastGame:history.lastGame}};
+    return {name:history.profile?.displayName||name,playerId:history.profile?.id||null,order:i+1,speaker:i===0,history:{totalDraftPicks:history.total,factions:history.factions,speakerCount:history.speakerCount,achievements:history.achievements,games:history.games,wins:history.wins,winRate:history.winRate,winStreak:history.winStreak,legacyRecord:history.legacyRecord,lastGame:history.lastGame}};
   });
   return {mode:'opening',seed:state.seed,totalPlayers:state.players,speaker:players[0]?.name||'',expansions:[...state.exp].map(id=>E[id]?.name||id),players};
 }
