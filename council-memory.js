@@ -57,20 +57,20 @@ function councilContext(a,f){
 function councilEventId(ctx){return`${ctx.sessionId||ctx.seed}|${ctx.pickNumber}|${ctx.playerId||ctx.playerKey}`}
 function councilCurrentSession(store=councilLoadStore()){return state.councilSessionId?store.sessions.find(s=>s.id===state.councilSessionId)||null:null}
 function councilStartSession(){
-  const store=councilLoadStore(),id=councilNewId('s');state.councilSessionId=id;
-  const players=state.assignments.map((a,i)=>{const p=councilResolveProfile(playerName(a.playerIdx),true);return{profileId:p.id,name:p.displayName,order:i+1,speaker:i===0,faction:null}});
-  store.sessions.push({id,seed:state.seed,startedAt:Date.now(),completedAt:null,status:'drafted',expansions:[...state.exp],players,winnerId:null,winnerName:null,winnerVp:null,note:''});councilSaveStore(store);return id;
+  const id=councilNewId('s');state.councilSessionId=id;
+  const resolved=state.assignments.map((a,i)=>{const p=councilResolveProfile(playerName(a.playerIdx),true);return{profileId:p.id,name:p.displayName,order:i+1,speaker:i===0,faction:null}}),store=councilLoadStore();
+  store.sessions.push({id,seed:state.seed,startedAt:Date.now(),completedAt:null,status:'drafted',expansions:[...state.exp],players:resolved,winnerId:null,winnerName:null,winnerVp:null,note:''});councilSaveStore(store);return id;
 }
 function councilSyncSessionPick(ctx,faction){const store=councilLoadStore(),session=store.sessions.find(s=>s.id===(ctx.sessionId||state.councilSessionId));if(!session)return;const seat=session.players.find(p=>p.profileId===(ctx.playerId||ctx.playerKey));if(seat)seat.faction=faction||null;councilSaveStore(store)}
 function councilRecordPick(ctx){
-  const store=councilLoadStore(),id=councilEventId(ctx),pid=ctx.playerId||ctx.playerKey;store.events=store.events.filter(e=>e.id!==id);(store.achievements[pid]||[]).filter(a=>a.sourceEventId===id).forEach(()=>{});store.achievements[pid]=(store.achievements[pid]||[]).filter(a=>a.sourceEventId!==id);
+  const store=councilLoadStore(),id=councilEventId(ctx),pid=ctx.playerId||ctx.playerKey;store.events=store.events.filter(e=>e.id!==id);store.achievements[pid]=(store.achievements[pid]||[]).filter(a=>a.sourceEventId!==id);
   store.events.push({id,sessionId:ctx.sessionId||state.councilSessionId||null,seed:ctx.seed,player:ctx.player,playerId:pid,playerKey:pid,faction:ctx.faction,pickNumber:ctx.pickNumber,speaker:ctx.speaker,ts:Date.now()});if(store.events.length>500)store.events=store.events.slice(-500);councilSaveStore(store);councilSyncSessionPick(ctx,ctx.faction);
   const h=councilHistoryFor(pid),achievement=councilAchievementFor(ctx,h);if(achievement){const fresh=councilLoadStore(),list=fresh.achievements[pid]||[];if(!list.some(x=>x.title===achievement.title)){list.push({...achievement,source:'draft',sourceEventId:id,ts:Date.now()});fresh.achievements[pid]=list;councilSaveStore(fresh);return achievement}}return null;
 }
 function councilForgetPick(id){
   if(!id)return;const store=councilLoadStore(),event=store.events.find(e=>e.id===id);store.events=store.events.filter(e=>e.id!==id);if(event){store.achievements[event.playerId]=(store.achievements[event.playerId]||[]).filter(a=>a.sourceEventId!==id);const session=store.sessions.find(s=>s.id===event.sessionId);const seat=session?.players?.find(p=>p.profileId===event.playerId);if(seat)seat.faction=null}councilSaveStore(store);
 }
-function councilUpdateSessionRoster(){const store=councilLoadStore(),session=councilCurrentSession(store);if(!session)return;state.picks.forEach(p=>{const profile=councilResolveProfile(playerName(p.playerIdx),true),seat=session.players.find(x=>x.profileId===profile.id);if(seat)seat.faction=p.faction.name});councilSaveStore(store)}
+function councilUpdateSessionRoster(){const store=councilLoadStore(),session=councilCurrentSession(store);if(!session)return;state.picks.forEach(p=>{const profile=councilFindProfile(store,playerName(p.playerIdx)),seat=profile?session.players.find(x=>x.profileId===profile.id):null;if(seat)seat.faction=p.faction.name});councilSaveStore(store)}
 function councilRebuildResultAchievements(store){
   Object.keys(store.achievements).forEach(pid=>store.achievements[pid]=(store.achievements[pid]||[]).filter(a=>a.source!=='session'));
   const streaks={};[...store.sessions].filter(s=>s.status==='complete'&&s.winnerId).sort((a,b)=>(a.completedAt||a.startedAt||0)-(b.completedAt||b.startedAt||0)).forEach(s=>{
