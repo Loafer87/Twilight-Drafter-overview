@@ -1,7 +1,8 @@
+function councilHistoryPayload(history){return{totalDraftPicks:history.total,factions:history.factions,speakerCount:history.speakerCount,achievements:history.achievements,games:history.games,wins:history.wins,winRate:history.winRate,winStreak:history.winStreak,legacyRecord:history.legacyRecord,lastGame:history.lastGame}}
 function councilOpeningContext(){
   const players=state.assignments.map((a,i)=>{
     const name=playerName(a.playerIdx),history=councilHistoryFor(name);
-    return {name:history.profile?.displayName||name,playerId:history.profile?.id||null,order:i+1,speaker:i===0,history:{totalDraftPicks:history.total,factions:history.factions,speakerCount:history.speakerCount,achievements:history.achievements,games:history.games,wins:history.wins,winRate:history.winRate,winStreak:history.winStreak,legacyRecord:history.legacyRecord,lastGame:history.lastGame}};
+    return {name:history.profile?.displayName||name,playerId:history.profile?.id||null,order:i+1,speaker:i===0,history:councilHistoryPayload(history)};
   });
   return {mode:'opening',seed:state.seed,totalPlayers:state.players,speaker:players[0]?.name||'',expansions:[...state.exp].map(id=>E[id]?.name||id),players};
 }
@@ -18,6 +19,23 @@ function prepareCouncilOpening(){
   const promise=councilRemoteReaction(ctx).catch(error=>({text:local,source:'local',reason:error?.name==='AbortError'?'timeout':String(error?.code||error?.message||'uplink_failed')}));
   return {ctx,promise};
 }
+function councilVerdictContext(){
+  const players=state.assignments.map((a,i)=>{
+    const raw=playerName(a.playerIdx),history=councilHistoryFor(raw),chosen=a.chosen;
+    return {name:history.profile?.displayName||raw,playerId:history.profile?.id||null,order:i+1,speaker:i===0,faction:chosen?.name||null,tag:chosen?.tag||null,expansion:chosen?E[chosen.exp]?.name||chosen.exp:null,rejected:a.options.filter(f=>!chosen||f.name!==chosen.name).map(f=>f.name),history:councilHistoryPayload(history)};
+  });
+  return {mode:'verdict',seed:state.seed,totalPlayers:state.players,speaker:players[0]?.name||'',expansions:[...state.exp].map(id=>E[id]?.name||id),players};
+}
+function councilLocalVerdict(ctx){
+  const speaker=ctx.players[0],chaos=ctx.players.find(p=>/chaos|aggressive|military/i.test(String(p.tag||'')))||ctx.players[ctx.players.length-1],repeat=ctx.players.find(p=>(p.history?.factions?.[p.faction]||0)>1);
+  const repeatLine=repeat?` ${repeat.name} has returned to ${repeat.faction}; the pattern-recognition subsystem has stopped pretending this is coincidence.`:'';
+  return `All ${ctx.totalPlayers} delegations are locked. ${speaker.name} used first priority on ${speaker.faction}, which the Council will classify as either leadership or an early confession.${repeatLine} ${chaos.name} currently carries the highest provisional entertainment risk. Final ruling: grudges are authorized, excuses are not.`;
+}
+function prepareCouncilVerdict(){
+  const ctx=councilVerdictContext(),local=councilLocalVerdict(ctx);
+  const promise=councilRemoteReaction(ctx).catch(error=>({text:local,source:'local',reason:error?.name==='AbortError'?'timeout':String(error?.code||error?.message||'uplink_failed')}));
+  return {ctx,promise};
+}
 function councilSetSource(result){
   const source=$('#intelSource'),reason=String(result.reason||'uplink_failed').toUpperCase().replace(/_/g,' ');
   source.textContent=result.source==='llm'?'LIVE COGNITIVE LINK':`LOCAL CHAOS ENGINE // ${reason}`;
@@ -26,16 +44,17 @@ function councilSetSource(result){
 const councilPickScreen=showCouncilIntelligence;
 showCouncilIntelligence=function(result,ctx,achievement,done){
   const el=$('#councilIntel');
-  el.classList.remove('opening');
+  el.classList.remove('opening','verdict');
   $('.intel-status b').textContent='COUNCIL INTELLIGENCE // UNSOLICITED ANALYSIS';
   $('.intel-kicker').textContent='Behavioral Assessment';
   $('.intel-title').textContent='The Council Has Opinions';
   councilPickScreen(result,ctx,achievement,done);
+  if(ctx.pickNumber>=ctx.totalPlayers)$('#intelContinue').textContent='Summon Final Verdict →';
   councilSetSource(result);
 };
 function showCouncilOpening(result,ctx,done){
   const el=$('#councilIntel'),text=$('#intelText'),ach=$('#intelAchievement'),btn=$('#intelContinue');
-  el.classList.add('opening');
+  el.classList.add('opening');el.classList.remove('verdict');
   $('.intel-status b').textContent='COUNCIL INTELLIGENCE // SESSION AUTHORIZATION';
   $('.intel-kicker').textContent='Initial Delegation Assessment';
   $('.intel-title').textContent='Council Intelligence Online';
@@ -56,4 +75,19 @@ function showCouncilOpening(result,ctx,done){
     clearTimeout(unlock);btn.disabled=true;el.classList.add('leaving');
     setTimeout(()=>{el.classList.remove('open','ready','leaving','opening');done()},reduced?20:720);
   };
+}
+function showCouncilVerdict(result,ctx,done){
+  const el=$('#councilIntel'),text=$('#intelText'),ach=$('#intelAchievement'),btn=$('#intelContinue');
+  el.classList.remove('opening');el.classList.add('verdict');
+  $('.intel-status b').textContent='COUNCIL INTELLIGENCE // PROVISIONAL TABLE RULING';
+  $('.intel-kicker').textContent='Draft Classification Complete';
+  $('.intel-title').textContent='Final Preliminary Verdict';
+  $('#intelSubject').textContent=`${ctx.totalPlayers} FACTIONS LOCKED // APPEALS: DENIED`;
+  text.textContent=result.text;councilSetSource(result);ach.hidden=true;ach.innerHTML='';
+  btn.textContent='Reveal the Council Chamber →';btn.disabled=true;
+  el.classList.remove('ready','leaving');el.classList.add('open');
+  playCouncilStinger();requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('ready')));
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const unlock=setTimeout(()=>{btn.disabled=false;btn.focus({preventScroll:true})},reduced?100:1200);
+  btn.onclick=()=>{if(btn.disabled)return;clearTimeout(unlock);btn.disabled=true;el.classList.add('leaving');setTimeout(()=>{el.classList.remove('open','ready','leaving','verdict');done()},reduced?20:760)};
 }
