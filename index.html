@@ -17,13 +17,14 @@
 <link rel="stylesheet" href="styles-g.css">
 <link rel="stylesheet" href="styles-h.css">
 <link rel="stylesheet" href="styles-i.css">
+<link rel="stylesheet" href="styles-j.css">
 </head>
 <body>
 <canvas id="space"></canvas><div class="aurora"></div>
 <div class="shell">
   <div class="topbar"><div class="brand-mini">Twilight Imperium IV • Game Night Utility</div><div class="tools"><button class="tool" id="musicBtn">♪ Space Lofi Off</button><button class="tool" id="shareBtn">⧉ Copy Draft Link</button><button class="tool" id="tvBtn">▣ TV Mode</button></div></div>
   <header class="hero"><div class="eyebrow">The Galactic Council Convenes</div><h1>Faction Draft</h1><div class="sub">Choose your civilization • claim your destiny • blame the speaker</div><div class="ornament"><div class="hex"></div></div></header>
-  <nav class="nav" aria-label="App sections"><button class="active" data-view="setup">Council Setup</button><button data-view="guide">Faction Archive</button></nav>
+  <nav class="nav" aria-label="App sections"><button class="active" data-view="setup">Council Setup</button><button data-view="guide">Faction Archive</button><button data-view="history">Council Archives</button></nav>
   <main>
     <section class="view active" id="setupView">
       <div id="setupScreen" class="setup-grid">
@@ -33,6 +34,7 @@
       <div id="stageScreen" class="stage" hidden></div>
     </section>
     <section class="view" id="guideView"><div class="guide-tools"><input class="search" id="guideSearch" placeholder="Search factions, playstyles, expansions…"><div class="filters" id="guideFilters"></div></div><div class="guide-grid" id="guideGrid"></div></section>
+    <section class="view" id="historyView"><div class="archive-shell" id="councilArchive"></div></section>
   </main>
   <div class="footer">Fan-made draft utility • All hail the speaker • No warranty against Saar</div>
 </div>
@@ -43,8 +45,10 @@
 <script src="data.js"></script>
 <script src="core.js"></script>
 <script src="council-ai.js"></script>
+<script src="council-memory.js"></script>
 <script src="council-host.js"></script>
 <script src="draft.js"></script>
+<script src="council-archive.js"></script>
 <script src="effects.js"></script>
 </body>
 </html>
