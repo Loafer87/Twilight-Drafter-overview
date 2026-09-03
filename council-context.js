@@ -1,4 +1,4 @@
-/* Real-world session awareness + knowledge-aware Council uplink. */
+/* Real-world session awareness + knowledge-aware Council uplink. Deployment retry: 2026-09-03 11:53 America/Vancouver. */
 const COUNCIL_API=location.hostname==='loafer87.github.io'?'https://twilight-drafter-overview.vercel.app/api/council-v7':'/api/council-v7';
 const COUNCIL_RECENT_HEADLINES_KEY='ti4-council-recent-headlines-v1';
 const COUNCIL_RECENT_ACHIEVEMENTS_KEY='ti4-council-recent-ai-achievements-v1';
