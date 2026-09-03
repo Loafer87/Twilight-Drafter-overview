@@ -24,6 +24,7 @@
 <link rel="stylesheet" href="styles-n.css">
 <link rel="stylesheet" href="styles-o.css">
 <link rel="stylesheet" href="styles-p.css">
+<link rel="stylesheet" href="styles-q.css">
 </head>
 <body>
 <canvas id="space"></canvas><div class="aurora"></div>
@@ -46,13 +47,14 @@
 </div>
 <div class="modal" id="modal"><div class="modal-card"><button class="modal-close" id="modalClose">×</button><div id="modalBody"></div></div></div>
 <div class="ceremony" id="ceremony" aria-live="assertive"><div class="ceremony-rays"></div><div class="ceremony-inner"><div class="ceremony-prelude" id="ceremonyPrelude">The choice is sealed</div><div class="ceremony-sigil" id="ceremonySigil"></div><div class="ceremony-kicker">Faction Selected</div><div class="ceremony-player" id="ceremonyPlayer"></div><div class="ceremony-name" id="ceremonyName"></div><div class="ceremony-line"></div><div class="ceremony-copy">The galaxy has witnessed your decision</div><button class="ceremony-continue" id="ceremonyContinue" disabled>Continue to Council Intelligence →</button></div></div>
-<div class="council-intel" id="councilIntel" aria-live="polite"><div class="intel-frame"><div class="intel-status"><b>COUNCIL INTELLIGENCE // UNSOLICITED ANALYSIS</b><span class="intel-source" id="intelSource">LOCAL CHAOS ENGINE</span></div><div class="intel-orb"></div><div class="intel-kicker">Behavioral Assessment</div><div class="intel-title">The Council Has Opinions</div><div class="intel-subject" id="intelSubject"></div><div class="intel-text" id="intelText"></div><div class="intel-achievement" id="intelAchievement" hidden></div><div class="intel-actions"><button class="intel-continue" id="intelContinue" disabled>Summon Next Delegation →</button></div></div></div>
+<div class="council-intel" id="councilIntel" aria-live="polite"><div class="intel-frame"><div class="intel-status"><b>COUNCIL INTELLIGENCE // UNSOLICITED ANALYSIS</b><span class="intel-source" id="intelSource">LOCAL CHAOS ENGINE</span></div><div class="intel-orb"></div><div class="intel-kicker">Behavioral Assessment</div><div class="intel-title">Council Intelligence</div><div class="intel-subject" id="intelSubject"></div><div class="intel-text" id="intelText"></div><div class="intel-achievement" id="intelAchievement" hidden></div><div class="intel-actions"><button class="intel-continue" id="intelContinue" disabled>Summon Next Delegation →</button></div></div></div>
 <div class="toast" id="toast"></div>
 <script src="data.js"></script>
 <script src="core.js"></script>
 <script src="council-ai.js"></script>
 <script src="council-memory.js"></script>
 <script src="council-host.js"></script>
+<script src="council-ui-dynamic.js"></script>
 <script src="council-lore.js"></script>
 <script src="draft.js"></script>
 <script src="te-art.js"></script>
