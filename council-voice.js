@@ -25,27 +25,34 @@ async function councilSpeak(text,mode='pick',onEnded=null,onStarted=null,onUnava
   }catch(e){if(e?.name==='AbortError')return;el?.classList.remove('voice-loading','voice-speaking');councilVoiceController=null;if(typeof onUnavailable==='function')onUnavailable();console.warn('Council voice unavailable',e);councilRestoreMusic();toast('AI voice uplink unavailable • text mode continues')}
 }
 function councilToggleVoice(){councilVoiceEnabled=!councilVoiceEnabled;localStorage.setItem(COUNCIL_VOICE_KEY,councilVoiceEnabled?'on':'off');if(!councilVoiceEnabled)councilStopVoice();councilUpdateVoiceButton();toast(councilVoiceEnabled?'AI-generated Council voice enabled':'Council voice muted')}
-function councilAchievementSpeech(achievement){if(!achievement)return'';return `NEW ACHIEVEMENT! ${achievement.title}. ${achievement.copy}`}
+function councilOfficialAchievement(result,legacy){return legacy||result?.achievement||null}
+function councilAchievementSpeech(achievement){if(!achievement?.title)return'';return `COUNCIL ACHIEVEMENT UNLOCKED. ${achievement.title}. ${achievement.copy||''}`.trim()}
+function councilSpeakWithAchievement(result,mode,textEl,achievementEl,achievement){
+  const text=String(result?.text||'').trim(),achievementSpeech=councilAchievementSpeech(achievement),sync=councilVoiceEnabled&&Boolean(text);
+  if(sync)councilVoiceHold(textEl);else councilVoiceReveal(textEl);
+  if(achievement&&sync)councilVoiceHold(achievementEl);else if(achievement)councilVoiceReveal(achievementEl);
+  const revealAll=()=>{councilVoiceReveal(textEl);if(achievement)councilVoiceReveal(achievementEl)};
+  const speakAchievement=achievementSpeech?()=>councilSpeak(achievementSpeech,'achievement',null,()=>councilVoiceReveal(achievementEl),()=>councilVoiceReveal(achievementEl)):null;
+  councilSpeak(text,mode,speakAchievement,()=>councilVoiceReveal(textEl),revealAll);
+}
 
 const councilVoiceBasePick=showCouncilIntelligence;
 showCouncilIntelligence=function(result,ctx,achievement,done){
-  councilVoiceBasePick(result,ctx,achievement,()=>{councilStopVoice();done()});
-  const textEl=$('#intelText'),ach=$('#intelAchievement'),achievementSpeech=councilAchievementSpeech(achievement),sync=councilVoiceEnabled&&String(result.text||'').trim();
-  if(sync)councilVoiceHold(textEl);else councilVoiceReveal(textEl);
-  if(achievement&&sync)councilVoiceHold(ach);else if(achievement)councilVoiceReveal(ach);
-  councilSpeak(result.text,'pick',achievementSpeech?()=>councilSpeak(achievementSpeech,'achievement',null,()=>councilVoiceReveal(ach),()=>councilVoiceReveal(ach)):null,()=>councilVoiceReveal(textEl),()=>{councilVoiceReveal(textEl);if(achievement)councilVoiceReveal(ach)});
+  const official=councilOfficialAchievement(result,achievement);
+  councilVoiceBasePick(result,ctx,official,()=>{councilStopVoice();done()});
+  councilSpeakWithAchievement(result,'pick',$('#intelText'),$('#intelAchievement'),official);
 };
 const councilVoiceBaseOpening=showCouncilOpening;
 showCouncilOpening=function(result,ctx,done){
-  councilVoiceBaseOpening(result,ctx,()=>{councilStopVoice();done()});const textEl=$('#intelText');
-  if(councilVoiceEnabled&&String(result.text||'').trim())councilVoiceHold(textEl);else councilVoiceReveal(textEl);
-  councilSpeak(result.text,'opening',null,()=>councilVoiceReveal(textEl),()=>councilVoiceReveal(textEl));
+  const official=councilOfficialAchievement(result,null);
+  councilVoiceBaseOpening(result,ctx,()=>{councilStopVoice();done()});
+  councilSpeakWithAchievement(result,'opening',$('#intelText'),$('#intelAchievement'),official);
 };
 const councilVoiceBaseVerdict=showCouncilVerdict;
 showCouncilVerdict=function(result,ctx,done){
-  councilVoiceBaseVerdict(result,ctx,()=>{councilStopVoice();done()});const textEl=$('#intelText');
-  if(councilVoiceEnabled&&String(result.text||'').trim())councilVoiceHold(textEl);else councilVoiceReveal(textEl);
-  councilSpeak(result.text,'verdict',null,()=>councilVoiceReveal(textEl),()=>councilVoiceReveal(textEl));
+  const official=councilOfficialAchievement(result,null);
+  councilVoiceBaseVerdict(result,ctx,()=>{councilStopVoice();done()});
+  councilSpeakWithAchievement(result,'verdict',$('#intelText'),$('#intelAchievement'),official);
 };
 
 councilEnsureVolumeControl();

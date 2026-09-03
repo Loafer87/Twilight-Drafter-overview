@@ -1,5 +1,5 @@
 /* Real-world session awareness + knowledge-aware Council uplink. */
-const COUNCIL_V2_API=location.hostname==='loafer87.github.io'?'https://twilight-drafter-overview.vercel.app/api/council-v3':'/api/council-v3';
+const COUNCIL_API=location.hostname==='loafer87.github.io'?'https://twilight-drafter-overview.vercel.app/api/council-v4':'/api/council-v4';
 let councilSessionStartedAt=null;
 
 function councilSessionTemporal(){
@@ -14,10 +14,10 @@ const councilContextBaseReset=resetSetup;
 resetSetup=function(){councilSessionStartedAt=null;return councilContextBaseReset()};
 
 councilRemoteReaction=async function(ctx){
-  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),18000);
   try{
     const payload={...ctx,temporal:councilSessionTemporal()};
-    const r=await fetch(COUNCIL_V2_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:controller.signal});
+    const r=await fetch(COUNCIL_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:controller.signal});
     let data={};try{data=await r.json()}catch(e){}
     if(!r.ok){const error=new Error(String(data.code||`http_${r.status}`));error.code=String(data.code||`http_${r.status}`);throw error}
     const text=String(data.commentary||'').trim();
