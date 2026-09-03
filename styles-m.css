@@ -1,0 +1,98 @@
+/* Final UI polish pass: Council Chamber hierarchy, responsive dossiers, keyboard focus, long-name reveals */
+
+/* Final Council Chamber should read as a deliberate dossier wall, not stretched dashboard rows. */
+.roster{
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),440px));
+  justify-content:center;
+  gap:14px;
+  max-width:1380px;
+  margin:0 auto;
+}
+.roster-card{
+  min-height:112px;
+  grid-template-columns:82px 1fr;
+  gap:16px;
+  padding:20px;
+}
+.roster-sigil{
+  width:82px;
+  height:82px;
+  font-size:24px;
+}
+.roster-player{font-size:13px;letter-spacing:.6px}
+.roster-faction{font-size:17px;line-height:1.18;margin-top:5px}
+.roster-meta{margin-top:7px;letter-spacing:1.5px}
+
+/* The saved-session strip is a status readout, not the star of the page. */
+.session-final-status{
+  max-width:920px;
+  margin:26px auto 0;
+  padding:14px 18px;
+  background:linear-gradient(135deg,rgba(201,162,39,.045),rgba(82,124,223,.028));
+}
+.session-final-status span{letter-spacing:2.4px}
+.session-final-status b{font-size:14px}
+
+/* Final actions: one obvious next step, utilities underneath it. */
+.stage-actions.final-actions{
+  max-width:980px;
+  margin:22px auto 0;
+  display:grid;
+  grid-template-columns:repeat(4,max-content);
+  justify-content:center;
+  align-items:center;
+  gap:9px;
+}
+.stage-actions.final-actions #sessionCloseBtn{
+  grid-column:1/-1;
+  justify-self:center;
+  min-width:300px;
+  padding:16px 30px;
+  border-color:var(--gold);
+  color:var(--gold2);
+  background:linear-gradient(135deg,rgba(201,162,39,.2),rgba(201,162,39,.07));
+  box-shadow:0 0 34px rgba(201,162,39,.08);
+  font-size:12px;
+}
+.stage-actions.final-actions #sessionCloseBtn:hover{
+  background:rgba(201,162,39,.17);
+  box-shadow:0 0 34px rgba(201,162,39,.18);
+}
+.stage-actions.final-actions #newDraft{
+  border-color:rgba(201,162,39,.32);
+  background:rgba(201,162,39,.025);
+  color:#bfa969;
+}
+.stage-actions.final-actions #undoFinal{color:#887f78;border-color:rgba(255,255,255,.09)}
+
+/* The cards are interactive controls, so make keyboard focus feel intentional. */
+.faction-card[role="button"]:focus-visible{
+  outline:2px solid var(--gold2);
+  outline-offset:4px;
+  border-color:var(--gold2);
+  box-shadow:0 0 0 1px rgba(242,207,114,.18),0 18px 55px rgba(0,0,0,.42),0 0 34px rgba(201,162,39,.2);
+  transform:translateY(-3px);
+}
+.faction-card[aria-disabled="true"]{cursor:not-allowed}
+
+/* Long faction names still get the ridiculous reveal, without escaping the viewport. */
+.ceremony-name{max-width:1120px;margin-left:auto;margin-right:auto;text-wrap:balance}
+.ceremony-name.long-name{font-size:clamp(36px,5.35vw,74px);line-height:1.02}
+.ceremony-name.very-long-name{font-size:clamp(31px,4.6vw,63px);line-height:1.04;max-width:1050px}
+
+@media(max-width:980px){
+  .roster{grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),400px))}
+  .roster-card{grid-template-columns:74px 1fr;min-height:102px}
+  .roster-sigil{width:74px;height:74px}
+  .stage-actions.final-actions{grid-template-columns:repeat(2,max-content)}
+}
+@media(max-width:620px){
+  .roster{grid-template-columns:1fr}
+  .roster-card{grid-template-columns:68px 1fr;padding:16px;min-height:94px}
+  .roster-sigil{width:68px;height:68px}
+  .session-final-status{margin-top:18px;align-items:flex-start}
+  .stage-actions.final-actions{display:flex;flex-direction:column;align-items:stretch;width:min(100%,420px)}
+  .stage-actions.final-actions .btn,.stage-actions.final-actions #sessionCloseBtn{width:100%;min-width:0}
+  .ceremony-name.long-name{font-size:clamp(28px,9vw,44px)}
+  .ceremony-name.very-long-name{font-size:clamp(24px,8vw,38px)}
+}
