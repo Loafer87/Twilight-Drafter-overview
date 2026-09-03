@@ -14,7 +14,7 @@ const councilContextBaseReset=resetSetup;
 resetSetup=function(){councilSessionStartedAt=null;return councilContextBaseReset()};
 
 councilRemoteReaction=async function(ctx){
-  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
   try{
     const payload={...ctx,temporal:councilSessionTemporal()};
     const r=await fetch(COUNCIL_V2_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:controller.signal});
