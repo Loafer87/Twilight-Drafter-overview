@@ -51,17 +51,28 @@ function captureResponse(realRes){
   };
   return{captured,proxy};
 }
+function isUpstreamQualityFailure(captured){
+  return captured.statusCode===502&&captured.body?.error==='Council returned no director-approved take';
+}
 module.exports=async function handler(req,res){
   if(req.method==='POST'&&req.body)req.body=enrich(req.body);
   if(req.method!=='POST')return councilV6(req,res);
   const originalNonce=req.body?.transmissionNonce||Date.now().toString(36);let lastIssue='';
   for(let take=0;take<3;take++){
-    if(take&&req.body){req.body={...req.body,transmissionNonce:`${originalNonce}-quality-retake-${take}`,recentBodyPatterns:[...(req.body.recentBodyPatterns||[]),`v7-rejected-${lastIssue||'quality'}-${take}`]}}
+    if(take&&req.body){req.body={...req.body,transmissionNonce:`${originalNonce}-quality-retake-${take}`,seed:`${req.body.seed||''}|v7-retake-${take}`,recentBodyPatterns:[...(req.body.recentBodyPatterns||[]),`v7-rejected-${lastIssue||'quality'}-${take}`]}}
     const {captured,proxy}=captureResponse(res);
     await councilV6(req,proxy);
-    if(captured.statusCode!==200)return res.status(captured.statusCode).json(captured.body||{error:'Council Intelligence malfunction',code:'upstream_failure'});
+    if(captured.statusCode!==200){
+      if(isUpstreamQualityFailure(captured)){
+        lastIssue=`upstream-${captured.body?.code||'quality'}`;
+        console.info('[council-v7] retrying upstream quality failure',{take,code:captured.body?.code||null,reason:captured.body?.reason||null});
+        continue;
+      }
+      return res.status(captured.statusCode).json(captured.body||{error:'Council Intelligence malfunction',code:'upstream_failure'});
+    }
     const body=captured.body||{};lastIssue=responseIssue(body,req.body);
     if(!lastIssue)return res.status(200).json({...body,completionGate:true,verdictSynthesisGate:req.body?.mode==='verdict',qualityRetakes:take});
+    console.info('[council-v7] retrying response quality issue',{take,issue:lastIssue});
   }
-  return res.status(502).json({error:'Council returned an unusable transmission after retakes',code:lastIssue==='verdict-too-narrow'?'verdict_too_narrow':'incomplete_transmission',apiVersion:'v7-director'});
+  return res.status(502).json({error:'Council returned an unusable transmission after retakes',code:lastIssue.startsWith('upstream-')?'upstream_quality_exhausted':lastIssue==='verdict-too-narrow'?'verdict_too_narrow':'incomplete_transmission',reason:lastIssue,apiVersion:'v7-director'});
 };
