@@ -5,6 +5,12 @@
 .council-intel.voice-speaking .intel-orb:before{animation-duration:2.1s;border-top-color:#ff8bdd;border-right-color:#7dc1ff;box-shadow:0 0 40px rgba(255,92,204,.2)}
 .council-intel.voice-speaking .intel-orb:after{animation:intelVoiceCore .62s ease-in-out infinite alternate;box-shadow:0 0 28px rgba(255,255,255,.18),inset 0 0 18px rgba(255,92,204,.22)}
 .council-intel.voice-speaking .intel-title{text-shadow:0 0 34px rgba(255,77,196,.3)}
+.voice-volume-control{display:flex;align-items:center;gap:7px;height:36px;padding:0 10px;border:1px solid rgba(255,255,255,.1);background:rgba(5,3,13,.56);border-radius:999px;color:#a99f8d;font-size:10px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;transition:.2s}
+.voice-volume-control span{min-width:66px;text-align:right;white-space:nowrap}
+.voice-volume-control input{width:82px;accent-color:var(--gold2);cursor:pointer}
+.voice-volume-control:hover{border-color:rgba(201,162,39,.36);color:var(--gold2)}
+.voice-volume-control.muted{opacity:.45}
 @keyframes intelVoicePulse{from{transform:scale(.985)}to{transform:scale(1.06)}}
 @keyframes intelVoiceCore{from{transform:scale(.94);opacity:.72}to{transform:scale(1.11);opacity:1}}
+@media(max-width:760px){.voice-volume-control{width:100%;justify-content:flex-end}.voice-volume-control input{width:110px}}
 @media(prefers-reduced-motion:reduce){.council-intel.voice-speaking .intel-orb,.council-intel.voice-speaking .intel-orb:before,.council-intel.voice-speaking .intel-orb:after{animation:none!important}}
