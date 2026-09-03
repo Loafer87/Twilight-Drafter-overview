@@ -1,5 +1,5 @@
 const COUNCIL_MEMORY_KEY='ti4-council-memory-v1';
-const COUNCIL_API='/api/council';
+const COUNCIL_API=location.hostname==='loafer87.github.io'?'https://twilight-drafter-overview.vercel.app/api/council':'/api/council';
 const COUNCIL_FACTION_LINES={
   'The Arborec':['A plant-based strategic decision. The Council will notify the gardening department.','You chose the faction whose solution to every problem is more organism. Disturbing. Efficient. Moist.'],
   'The Barony of Letnev':['Ah yes. Big fleets, bigger confidence, and diplomacy performed through orbital pressure.','The Barony. Because subtlety is for civilizations with smaller flagships.'],
