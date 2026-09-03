@@ -24,7 +24,7 @@ ACHIEVEMENT_COPY: <NONE or one short sentence explaining the achievement>
 BODY:
 <spoken commentary only>
 
-The HEADLINE is UI text and must NOT be repeated in BODY. If you issue an achievement, put it in the ACHIEVEMENT fields and do not narrate that award again in BODY. Never output the phrase THE COUNCIL HAS OPINIONS as the default headline. No markdown.`;
+The HEADLINE is UI text and must NOT be repeated in BODY. If you issue an achievement, put it in the ACHIEVEMENT fields and do not narrate that award again in BODY. Council achievements are never called fake. Never output the phrase THE COUNCIL HAS OPINIONS as the default headline. No markdown.`;
 
 const PICK_SYSTEM=`${PERSONA}\n\nA player has just locked a faction. React immediately. Find the funniest pressure point in this exact decision: one faction mechanic, one rejected option, pick position, observed indecision, a recent undo, an active obsession, table lore, or another verified earlier pick. Do not automatically compare all offered factions. Usually 2-4 short sentences and under 95 words; a strong 1-2 sentence reaction is allowed.`;
 const OPENING_SYSTEM=`${PERSONA}\n\nOpen the Council session before drafting begins. Use supplied names, Speaker assignment, order, expansions, history, achievements, table lore and clock. Mention the Speaker somewhere, but do not perform a roll call. Pick one or two details and overreact. Usually 4-6 punchy sentences and under 130 words.`;
@@ -40,9 +40,46 @@ function titleClean(s){return String(s||'').replace(/^['"`]+|['"`]+$/g,'').repla
 function copyClean(s){return String(s||'').replace(/^['"`]+|['"`]+$/g,'').trim().slice(0,180)}
 function fixLeakage(s){return String(s||'').replace(/\bfake achievement\b/gi,'Council achievement').replace(/\bfake award\b/gi,'Council award').replace(/\bfake classification\b/gi,'Council classification')}
 function preserveNames(text,names){let out=String(text||'');for(const name of names.filter(Boolean)){const escaped=String(name).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');out=out.replace(new RegExp(escaped,'gi'),String(name))}return out}
-function parseEnvelope(raw,mode,names){const clean=String(raw||'').trim().replace(/\r/g,'');const lines=clean.split('\n');let headline='',ach='',achCopy='',bodyIndex=-1;for(let i=0;i<Math.min(lines.length,8);i++){const line=lines[i].trim();if(/^HEADLINE:/i.test(line))headline=titleClean(line.replace(/^HEADLINE:\s*/i,''));else if(/^ACHIEVEMENT_COPY:/i.test(line))achCopy=copyClean(line.replace(/^ACHIEVEMENT_COPY:\s*/i,''));else if(/^ACHIEVEMENT:/i.test(line))ach=titleClean(line.replace(/^ACHIEVEMENT:\s*/i,''));else if(/^BODY:/i.test(line)){bodyIndex=i+1;break}}
-let body=bodyIndex>=0?lines.slice(bodyIndex).join('\n').trim():lines.filter(l=>!/^\s*(HEADLINE|ACHIEVEMENT|ACHIEVEMENT_COPY|BODY):/i.test(l)).join('\n').trim();body=fixLeakage(body);if(mode==='verdict')body=body.replace(/^\s*(?:FINAL\s+)?PRELIMINARY\s+VERDICT\s*:\s*/i,'');body=preserveNames(body,names);headline=preserveNames(headline,names);ach=preserveNames(ach,names);achCopy=preserveNames(fixLeakage(achCopy),names);const fallback=mode==='opening'?'The Machine Is Awake':mode==='verdict'?'Council Finding':'Behavior Under Review';return{headline:headline||fallback,commentary:body,achievement:ach&&!/^none$/i.test(ach)?{title:ach,copy:achCopy&&!/^none$/i.test(achCopy)?achCopy:''}:null}}
+function fieldValue(clean,label,nextLabels){const next=nextLabels.join('|');const re=new RegExp(`${label}\\s*:\\s*([\\s\\S]*?)(?=\\n\\s*(?:${next})\\s*:|$)`,'i');const m=clean.match(re);return m?m[1].trim():''}
+function parseEnvelope(raw,mode,names){
+  const clean=String(raw||'').trim().replace(/\r/g,'');
+  let headline=fieldValue(clean,'HEADLINE',['ACHIEVEMENT','ACHIEVEMENT_COPY','BODY']);
+  let ach=fieldValue(clean,'ACHIEVEMENT',['ACHIEVEMENT_COPY','BODY']);
+  let achCopy=fieldValue(clean,'ACHIEVEMENT_COPY',['BODY']);
+  let body='';
+  const bodyMatch=clean.match(/(?:^|\n)\s*BODY\s*:\s*([\s\S]*)$/i);
+  if(bodyMatch)body=bodyMatch[1].trim();
+  if(!body){
+    const stripped=clean
+      .replace(/(?:^|\n)\s*HEADLINE\s*:[^\n]*/i,'')
+      .replace(/(?:^|\n)\s*ACHIEVEMENT\s*:[^\n]*/i,'')
+      .replace(/(?:^|\n)\s*ACHIEVEMENT_COPY\s*:[^\n]*/i,'')
+      .replace(/(?:^|\n)\s*BODY\s*:\s*/i,'')
+      .trim();
+    body=stripped;
+  }
+  headline=titleClean(headline);ach=titleClean(ach);achCopy=copyClean(achCopy);body=fixLeakage(body);
+  if(mode==='verdict')body=body.replace(/^\s*(?:FINAL\s+)?PRELIMINARY\s+VERDICT\s*:\s*/i,'');
+  body=preserveNames(body,names);headline=preserveNames(headline,names);ach=preserveNames(ach,names);achCopy=preserveNames(fixLeakage(achCopy),names);
+  const fallback=mode==='opening'?'The Machine Is Awake':mode==='verdict'?'Council Finding':'Behavior Under Review';
+  return{headline:headline||fallback,commentary:body,achievement:ach&&!/^none$/i.test(ach)?{title:ach,copy:achCopy&&!/^none$/i.test(achCopy)?achCopy:''}:null};
+}
+async function requestCouncil({key,model,instructions,payload,maxTokens}){const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model,instructions,input:JSON.stringify(payload),max_output_tokens:maxTokens})});if(!r.ok){let parsed={};try{parsed=await r.json()}catch(e){}const apiError=parsed?.error||{};const err=new Error('Council uplink failed');err.status=r.status;err.code=safeCode(apiError.code||apiError.type,`openai_${r.status}`);throw err}return r.json()}
 
-module.exports=async function handler(req,res){const origin=setCors(req,res),key=process.env.OPENAI_API_KEY,model=process.env.OPENAI_MODEL;res.setHeader('Cache-Control','no-store');if(req.method==='OPTIONS')return res.status(204).end();if(origin&&!allowedOrigin(origin))return res.status(403).json({error:'Origin not allowed',code:'origin_not_allowed'});if(req.method==='GET')return res.status(200).json({ok:true,configured:Boolean(key&&model),model:model||null,headlineAware:true,officialAchievements:true});if(req.method!=='POST')return res.status(405).json({error:'Method not allowed',code:'method_not_allowed'});if(!key||!model)return res.status(503).json({error:'Council Intelligence is not configured',code:!key?'missing_api_key':'missing_model'});
-const ctx=req.body||{},mode=ctx.mode==='opening'?'opening':ctx.mode==='verdict'?'verdict':'pick',temporal=temporalContext(ctx),gameKnowledge=knowledgeFor(ctx,mode),style=comedyBrief(ctx,mode);let payload,instructions,maxTokens;if(mode==='opening'){payload={...ctx,temporal,gameKnowledge,comedyBrief:style};instructions=OPENING_SYSTEM;maxTokens=360}else if(mode==='verdict'){payload={...ctx,temporal,gameKnowledge,comedyBrief:style};instructions=VERDICT_SYSTEM;maxTokens=360}else{payload={...ctx,temporal,gameKnowledge,comedyBrief:style};instructions=PICK_SYSTEM;maxTokens=260}
-try{const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model,instructions,input:JSON.stringify(payload),max_output_tokens:maxTokens})});if(!r.ok){let parsed={};try{parsed=await r.json()}catch(e){}const apiError=parsed?.error||{};return res.status(r.status).json({error:'Council uplink failed',code:safeCode(apiError.code||apiError.type,`openai_${r.status}`)})}const data=await r.json(),names=mode==='pick'?[ctx.player,...(ctx.alreadyPicked||[]).map(x=>x.player)]:[...(ctx.players||[]).map(x=>x.name)];const parsed=parseEnvelope(outputText(data),mode,names);if(!parsed.commentary)return res.status(502).json({error:'Council returned silence',code:'empty_response'});return res.status(200).json({commentary:parsed.commentary,title:parsed.headline,achievement:parsed.achievement})}catch(e){return res.status(500).json({error:'Council Intelligence malfunction',code:'server_error'})}}
+module.exports=async function handler(req,res){const origin=setCors(req,res),key=process.env.OPENAI_API_KEY,model=process.env.OPENAI_MODEL;res.setHeader('Cache-Control','no-store');if(req.method==='OPTIONS')return res.status(204).end();if(origin&&!allowedOrigin(origin))return res.status(403).json({error:'Origin not allowed',code:'origin_not_allowed'});if(req.method==='GET')return res.status(200).json({ok:true,configured:Boolean(key&&model),model:model||null,headlineAware:true,officialAchievements:true,resilientEnvelope:true});if(req.method!=='POST')return res.status(405).json({error:'Method not allowed',code:'method_not_allowed'});if(!key||!model)return res.status(503).json({error:'Council Intelligence is not configured',code:!key?'missing_api_key':'missing_model'});
+const ctx=req.body||{},mode=ctx.mode==='opening'?'opening':ctx.mode==='verdict'?'verdict':'pick',temporal=temporalContext(ctx),gameKnowledge=knowledgeFor(ctx,mode),style=comedyBrief(ctx,mode);let payload,instructions,maxTokens;if(mode==='opening'){payload={...ctx,temporal,gameKnowledge,comedyBrief:style};instructions=OPENING_SYSTEM;maxTokens=380}else if(mode==='verdict'){payload={...ctx,temporal,gameKnowledge,comedyBrief:style};instructions=VERDICT_SYSTEM;maxTokens=380}else{payload={...ctx,temporal,gameKnowledge,comedyBrief:style};instructions=PICK_SYSTEM;maxTokens=280}
+const names=mode==='pick'?[ctx.player,...(ctx.alreadyPicked||[]).map(x=>x.player)]:[...(ctx.players||[]).map(x=>x.name)];
+try{
+  let parsed=null,lastError=null;
+  for(let attempt=0;attempt<2;attempt++){
+    try{
+      const retryInstruction=attempt?`${instructions}\n\nRETRY FORMAT NOTICE: Your previous response did not contain usable BODY commentary. Return all four envelope fields and make BODY non-empty. BODY may begin on the same line as BODY: or the following line.`:instructions;
+      const data=await requestCouncil({key,model,instructions:retryInstruction,payload,maxTokens});
+      parsed=parseEnvelope(outputText(data),mode,names);
+      if(parsed.commentary)break;
+      lastError={code:'empty_response'};
+    }catch(e){lastError=e;if(e.status&&e.status<500&&e.status!==429)break}
+  }
+  if(!parsed?.commentary){const status=lastError?.status||502;return res.status(status).json({error:'Council returned silence',code:lastError?.code||'empty_response'})}
+  return res.status(200).json({commentary:parsed.commentary,title:parsed.headline,achievement:parsed.achievement});
+}catch(e){return res.status(500).json({error:'Council Intelligence malfunction',code:'server_error'})}}
