@@ -1,4 +1,4 @@
-const COUNCIL_TABLE_LORE_VERSION=3;
+const COUNCIL_TABLE_LORE_VERSION=4;
 const COUNCIL_TABLE_LORE={
   joshua:[
     'Self-declared chaos goblin. Actively prefers spectacular, weird, risky, or disruptive game choices when they make the table more entertaining.',
@@ -13,10 +13,12 @@ const COUNCIL_TABLE_LORE={
     'Coffee is life. Treat caffeine as a strategic resource, sacred object, and likely explanation for continued Council attendance.',
     'Historically loved redos and backsies until the table enacted a rule forbidding players from reversing declared choices. Bureaucracy was forced to intervene.',
     'Has one long-ago victory and is currently enduring an extended championship drought.',
-    'Loves The Arborec and treats them as a signature faction. When playing them, he habitually says, "I’m just a plant." The Council may treat this botanical alibi as established table lore.'
+    'Loves The Arborec and treats them as a signature faction. When playing them, he habitually says, "I’m just a plant." The Council may treat this botanical alibi as established table lore.',
+    'Calls Dreadnoughts "Wetty Dreddys." The table loudly claims to hate the phrase, instantly understands it, and has unfortunately grown fond of it anyway. This is verified recurring table lore, not a typo.'
   ]
 };
 const COUNCIL_ARBOREC_CHRIS_LORE='Chris loves The Arborec and habitually says "I’m just a plant" when playing them. This is verified table lore and may be used for callbacks or to roast anyone entering Chris’s botanical territory.';
+const COUNCIL_WETTY_DREDDYS_LORE='Chris calls Dreadnoughts "Wetty Dreddys." Everyone at the table claims to hate the phrase but also immediately understands it and secretly enjoys the bit. This is verified table lore. Use it only as an occasional callback when Dreadnoughts, Dreadnought upgrades, Dreadnought-heavy factions, or conspicuously large fleet talk makes it relevant; do not force it into unrelated reactions.';
 function councilMergeLore(existing,incoming){return[...(existing||[]),...(incoming||[])].filter((x,i,arr)=>arr.findIndex(y=>String(y).trim().toLowerCase()===String(x).trim().toLowerCase())===i)}
 function councilApplyTableLoreSeed(){
   const joshua=councilResolveProfile('Joshua',true),chris=councilResolveProfile('Chris',true),store=councilLoadStore();
@@ -31,7 +33,7 @@ councilApplyTableLoreSeed();
 const councilHistoryForBeforeLore=councilHistoryFor;
 councilHistoryFor=function(playerOrId){const h=councilHistoryForBeforeLore(playerOrId);return{...h,tableLore:h.profile?.lore?[...h.profile.lore]:[]}};
 const councilContextBeforeLore=councilContext;
-councilContext=function(a,f){const ctx=councilContextBeforeLore(a,f);ctx.history={...(ctx.history||{}),tableLore:councilLoreFor(ctx.playerId||ctx.player)};if(ctx.faction==='The Arborec')ctx.tableLore=councilMergeLore(ctx.tableLore,[COUNCIL_ARBOREC_CHRIS_LORE]);return ctx};
+councilContext=function(a,f){const ctx=councilContextBeforeLore(a,f);ctx.history={...(ctx.history||{}),tableLore:councilLoreFor(ctx.playerId||ctx.player)};ctx.tableLore=councilMergeLore(ctx.tableLore,[COUNCIL_WETTY_DREDDYS_LORE]);if(ctx.faction==='The Arborec')ctx.tableLore=councilMergeLore(ctx.tableLore,[COUNCIL_ARBOREC_CHRIS_LORE]);return ctx};
 if(typeof councilHistoryPayload==='function'){
   const councilHistoryPayloadBeforeLore=councilHistoryPayload;
   councilHistoryPayload=function(history){return{...councilHistoryPayloadBeforeLore(history),tableLore:[...(history.tableLore||history.profile?.lore||[])]}};
