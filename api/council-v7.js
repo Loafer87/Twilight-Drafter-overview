@@ -60,9 +60,7 @@ function verdictTooNarrow(payload,ctx={}){
   const represented=players.filter(p=>{const name=String(p.name||'').trim().toLowerCase(),faction=String(p.faction||'').trim().toLowerCase();return(faction&&lower.includes(faction))||(name&&name.length>2&&lower.includes(name))}).length;
   const tableCue=/\b(?:table|roster|delegations?|factions?|lineup|galaxy|chamber|everyone|everybody|you people|collective|between them|this group|this mess|all five|all four|all three|entire table)\b/i.test(text);
   const pickReactionCue=/\b(?:speaker|selection switches?|switched|changed (?:his|her|their|its) mind|highlights?|revisions?|undo|redos?|backsies|\d+ seconds?|pick\s*#?\d+|first pick|last pick)\b/i.test(text);
-  if(!tableCue&&represented<2)return true;
-  if(pickReactionCue&&represented<2)return true;
-  return false;
+  return Boolean(pickReactionCue&&!tableCue&&represented<2);
 }
 function captureResponse(realRes){
   const captured={statusCode:200,body:null,ended:false};
@@ -116,7 +114,7 @@ module.exports=async function handler(req,res){
   if(captured.statusCode!==200)return immediateFallback(res,req.body||{},mode,`upstream_${captured.body?.code||captured.statusCode}`,started);
   const body={...(captured.body||{})};body.commentary=removeAudiencePromptLeak(body.commentary);
   if(incompleteTransmission(body.commentary)){const repaired=salvageHardCut(body.commentary);if(repaired){body.commentary=repaired;body.completionRepaired=true;body.hardCutSalvaged=true;console.info('[council-v7] salvaged hard cut without canned ending',{mode})}else return immediateFallback(res,req.body||{},mode,'incomplete_unrepairable',started)}
-  if(mode==='verdict'&&verdictTooNarrow(body,req.body||{}))return immediateFallback(res,req.body||{},mode,'verdict_too_narrow',started);
+  if(mode==='verdict'&&verdictTooNarrow(body,req.body||{}))return immediateFallback(res,req.body||{},mode,'verdict_clearly_single_pick',started);
   console.info('[council-v7] single-pass success',{mode,elapsedMs:Date.now()-started,styleRelaxed:Boolean(body.styleRelaxed)});
   return res.status(200).json({...body,completionGate:true,verdictSynthesisGate:mode==='verdict',qualityRetakes:0,singlePass:true,elapsedMs:Date.now()-started});
 };
