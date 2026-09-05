@@ -1,4 +1,4 @@
-const COUNCIL_TABLE_LORE_VERSION=4;
+const COUNCIL_TABLE_LORE_VERSION=5;
 const COUNCIL_TABLE_LORE={
   joshua:[
     'Self-declared chaos goblin. Actively prefers spectacular, weird, risky, or disruptive game choices when they make the table more entertaining.',
@@ -15,17 +15,28 @@ const COUNCIL_TABLE_LORE={
     'Has one long-ago victory and is currently enduring an extended championship drought.',
     'Loves The Arborec and treats them as a signature faction. When playing them, he habitually says, "I’m just a plant." The Council may treat this botanical alibi as established table lore.',
     'Calls Dreadnoughts "Wetty Dreddys." The table loudly claims to hate the phrase, instantly understands it, and has unfortunately grown fond of it anyway. This is verified recurring table lore, not a typo.'
+  ],
+  ashley:[
+    'Frequently says "I’m just a girl" as disarming table camouflage. Treat the phrase as a recurring gameplay bit, not as evidence that she is harmless.',
+    'A smart, sneaky player who actively looks for the winning line and is perfectly willing to let the table underestimate her while she sets it up.',
+    'Hates being attacked and reacts accordingly, while remaining entirely comfortable attacking other people when it helps her position. The Council recognizes the hypocrisy as strategically efficient.',
+    'Won the most recent game played without Joshua present and now claims that victory should make her the champion. Joshua disputes the jurisdiction of this title transfer.',
+    'Uses charm, diplomacy, and table presence as legitimate strategic weapons when they can help convert a position into a win.',
+    'Brings her own organizers for the plastic pieces. This level of component preparedness should be treated as both practical competence and mildly threatening evidence of intent.'
   ]
 };
 const COUNCIL_ARBOREC_CHRIS_LORE='Chris loves The Arborec and habitually says "I’m just a plant" when playing them. This is verified table lore and may be used for callbacks or to roast anyone entering Chris’s botanical territory.';
 const COUNCIL_WETTY_DREDDYS_LORE='Chris calls Dreadnoughts "Wetty Dreddys." Everyone at the table claims to hate the phrase but also immediately understands it and secretly enjoys the bit. This is verified table lore. Use it only as an occasional callback when Dreadnoughts, Dreadnought upgrades, Dreadnought-heavy factions, or conspicuously large fleet talk makes it relevant; do not force it into unrelated reactions.';
 function councilMergeLore(existing,incoming){return[...(existing||[]),...(incoming||[])].filter((x,i,arr)=>arr.findIndex(y=>String(y).trim().toLowerCase()===String(x).trim().toLowerCase())===i)}
 function councilApplyTableLoreSeed(){
-  const joshua=councilResolveProfile('Joshua',true),chris=councilResolveProfile('Chris',true),store=councilLoadStore();
+  const joshua=councilResolveProfile('Joshua',true),chris=councilResolveProfile('Chris',true),ashley=councilResolveProfile('Ashley',true);
+  councilAddAlias(ashley.id,'Ash');
+  const store=councilLoadStore();
   store.meta=store.meta||{};if((store.meta.tableLoreSeed||0)>=COUNCIL_TABLE_LORE_VERSION)return;
-  const j=store.profiles.find(p=>p.id===joshua.id),c=store.profiles.find(p=>p.id===chris.id);
+  const j=store.profiles.find(p=>p.id===joshua.id),c=store.profiles.find(p=>p.id===chris.id),a=store.profiles.find(p=>p.id===ashley.id);
   if(j)j.lore=councilMergeLore(j.lore,COUNCIL_TABLE_LORE.joshua);
   if(c)c.lore=councilMergeLore(c.lore,COUNCIL_TABLE_LORE.chris);
+  if(a)a.lore=councilMergeLore(a.lore,COUNCIL_TABLE_LORE.ashley);
   store.meta.tableLoreSeed=COUNCIL_TABLE_LORE_VERSION;councilSaveStore(store);
 }
 function councilLoreFor(playerOrId){const store=councilLoadStore(),profile=councilFindProfile(store,playerOrId);return profile?.lore?[...profile.lore]:[]}
