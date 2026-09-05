@@ -31,7 +31,7 @@ function achievementPlan(input={}){
   const chance=Math.min(60,base+notableEvidence(evidence));
   const key=`${input.guildId||''}|${input.channelId||''}|${input.interactionId||''}|${input.command||''}|${input.invoker||''}|${input.target||''}|${input.message||''}`;
   const roll=hash32(`${key}|achievement-roll`)%100;
-  const enabled=input.forceAchievement===true||roll<chance;
+  const enabled=input.forceAchievement===false?false:(input.forceAchievement===true||roll<chance);
   const mode=MODES[hash32(`${key}|achievement-mode`)%MODES.length];
   const rewardRoll=hash32(`${key}|reward-shape`)%100;
   const rewardShape=mode.id==='reward-betrayal'?(rewardRoll<52?'punchline':'box'):rewardRoll<79?'box':rewardRoll<91?'punchline':'none';
