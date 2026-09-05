@@ -5,17 +5,18 @@ module.exports=async function handler(req,res){
   try{
     const result=await generateDiscordCouncil({
       command:'council',
-      invoker:'Kevin',
-      message:'Kevin has once again hoarded a mountain of trade goods while insisting he is everyone’s ally.',
+      invoker:'Shane',
+      message:'Shane has already declared a planet on the far side of the map to be his and is warning everyone not to take it.',
       recentMessages:[
-        {author:'Joshua',content:'Kevin is sitting on all the trade goods again.'},
-        {author:'Shane',content:'He says he is still open to deals.'}
+        {author:'Ashley',content:'Nobody is even near that planet yet.'},
+        {author:'Joshua',content:'He has pre-claimed it anyway.'}
       ],
       guildId:'smoke',
       channelId:'smoke',
-      interactionId:`system-smoke-${Date.now()}`,
+      interactionId:`status-smoke-${Date.now()}`,
       forceAchievement:false,
-      forceSystemEvent:true
+      forceSystemEvent:true,
+      forceSystemType:'status'
     });
     return res.status(200).json({ok:true,result,reply:formatDiscordReply(result)});
   }catch(e){return res.status(500).json({ok:false,error:String(e?.stack||e?.message||e)})}
