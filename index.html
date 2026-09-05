@@ -36,7 +36,7 @@
   <main>
     <section class="view active" id="setupView">
       <div id="setupScreen" class="setup-grid">
-        <div class="panel panel-pad"><div class="section-label">I • Galaxy Composition</div><div class="section-title">Choose the faction pool</div><div class="section-help">Base game is always present. Turn on the expansions your table is actually using for tonight's draft.</div><div class="exp-grid" id="expGrid"></div><div class="hint-box"><b>Recommended:</b> Base + Prophecy of Kings + Thunder's Edge. Codex III and Discordant Stars remain optional.</div></div>
+        <div class="panel panel-pad"><div class="section-label">I • Galaxy Composition</div><div class="section-title">Choose the faction pool</div><div class="section-help">Base game is always present. Turn on the expansions your table is actually using for tonight's draft.</div><div class="exp-grid" id="expGrid"></div><div class="hint-box"><b>Recommended:</b> Base + Prophecy of Kings + Thunder's Edge. Discordant Stars remains optional.</div></div>
         <div class="panel panel-pad"><div class="section-label">II • Council Delegation</div><div class="config-row"><div class="config-box"><label>Players</label><div class="stepper"><button data-step="players" data-delta="-1">−</button><strong id="playerCount">6</strong><button data-step="players" data-delta="1">+</button></div></div><div class="config-box"><label>Faction Choices Per Player</label><div class="stepper"><button data-step="perPlayer" data-delta="-1">−</button><strong id="optionCount">3</strong><button data-step="perPlayer" data-delta="1">+</button></div></div></div><div class="ceremony-note"><div class="ceremony-note-icon">⬡</div><div><b>Ceremonial Draft</b><span>Council order is revealed first. Then the chamber moves directly from one delegation's faction hand to the next until every choice is sealed.</span></div></div><div class="section-label names-label">Council Members</div><div class="names" id="names"></div><div class="seedbox"><span>Draft Seed</span><code id="seedText"></code><button id="rerollSeed" title="Generate new seed">↻ New</button></div><button class="launch" id="launchBtn">⬡ Convene the Galactic Council ⬡</button></div>
       </div>
       <div id="stageScreen" class="stage" hidden></div>
@@ -70,5 +70,6 @@
 <script src="council-admin.js"></script>
 <script src="ui-polish.js"></script>
 <script src="council-mulligan.js"></script>
+<script src="council-achievement-polish.js"></script>
 </body>
 </html>
