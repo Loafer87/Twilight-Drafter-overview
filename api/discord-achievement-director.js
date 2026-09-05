@@ -17,17 +17,18 @@ function notableEvidence(text){
   const patterns=[
     /\b(?:again|another|third|fourth|fifth|first time|never|always|still)\b/,
     /\b(?:won|lost|killed|destroyed|stole|lied|forgot|failed|broke|betrayed|cheated|refused|rage quit|mulligan|backsies)\b/,
-    /\b(?:wetty\s+dredd|i.?m just a plant|coffee|banana|dreadnought|war sun|mecatol|wormhole|pillage|trade good)\b/,
+    /\b(?:wetty\s+dredd|i.?m just a plant|i.?m just a girl|coffee|banana|dreadnought|war sun|mecatol|wormhole|pillage|trade good|mentak|hoard)\b/,
+    /\b(?:champion|claim|grudge|organizer|meme|ally|attack|revenge)\b/,
     /\b\d+\b/
   ];
-  for(const re of patterns)if(re.test(t))bonus+=8;
-  return Math.min(24,bonus);
+  for(const re of patterns)if(re.test(t))bonus+=7;
+  return Math.min(28,bonus);
 }
 
 function achievementPlan(input={}){
   const evidence=[input.message,...(input.recentMessages||[]).map(x=>x?.content)].filter(Boolean).join(' ');
-  const base=input.command==='accuse'?50:input.command==='grievance'?45:32;
-  const chance=Math.min(74,base+notableEvidence(evidence));
+  const base=input.command==='accuse'?38:input.command==='grievance'?32:22;
+  const chance=Math.min(60,base+notableEvidence(evidence));
   const key=`${input.guildId||''}|${input.channelId||''}|${input.interactionId||''}|${input.command||''}|${input.invoker||''}|${input.target||''}|${input.message||''}`;
   const roll=hash32(`${key}|achievement-roll`)%100;
   const enabled=input.forceAchievement===true||roll<chance;
