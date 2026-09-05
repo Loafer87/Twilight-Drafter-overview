@@ -1,4 +1,4 @@
-const COUNCIL_TABLE_LORE_VERSION=6;
+const COUNCIL_TABLE_LORE_VERSION=7;
 const COUNCIL_TABLE_LORE={
   joshua:[
     'Self-declared chaos goblin. Actively prefers spectacular, weird, risky, or disruptive game choices when they make the table more entertaining.',
@@ -25,20 +25,21 @@ const COUNCIL_TABLE_LORE={
     'Brings her own organizers for the plastic pieces. This level of component preparedness should be treated as both practical competence and mildly threatening evidence of intent.'
   ],
   kevin:[
-    'Meme master. If the table produces a ridiculous moment, Kevin is likely to preserve it, weaponize it, or turn it into recurring propaganda.',
-    'Played The Mentak Coalition multiple times and did win with them. A few games later the table discovered that the way he had been using part of their rules was illegal, creating a retroactive Mentak cheating scandal. Treat this only as game-night rules lore, not a real-world accusation.',
-    'Somehow presents as everyone’s ally and nobody’s ally at the same time. Agreements with Kevin may be sincere, temporary, strategically useful, or all three.',
-    'Loves hoarding trade goods. Large piles of trade goods near Kevin should be treated as both an economic strategy and evidence that he has no intention of circulating liquidity for the public good.'
+    'Meme archivist and cultural vandal. If something stupid happens at the table, Kevin will have it captioned, preserved, and entered into the historical record before the next strategy phase.',
+    'Repeat Mentak offender. He won with them, then a few games later the table discovered one of his favourite Mentak interpretations was, in fact, bullshit. The victory remains in the record under a permanent little asterisk.',
+    'Everyone’s ally right up until the exact second being your ally stops being profitable. Somehow every negotiation with Kevin sounds friendly and mildly incriminating at the same time.',
+    'Hoarder of trade goods. Kevin can sit on a glittering dragon pile of galactic cash while explaining with a straight face that the economy is actually doing great.'
   ],
   shane:[
-    'Taught the group how to play Twilight Imperium. The Council may treat him as an original source of table procedure, rules culture, and occasional disappointed-parent energy.',
-    'Likes to claim planets ahead of time as if verbal pre-registration creates property rights. If another player takes one of those planets, Shane is liable to remember it, hold the grudge, and eventually attack them over the perceived theft.',
-    'Keeps the table on track when he plays. He is one of the people most likely to drag the game back toward turns, timing, and forward motion when everyone else has become distracted by nonsense.'
+    'The man who taught the table Twilight Imperium, which technically makes every later rules argument at least a little bit his fault.',
+    'Practices pre-emptive cartography: points at a planet several turns early and announces that it is "his." If you take it anyway, you have not captured a planet; you have opened a blood feud.',
+    'Keeps the game moving. When the table dissolves into memes, side treaties, snack archaeology, and three simultaneous rules arguments, Shane becomes the unwilling substitute teacher and starts putting adults back on turn order.'
   ]
 };
 const COUNCIL_ARBOREC_CHRIS_LORE='Chris loves The Arborec and habitually says "I’m just a plant" when playing them. This is verified table lore and may be used for callbacks or to roast anyone entering Chris’s botanical territory.';
 const COUNCIL_WETTY_DREDDYS_LORE='Chris calls Dreadnoughts "Wetty Dreddys." Everyone at the table claims to hate the phrase but also immediately understands it and secretly enjoys the bit. This is verified table lore. Use it only as an occasional callback when Dreadnoughts, Dreadnought upgrades, Dreadnought-heavy factions, or conspicuously large fleet talk makes it relevant; do not force it into unrelated reactions.';
 function councilMergeLore(existing,incoming){return[...(existing||[]),...(incoming||[])].filter((x,i,arr)=>arr.findIndex(y=>String(y).trim().toLowerCase()===String(x).trim().toLowerCase())===i)}
+function councilPruneLoreByPrefix(existing,prefixes){return(existing||[]).filter(line=>!prefixes.some(prefix=>String(line||'').startsWith(prefix)))}
 function councilApplyTableLoreSeed(){
   const joshua=councilResolveProfile('Joshua',true),chris=councilResolveProfile('Chris',true),ashley=councilResolveProfile('Ashley',true),kevin=councilResolveProfile('Kevin',true),shane=councilResolveProfile('Shane',true);
   councilAddAlias(ashley.id,'Ash');
@@ -48,8 +49,14 @@ function councilApplyTableLoreSeed(){
   if(j)j.lore=councilMergeLore(j.lore,COUNCIL_TABLE_LORE.joshua);
   if(c)c.lore=councilMergeLore(c.lore,COUNCIL_TABLE_LORE.chris);
   if(a)a.lore=councilMergeLore(a.lore,COUNCIL_TABLE_LORE.ashley);
-  if(k)k.lore=councilMergeLore(k.lore,COUNCIL_TABLE_LORE.kevin);
-  if(s)s.lore=councilMergeLore(s.lore,COUNCIL_TABLE_LORE.shane);
+  if(k){
+    k.lore=councilPruneLoreByPrefix(k.lore,['Meme master.','Played The Mentak Coalition','Somehow presents as everyone’s ally','Loves hoarding trade goods.']);
+    k.lore=councilMergeLore(k.lore,COUNCIL_TABLE_LORE.kevin);
+  }
+  if(s){
+    s.lore=councilPruneLoreByPrefix(s.lore,['Taught the group how to play Twilight Imperium.','Likes to claim planets ahead of time','Keeps the table on track when he plays.']);
+    s.lore=councilMergeLore(s.lore,COUNCIL_TABLE_LORE.shane);
+  }
   store.meta.tableLoreSeed=COUNCIL_TABLE_LORE_VERSION;councilSaveStore(store);
 }
 function councilLoreFor(playerOrId){const store=councilLoadStore(),profile=councilFindProfile(store,playerOrId);return profile?.lore?[...profile.lore]:[]}
