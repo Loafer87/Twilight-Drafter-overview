@@ -2,10 +2,10 @@ const crypto=require('crypto');
 const {generateDiscordCouncil,formatDiscordReply}=require('./discord-council-core');
 
 const DEFAULT_GUILD_ID='1538780933082193980';
-const DEFAULT_CHANNEL_ID='1540805179388203078';
+const DEFAULT_CHANNEL_IDS='1540805179388203078,1538785106351624233';
 
 function clean(v,max=2000){return String(v||'').replace(/\u0000/g,'').trim().slice(0,max)}
-function allowedChannels(){return new Set(String(process.env.DISCORD_LIVE_CHANNEL_IDS||DEFAULT_CHANNEL_ID).split(',').map(x=>x.trim()).filter(Boolean))}
+function allowedChannels(){return new Set(String(process.env.DISCORD_LIVE_CHANNEL_IDS||DEFAULT_CHANNEL_IDS).split(',').map(x=>x.trim()).filter(Boolean))}
 function canonical(body={}){
   return JSON.stringify({
     guildId:clean(body.guildId,32),
