@@ -70,6 +70,53 @@ councilAchievementFor=function(ctx,afterHistory){
   return null;
 };
 
+// Opening transmissions happen before anyone has selected a faction. Keep useful
+// player history, but remove faction-specific historical evidence so the opening AI
+// cannot accidentally narrate last game's roster as tonight's locked factions.
+if(typeof councilOpeningContext==='function'){
+  const councilAchievementPolishOpeningBase=councilOpeningContext;
+  councilOpeningContext=function(){
+    const ctx=councilAchievementPolishOpeningBase();
+    const factionNames=new Set((typeof factions!=='undefined'?factions:[]).map(f=>String(f?.name||'').toLowerCase()).filter(Boolean));
+    const safeLore=(ctx.tableLore||[]).filter(line=>{
+      const lower=String(line||'').toLowerCase();
+      for(const name of factionNames)if(lower.includes(name))return false;
+      return true;
+    });
+    const players=(ctx.players||[]).map(player=>{
+      const h=player.history||{};
+      return {...player,history:{
+        totalDraftPicks:h.totalDraftPicks||0,
+        factions:{},
+        speakerCount:h.speakerCount||0,
+        achievements:(h.achievements||[]).map(a=>({title:a?.title||String(a||'')})).filter(a=>a.title),
+        games:h.games||0,
+        wins:h.wins||0,
+        winRate:h.winRate||0,
+        winStreak:h.winStreak||0,
+        legacyRecord:h.legacyRecord||'',
+        lastGame:null
+      }};
+    });
+    safeLore.unshift('OPENING PHASE FACT: No faction has been selected in this session yet. Never describe any faction as currently picked, present, arrived, locked, seated, or belonging to a player. Historical faction references, if any survive elsewhere, are past context only.');
+    return {...ctx,players,tableLore:safeLore,draftState:'pre-faction-selection',lockedFactions:[]};
+  };
+}
+
+// The original voice director predates reward/consequence lines. Extend only the
+// spoken achievement payload; normal Council speech, timing, and TTS routing stay
+// untouched.
+if(typeof councilAchievementSpeech==='function'){
+  councilAchievementSpeech=function(achievement){
+    if(!achievement?.title)return'';
+    const parts=[`ACHIEVEMENT UNLOCKED! ${achievement.title}.`];
+    if(achievement.copy)parts.push(String(achievement.copy));
+    if(achievement.reward)parts.push(`Reward: ${achievement.reward}`);
+    if(achievement.consequence)parts.push(`Consequence: ${achievement.consequence}`);
+    return parts.join(' ').trim();
+  };
+}
+
 const councilAchievementPolishBase=showCouncilIntelligence;
 showCouncilIntelligence=function(result,ctx,achievement,done){
   councilAchievementPolishBase(result,ctx,achievement,done);
