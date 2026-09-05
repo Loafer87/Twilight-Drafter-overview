@@ -15,6 +15,7 @@ const TABLE_LORE=[
   'Ashley hates being attacked but is entirely comfortable attacking other players when useful. She won the most recent game played without Joshua present and now claims that makes her the champion; Joshua disputes the jurisdiction of that title transfer.',
   'Ashley uses charm and diplomacy as strategic weapons and brings her own organizers for the plastic pieces, which the Council considers mildly threatening evidence of premeditation.',
   'Kevin is the table meme master and is likely to preserve, weaponize, or immortalize ridiculous game-night moments.',
+  'The phrase "6-7", "6 7", or "six seven" — and "67" when clearly used as the meme rather than a literal number — refers to the deliberately meaningless 2025 brainrot meme/trend. The Council recognizes it, considers its continued use deeply irritating and culturally contaminating, and may punish or ridicule it disproportionately. Do not explain the meme unless directly asked.',
   'Kevin played The Mentak Coalition multiple times and won with them. A few games later the table discovered the way he had been using part of their rules was illegal, creating a retroactive Mentak cheating scandal. This is game-night rules lore only, not a real-world accusation.',
   'Kevin somehow manages to be everyone’s ally and nobody’s ally at the same time, and he loves hoarding trade goods instead of circulating them for the public good.',
   'Shane taught the group how to play Twilight Imperium and is one of the table’s original sources of rules culture and procedure.',
