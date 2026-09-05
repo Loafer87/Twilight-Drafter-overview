@@ -2,6 +2,7 @@
 (function(){
   const PICK_TRACES=new Map();
   let latestVerdictTrace=null;
+  let mulliganUses=0;
 
   function clean(value){return String(value||'').replace(/\s+/g,' ').trim()}
   function removeRemembered(list,value,key){
@@ -27,9 +28,45 @@
   }
   function labelMulliganButtons(){
     const pick=$('#undoBtn');
-    if(pick){pick.textContent='↶ Collins Mulligan';pick.title='Undo the last locked faction. Chris Collins would understand.';pick.setAttribute('aria-label','Collins Mulligan — undo last locked faction')}
+    if(pick){pick.textContent='↶ Collins Mulligan';pick.title='Undo the last locked faction. One Mulligan per draft. A second request is medically inadvisable.';pick.setAttribute('aria-label','Collins Mulligan — undo last locked faction')}
     const final=$('#undoFinal');
-    if(final){final.textContent='↶ Collins Mulligan';final.title='Undo the final locked faction. The Council will forget the invalid verdict too.';final.setAttribute('aria-label','Collins Mulligan — undo final locked faction')}
+    if(final){final.textContent='↶ Collins Mulligan';final.title='Undo the final locked faction. One Mulligan per draft. Do not test the Council twice.';final.setAttribute('aria-label','Collins Mulligan — undo final locked faction')}
+  }
+  function ensureAssassinationUi(){
+    if(!document.querySelector('#councilMulliganAssassinationStyle')){
+      const style=document.createElement('style');style.id='councilMulliganAssassinationStyle';style.textContent=`
+        .mulligan-assassination{position:fixed;inset:0;z-index:5000;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 45%,rgba(88,0,18,.58),rgba(3,0,8,.96) 58%,#020105 100%);opacity:0;pointer-events:none;transition:opacity .18s ease;font-family:'Rajdhani',sans-serif}
+        .mulligan-assassination.open{opacity:1;pointer-events:auto}
+        .mulligan-assassination-card{width:min(760px,94vw);border:1px solid rgba(255,76,94,.95);box-shadow:0 0 0 1px rgba(255,255,255,.04) inset,0 30px 120px rgba(0,0,0,.85),0 0 90px rgba(255,25,60,.32);background:linear-gradient(145deg,rgba(32,1,10,.99),rgba(7,2,13,.995));padding:34px 38px;text-align:center;position:relative;overflow:hidden}
+        .mulligan-assassination-card:before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 4px,rgba(255,255,255,.018) 5px);pointer-events:none}
+        .mulligan-assassination-code{font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:#ff7584;font-weight:700;margin-bottom:15px}
+        .mulligan-assassination-title{font-family:'Cinzel',serif;font-size:clamp(28px,5vw,52px);line-height:1.02;color:#fff2f3;text-transform:uppercase;text-shadow:0 0 26px rgba(255,52,82,.35);margin-bottom:18px}
+        .mulligan-assassination-text{font-size:21px;line-height:1.42;color:#f1dfe4;max-width:640px;margin:0 auto 24px}
+        .mulligan-assassination-kill{font-size:14px;letter-spacing:.18em;text-transform:uppercase;color:#ff5268;font-weight:800;margin:22px 0}
+        .mulligan-assassination button{border:1px solid rgba(255,107,126,.8);background:rgba(255,52,82,.08);color:#ffd9df;font:700 13px 'Rajdhani',sans-serif;letter-spacing:.16em;text-transform:uppercase;padding:11px 18px;cursor:pointer}
+        .mulligan-assassination.open .mulligan-assassination-card{animation:mulliganAssassinationHit .18s linear 3}
+        @keyframes mulliganAssassinationHit{50%{transform:translate(2px,-1px);filter:brightness(1.3)}75%{transform:translate(-2px,1px)}}
+        @media(max-width:650px){.mulligan-assassination-card{padding:26px 20px}.mulligan-assassination-text{font-size:18px}}
+        @media(prefers-reduced-motion:reduce){.mulligan-assassination.open .mulligan-assassination-card{animation:none}}
+      `;document.head.appendChild(style);
+    }
+    let el=document.querySelector('#mulliganAssassination');
+    if(!el){
+      el=document.createElement('div');el.id='mulliganAssassination';el.className='mulligan-assassination';el.setAttribute('role','alertdialog');el.setAttribute('aria-modal','true');el.innerHTML=`<div class="mulligan-assassination-card"><div class="mulligan-assassination-code">COUNCIL ERROR // CM-02</div><div class="mulligan-assassination-title">Second Mulligan Detected</div><div class="mulligan-assassination-text">The Council approved one act of cowardice. You requested another. This is no longer a redo. This is a lifestyle.</div><div class="mulligan-assassination-kill">ASSASSIN DISPATCHED // TARGET ACQUIRED</div><button type="button">Continue Posthumously →</button></div>`;document.body.appendChild(el);
+      el.querySelector('button').onclick=()=>el.classList.remove('open');
+    }
+    return el;
+  }
+  function assassinateSecondMulligan(){
+    if(typeof councilStopVoice==='function')councilStopVoice();
+    if(typeof playCouncilStinger==='function')playCouncilStinger();
+    const el=ensureAssassinationUi();el.classList.add('open');setTimeout(()=>el.querySelector('button')?.focus({preventScroll:true}),120);
+  }
+  function requestMulligan(action){
+    if(mulliganUses>=1){assassinateSecondMulligan();return false}
+    const changed=Boolean(action());
+    if(changed)mulliganUses++;
+    return changed;
   }
 
   const baseRemote=councilRemoteReaction;
@@ -53,19 +90,33 @@
   const baseRenderPick=renderPick;
   renderPick=function(){const out=baseRenderPick();labelMulliganButtons();return out};
   const baseRenderFinal=renderFinal;
-  renderFinal=function(){const out=baseRenderFinal();labelMulliganButtons();return out};
+  renderFinal=function(){
+    const out=baseRenderFinal();labelMulliganButtons();
+    const final=$('#undoFinal');
+    if(final)final.onclick=()=>requestMulligan(()=>{
+      if(!state.picks.length)return false;
+      const last=state.picks.pop();councilForgetPick(last.memoryId);state.current=state.players-1;state.assignments[state.current].chosen=null;state.selected=null;renderPick();toast('COLLINS MULLIGAN GRANTED • previous choice expunged from Council memory');return true;
+    });
+    return out;
+  };
 
   const baseUndoPick=undoPick;
   undoPick=function(){
-    const hadPick=Boolean(state?.picks?.length);
-    const out=baseUndoPick();
-    if(hadPick)toast('COLLINS MULLIGAN GRANTED • previous choice expunged from Council memory');
-    return out;
+    return requestMulligan(()=>{
+      const hadPick=Boolean(state?.picks?.length);if(!hadPick)return false;
+      baseUndoPick();
+      toast('COLLINS MULLIGAN GRANTED • previous choice expunged from Council memory');
+      return true;
+    });
   };
+
+  const baseResetSetup=resetSetup;
+  resetSetup=function(){mulliganUses=0;ensureAssassinationUi().classList.remove('open');return baseResetSetup()};
 
   window.__councilMulliganDebug={
     pickTraceCount:()=>PICK_TRACES.size,
     hasVerdictTrace:()=>Boolean(latestVerdictTrace),
+    uses:()=>mulliganUses,
     recent:()=>({headlines:[...councilRecentHeadlines],achievements:[...councilRecentAchievements],shapes:[...councilRecentPerformanceShapes],bodyPatterns:[...councilRecentBodyPatterns],motifs:[...councilRecentComedyMotifs]})
   };
 })();
