@@ -41,7 +41,8 @@ function eventPlan(input={},achievementEnabled=false){
   const enabled=input.forceSystemEvent===true||roll<chance;
   const typeRoll=hash32(`${key}|system-event-type`)%100;
   const recurring=/\b(?:again|always|still|every time|multiple|habit|known for|hoard|mulligan|backsies|wetty\s+dredd|i.?m just a plant|i.?m just a girl)\b/i.test(evidence);
-  const type=typeRoll<(recurring?72:56)?'skill':'status';
+  const forcedType=/^(skill|status)$/i.test(String(input.forceSystemType||''))?String(input.forceSystemType).toLowerCase():null;
+  const type=forcedType||(typeRoll<(recurring?72:56)?'skill':'status');
   const modes=type==='skill'?SKILL_MODES:STATUS_MODES;
   const mode=modes[hash32(`${key}|system-event-mode`)%modes.length];
   const level=type==='skill'?2+(hash32(`${key}|skill-level`)%8):null;
