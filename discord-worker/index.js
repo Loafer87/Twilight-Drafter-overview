@@ -2,11 +2,12 @@ const crypto=require('crypto');
 
 const TOKEN=String(process.env.DISCORD_BOT_TOKEN||'').trim();
 const GUILD_ID=String(process.env.DISCORD_GUILD_ID||'1538780933082193980').trim();
-const CHANNEL_IDS=new Set(String(process.env.DISCORD_CHANNEL_IDS||'1540805179388203078').split(',').map(x=>x.trim()).filter(Boolean));
+const CHANNEL_IDS=new Set(String(process.env.DISCORD_CHANNEL_IDS||'1540805179388203078,1538785106351624233').split(',').map(x=>x.trim()).filter(Boolean));
+const AUTONOMOUS_CHANNEL_IDS=new Set(String(process.env.COUNCIL_AUTONOMOUS_CHANNEL_IDS||'1538785106351624233').split(',').map(x=>x.trim()).filter(Boolean));
 const COUNCIL_URL=String(process.env.COUNCIL_URL||'https://twilight-drafter-overview.vercel.app/api/discord-live').trim();
 const AUTONOMOUS=/^(1|true|yes)$/i.test(String(process.env.COUNCIL_AUTONOMOUS||'false'));
 const TEST_MODE=!/^(0|false|no)$/i.test(String(process.env.COUNCIL_TEST_MODE||'true'));
-const AUTONOMOUS_COOLDOWN_MS=Math.max(60_000,Number(process.env.COUNCIL_AUTONOMOUS_COOLDOWN_MS||600_000));
+const AUTONOMOUS_COOLDOWN_MS=Math.max(60_000,Number(process.env.COUNCIL_AUTONOMOUS_COOLDOWN_MS||900_000));
 const INTENTS=1|512|32768; // GUILDS | GUILD_MESSAGES | MESSAGE_CONTENT
 const API='https://discord.com/api/v10';
 
@@ -72,12 +73,13 @@ function explicitSummon(m){
   return{yes:mentionByArray||mentionByText||named||reply,mention:mentionByArray||mentionByText,mentionByArray,mentionByText,named,reply};
 }
 function autonomousTrigger(m){
-  if(!AUTONOMOUS||TEST_MODE)return false;
+  if(!AUTONOMOUS||!AUTONOMOUS_CHANNEL_IDS.has(m.channel_id))return false;
   const now=Date.now(),last=lastAutonomousByChannel.get(m.channel_id)||0;if(now-last<AUTONOMOUS_COOLDOWN_MS)return false;
   const text=String(m.content||'').toLowerCase();
-  const notable=/wetty\s+dredd|collins\s+mulligan|backsies|take (?:that|it) back|i.?m just a plant|golden banana|war sun|mecatol|rage quit|you cheated|that.?s bullshit/.test(text);
-  if(!notable)return false;
-  const n=Number(BigInt(m.id)%100n);if(n>=22)return false;
+  const strong=/wetty\s+dredd|collins\s+mulligan|backsies|take (?:that|it) back|i.?m just a plant|i.?m just a girl|golden banana|rage quit|you cheated|that.?s bullshit|claimed? (?:that )?planet|my planet/.test(text);
+  const ti=/mentak|arborec|mecatol|war sun|dreadnought|trade goods?|alliance|ally|attack|planet|champion|banana|faction|speaker|strategy card|promissory|support for the throne|ceasefire|deal|rules?/.test(text);
+  if(!strong&&!ti)return false;
+  const n=Number(BigInt(m.id)%100n),threshold=strong?35:8;if(n>=threshold)return false;
   lastAutonomousByChannel.set(m.channel_id,now);return true;
 }
 
@@ -132,7 +134,7 @@ function scheduleReconnect(canResume=true){
 function gatewayUrl(resuming){const base=resuming&&resumeGatewayUrl?resumeGatewayUrl:'wss://gateway.discord.gg';return `${base.replace(/\/$/,'')}/?v=10&encoding=json`}
 function connect(resuming=false){
   if(stopping)return;
-  const url=gatewayUrl(resuming);console.log('[gateway] connecting',{url,resuming,channels:[...CHANNEL_IDS],testMode:TEST_MODE,autonomous:AUTONOMOUS});
+  const url=gatewayUrl(resuming);console.log('[gateway] connecting',{url,resuming,channels:[...CHANNEL_IDS],autonomousChannels:[...AUTONOMOUS_CHANNEL_IDS],testMode:TEST_MODE,autonomous:AUTONOMOUS,cooldownMs:AUTONOMOUS_COOLDOWN_MS});
   ws=new WebSocket(url);
   ws.addEventListener('open',()=>{reconnectAttempt=0});
   ws.addEventListener('message',event=>{
@@ -143,7 +145,7 @@ function connect(resuming=false){
       if(p.op===7){try{ws.close(4000,'server requested reconnect')}catch{}return}
       if(p.op===9){const resumable=Boolean(p.d);if(!resumable){sessionId=null;seq=null;resumeGatewayUrl=null}try{ws.close(4000,'invalid session')}catch{};setTimeout(()=>scheduleReconnect(resumable),1000+Math.floor(Math.random()*4000));return}
       if(p.op!==0)return;
-      if(p.t==='READY'){botId=p.d?.user?.id||botId;sessionId=p.d?.session_id||sessionId;resumeGatewayUrl=p.d?.resume_gateway_url||resumeGatewayUrl;console.log('[gateway] READY',{botId,sessionId:Boolean(sessionId),guild:GUILD_ID,channels:[...CHANNEL_IDS]});return}
+      if(p.t==='READY'){botId=p.d?.user?.id||botId;sessionId=p.d?.session_id||sessionId;resumeGatewayUrl=p.d?.resume_gateway_url||resumeGatewayUrl;console.log('[gateway] READY',{botId,sessionId:Boolean(sessionId),guild:GUILD_ID,channels:[...CHANNEL_IDS],autonomousChannels:[...AUTONOMOUS_CHANNEL_IDS]});return}
       if(p.t==='RESUMED'){console.log('[gateway] RESUMED');return}
       if(p.t==='MESSAGE_CREATE')onMessageCreate(p.d).catch(e=>console.error('[gateway] message handler failed',e));
     }catch(e){console.error('[gateway] frame parse failed',e?.message||e)}
