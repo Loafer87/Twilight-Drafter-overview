@@ -17,7 +17,6 @@ let heartbeatTimer=null,heartbeatAck=true,reconnectTimer=null,reconnectAttempt=0
 const seen=new Set(),inFlight=new Set(),lastAutonomousByChannel=new Map();
 
 function clean(v,max=2000){return String(v||'').replace(/\u0000/g,'').trim().slice(0,max)}
-function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 function remember(id){if(!id)return false;if(seen.has(id))return true;seen.add(id);if(seen.size>500){const first=seen.values().next().value;seen.delete(first)}return false}
 function canonical(body={}){
   return JSON.stringify({
@@ -46,6 +45,18 @@ async function fetchRecent(channelId,beforeId){
   }catch(e){console.warn('[gateway] recent context unavailable',e?.status||e?.message||e);return[]}
 }
 
+async function hydrateMessage(m){
+  if(m?.content)return m;
+  try{
+    const fresh=await discord(`/channels/${m.channel_id}/messages/${m.id}`,{method:'GET'});
+    if(fresh?.id){
+      console.log('[gateway] hydrated message',{channel:m.channel_id,message:m.id,hasContent:Boolean(fresh.content)});
+      return{...m,...fresh};
+    }
+  }catch(e){console.warn('[gateway] message hydration unavailable',e?.status||e?.message||e)}
+  return m;
+}
+
 function stripSummon(content){
   let out=String(content||'');
   if(botId)out=out.replace(new RegExp(`<@!?${botId}>`,'g'),' ');
@@ -54,10 +65,11 @@ function stripSummon(content){
 }
 function explicitSummon(m){
   const text=String(m?.content||'');
-  const mention=Boolean(botId&&new RegExp(`<@!?${botId}>`).test(text));
+  const mentionByArray=Boolean(botId&&Array.isArray(m?.mentions)&&m.mentions.some(u=>u?.id===botId));
+  const mentionByText=Boolean(botId&&new RegExp(`<@!?${botId}>`).test(text));
   const named=/^\s*(?:hey[,.!]?\s+)?(?:the\s+)?(?:galactic\s+)?council\b/i.test(text);
   const reply=Boolean(botId&&m?.referenced_message?.author?.id===botId);
-  return{yes:mention||named||reply,mention,named,reply};
+  return{yes:mentionByArray||mentionByText||named||reply,mention:mentionByArray||mentionByText,mentionByArray,mentionByText,named,reply};
 }
 function autonomousTrigger(m){
   if(!AUTONOMOUS||TEST_MODE)return false;
@@ -89,10 +101,15 @@ async function askCouncil(m,isExplicit){
   }catch(e){console.error('[gateway] Council response failed',e?.stack||e?.message||e)}finally{inFlight.delete(m.id)}
 }
 
-async function onMessageCreate(m){
-  if(!m||m.guild_id!==GUILD_ID||!CHANNEL_IDS.has(m.channel_id)||m.author?.bot||m.webhook_id||!m.content)return;
+async function onMessageCreate(raw){
+  if(!raw||raw.guild_id!==GUILD_ID||!CHANNEL_IDS.has(raw.channel_id)||raw.author?.bot||raw.webhook_id)return;
+  const initialSummon=explicitSummon(raw);
+  if(TEST_MODE)console.log('[gateway] MESSAGE_CREATE',{channel:raw.channel_id,message:raw.id,hasContent:Boolean(raw.content),mentionsBot:initialSummon.mention,mentionByArray:initialSummon.mentionByArray,replyToBot:initialSummon.reply});
+  let m=raw;
+  if(!m.content&&initialSummon.yes)m=await hydrateMessage(m);
   if(remember(m.id))return;
   const summon=explicitSummon(m),auto=autonomousTrigger(m);
+  if(TEST_MODE)console.log('[gateway] classified',{message:m.id,explicit:summon.yes,mention:summon.mention,named:summon.named,reply:summon.reply,auto,hasContent:Boolean(m.content)});
   if(!summon.yes&&!auto)return;
   await askCouncil(m,summon.yes);
 }
