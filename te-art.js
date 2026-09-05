@@ -16,13 +16,14 @@ const FACTION_PORTRAITS={
   'The Xxcha Kingdom':{url:'https://res.cloudinary.com/grwiz5ap/image/upload/v1788411049/XXCHA_e3arss.webp',position:'50% 20%'},
   'The Yin Brotherhood':{url:'https://res.cloudinary.com/grwiz5ap/image/upload/v1788411049/YIN_oei1n3.webp',position:'50% 20%'},
   'The Yssaril Tribes':{url:'https://res.cloudinary.com/grwiz5ap/image/upload/v1788411049/YSSARIL_jzdnhx.webp',position:'50% 20%'},
-  'The Argent Flight':{url:'https://res.cloudinary.com/grwiz5ap/image/upload/v1788411044/ArgentAgent_P_kzlimr.webp',position:'50% 20%'},
+  'The Argent Flight':{url:'https://res.cloudinary.com/grwiz5ap/image/upload/v1788411044/ArgentAgentP_kzlimr.webp',position:'50% 20%'},
   'The Empyrean':{url:'https://res.cloudinary.com/grwiz5ap/image/upload/v1788411044/EMPYREAN_gh3ja2.webp',position:'50% 20%'},
   'The Mahact Gene-Sorcerers':{url:'https://res.cloudinary.com/grwiz5ap/image/upload/v1788411045/MAHACT_oth6zf.webp',position:'50% 18%'},
   'The Naaz-Rokha Alliance':{url:'https://res.cloudinary.com/grwiz5ap/image/upload/v1788411047/NAAZROKHA_blad9f.webp',position:'50% 22%'},
   'The Nomad':{url:'https://res.cloudinary.com/grwiz5ap/image/upload/v1788411047/NOMAD_b7tp4f.webp',position:'50% 20%'},
   'The Titans of Ul':{url:'https://res.cloudinary.com/grwiz5ap/image/upload/v1788411048/TITANS_1_rnote0.webp',position:'50% 20%'},
   "The Vuil'raith Cabal":{url:'https://res.cloudinary.com/grwiz5ap/image/upload/v1788411044/CabalAgentP_qfp0uf.webp',position:'50% 20%'},
+  'The Council Keleres':{url:'https://res.cloudinary.com/grwiz5ap/image/upload/v1788625385/The_Council_of_Keleres_profile_e63csf.png',position:'50% 20%'},
   'Last Bastion':{url:'https://res.cloudinary.com/grwiz5ap/image/upload/v1788411044/Bastion_zmzy8y.webp',position:'50% 20%'},
   'The Deepwrought Scholarate':{url:'https://res.cloudinary.com/grwiz5ap/image/upload/v1788411044/Deepwrought_assmls.webp',position:'50% 20%'},
   'The Crimson Rebellion':{url:'https://res.cloudinary.com/grwiz5ap/image/upload/v1788411044/Crimson_jdlooj.webp',position:'50% 20%'},
@@ -31,6 +32,7 @@ const FACTION_PORTRAITS={
 };
 
 const TE_REFERENCES={
+  'The Council Keleres':'https://res.cloudinary.com/grwiz5ap/image/upload/v1788625356/KeleresFactionSheet_xpdjvv.webp',
   'Last Bastion':'https://images-cdn.fantasyflightgames.com/filer_public/f9/b6/f9b6d799-cdc5-48dc-af93-47cd68ebd022/ti11_faction-article_factions_sheet_lastbastion.png',
   'The Deepwrought Scholarate':'https://images-cdn.fantasyflightgames.com/filer_public/10/20/102016e2-4737-4c57-97c3-7dee24f39f09/ti11_faction-article_factions_sheet_thedeepwroughtscholarate.png',
   'The Crimson Rebellion':'https://images-cdn.fantasyflightgames.com/filer_public/aa/f4/aaf4c0bc-cc93-4b9c-bde3-dc5b1b4eb7ae/ti11_faction-article_factions_sheet_thecrimsonrebellion.png',
