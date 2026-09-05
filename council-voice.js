@@ -28,7 +28,7 @@ async function councilSpeak(text,mode='pick',onEnded=null,onStarted=null,onUnava
 }
 function councilToggleVoice(){councilVoiceEnabled=!councilVoiceEnabled;localStorage.setItem(COUNCIL_VOICE_KEY,councilVoiceEnabled?'on':'off');if(!councilVoiceEnabled)councilStopVoice();councilUpdateVoiceButton();toast(councilVoiceEnabled?'AI-generated Council voice enabled':'Council voice muted')}
 function councilOfficialAchievement(result,legacy){const raw=legacy||result?.achievement||null;return typeof councilNormalizeAchievement==='function'?councilNormalizeAchievement(raw):raw}
-function councilAchievementSpeech(achievement){if(!achievement?.title)return'';return `ACHIEVEMENT UNLOCKED! ${achievement.title}. ${achievement.copy||''}`.trim()}
+function councilAchievementSpeech(achievement){if(!achievement?.title)return'';const parts=[`ACHIEVEMENT UNLOCKED! ${achievement.title}.`];if(achievement.copy)parts.push(String(achievement.copy));if(achievement.reward)parts.push(`Reward: ${achievement.reward}`);if(achievement.consequence)parts.push(`Consequence: ${achievement.consequence}`);return parts.join(' ').trim()}
 function councilSpeakWithAchievement(result,mode,textEl,achievementEl,achievement){
   const text=String(result?.text||'').trim(),achievementSpeech=councilAchievementSpeech(achievement),directorMode=councilVoiceDirectorMode(result),sync=councilVoiceEnabled&&Boolean(text);
   if(sync)councilVoiceHold(textEl);else councilVoiceReveal(textEl);
