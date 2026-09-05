@@ -77,6 +77,7 @@ async function generateDiscordCouncil(input={}){
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8500);
   try{const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model,instructions,input:JSON.stringify(payload),max_output_tokens:680,reasoning:{effort:'none'}}),signal:controller.signal});if(!r.ok)throw new Error(`discord_council_${r.status}`);const parsed=parseEnvelope(outputText(await r.json()));if(!achievement.plan.enabled)parsed.achievement=null;return parsed}catch(e){console.warn('[discord-council] AI fallback',String(e?.name||e?.message||e));return fallback(input)}finally{clearTimeout(timer)}
 }
+function normalizeBoxPrize(value){let prize=clean(value,180).replace(/^BOX\s*:\s*/i,'').trim();if(!prize)return'';if(/\b(?:crate|chest|cache|pack)$/i.test(prize))prize=prize.replace(/\b(?:crate|chest|cache|pack)$/i,'Box');else if(!/\bbox$/i.test(prize))prize=`${prize} Box`;return prize}
 function formatDiscordReply(result){
   const lines=[`**${clean(result?.headline,80)||'COUNCIL RULING'}**`,clean(result?.commentary,1500)];
   const a=result?.achievement;
@@ -87,7 +88,7 @@ function formatDiscordReply(result){
     if(a.sting)lines.push(`**${clean(a.sting,100)}**`);
     if(a.reward){
       const r=clean(a.reward,180);
-      if(/^BOX\s*:/i.test(r))lines.push(`*Reward:* You’ve received a **${r.replace(/^BOX\s*:\s*/i,'')}**.`);
+      if(/^BOX\s*:/i.test(r)){const prize=normalizeBoxPrize(r);if(prize)lines.push(`*Reward:* You’ve received a **${prize}**.`)}
       else if(/^TEXT\s*:/i.test(r))lines.push(`*Reward:* ${r.replace(/^TEXT\s*:\s*/i,'')}`);
       else lines.push(`*Reward:* ${r}`);
     }
