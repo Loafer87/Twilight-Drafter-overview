@@ -36,7 +36,7 @@ function achievementPlan(input={}){
   const rewardShape=mode.id==='reward-betrayal'?(rewardRoll<52?'punchline':'box'):rewardRoll<79?'box':rewardRoll<91?'punchline':'none';
   const stingAllowed=hash32(`${key}|sting`)%100<24;
   const consequenceAllowed=mode.id==='consequence-prize'||hash32(`${key}|consequence`)%100<18;
-  const tiers=['Bronze','Silver','Gold','Platinum','Mythic','Questionably Legal'];
+  const tiers=['Bronze','Silver','Gold','Platinum','Legendary','Celestial'];
   const tier=tiers[hash32(`${key}|tier`)%tiers.length];
   return{enabled,chance,roll,mode,rewardShape,stingAllowed,consequenceAllowed,tier};
 }
@@ -45,7 +45,7 @@ function achievementDirective(input={}){
   const plan=achievementPlan(input);
   if(!plan.enabled)return{plan,instruction:'DISCORD ACHIEVEMENT DIRECTOR: No achievement this interaction. Output NONE for ACHIEVEMENT, ACHIEVEMENT_COPY, ACHIEVEMENT_STING, ACHIEVEMENT_REWARD and ACHIEVEMENT_CONSEQUENCE. Do not sneak an achievement into BODY.'};
   const rewardRule=plan.rewardShape==='box'
-    ?`ACHIEVEMENT_REWARD must be BOX: ${plan.tier} <invented offense-specific Box name>. Make the Box name the kind of ridiculous object-label that only makes sense for this exact act. Never reuse a reward name from existing fiction.`
+    ?`ACHIEVEMENT_REWARD must be BOX: ${plan.tier} <invented offense-specific name ending in the literal word Box>. The literal FINAL WORD must be Box. Make the name the kind of ridiculous object-label that only makes sense for this exact act. Never reuse a reward name from existing fiction.`
     :plan.rewardShape==='punchline'
       ?'ACHIEVEMENT_REWARD must be TEXT: <a very short anti-reward/punchline>. It can be one word, a refusal, a useless privilege, or a petty system response. Do not use a loot box in this lane.'
       :'ACHIEVEMENT_REWARD must be NONE. The lack of reward should itself feel intentional, not forgotten.';
