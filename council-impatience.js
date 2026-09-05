@@ -1,5 +1,6 @@
 const COUNCIL_IMPATIENCE_API=location.hostname==='loafer87.github.io'?'https://twilight-drafter-overview.vercel.app/api/council-stall-v2':'/api/council-stall-v2';
-const COUNCIL_IMPATIENCE_WINDOWS=[{min:240,max:300},{min:420,max:510},{min:600,max:720}];
+const COUNCIL_IMPATIENCE_WINDOWS=[{min:180,max:180},{min:420,max:420},{min:600,max:600}];
+const COUNCIL_AUTOPICK_SECONDS=900;
 let councilImpatience=null;
 
 function councilImpatienceEnsureUi(){
@@ -17,10 +18,16 @@ function councilImpatienceEnsureUi(){
       .council-impatience.level-3 .council-impatience-card{border-color:rgba(255,91,91,.92);border-left-color:#ff5b5b;background:linear-gradient(100deg,rgba(37,5,14,.99),rgba(12,3,8,.98));box-shadow:0 18px 72px rgba(0,0,0,.66),0 0 54px rgba(255,70,95,.28);animation:councilImpatienceCritical .72s ease-in-out 3}
       .council-impatience.level-3 .council-impatience-head{color:#ff8585}
       .council-impatience.level-3 .council-impatience-card:before{background:linear-gradient(90deg,transparent,rgba(255,91,91,.13),transparent);animation-duration:1.65s}
+      .council-impatience.level-4{z-index:1200;bottom:50%;transform:translate(-50%,50%) scale(.96)}
+      .council-impatience.level-4.open{transform:translate(-50%,50%) scale(1)}
+      .council-impatience.level-4 .council-impatience-card{border:1px solid rgba(255,70,70,.95);border-left:6px solid #ff3f57;background:radial-gradient(circle at 50% 0,rgba(88,7,22,.98),rgba(16,2,8,.995) 62%);box-shadow:0 28px 110px rgba(0,0,0,.82),0 0 84px rgba(255,42,74,.38);padding:20px 24px 22px;animation:councilImpatienceCritical .58s ease-in-out 5}
+      .council-impatience.level-4 .council-impatience-head{color:#ff707d;font-size:12px}
+      .council-impatience.level-4 .council-impatience-subject{color:#fff0c2}
+      .council-impatience.level-4 .council-impatience-text{font-size:22px;line-height:1.28}
       @keyframes councilImpatienceScan{to{transform:translateX(100%)}}
       @keyframes councilImpatienceCritical{50%{box-shadow:0 18px 72px rgba(0,0,0,.66),0 0 78px rgba(255,70,95,.42)}}
-      @media(max-width:650px){.council-impatience{bottom:12px;width:calc(100vw - 20px)}.council-impatience-card{padding:12px 14px}.council-impatience-head{align-items:flex-start;flex-direction:column;gap:3px}.council-impatience-text{font-size:16px}}
-      @media(prefers-reduced-motion:reduce){.council-impatience{transition:none}.council-impatience-card:before,.council-impatience.level-3 .council-impatience-card{animation:none}}
+      @media(max-width:650px){.council-impatience{bottom:12px;width:calc(100vw - 20px)}.council-impatience.level-4{bottom:50%}.council-impatience-card{padding:12px 14px}.council-impatience-head{align-items:flex-start;flex-direction:column;gap:3px}.council-impatience-text{font-size:16px}.council-impatience.level-4 .council-impatience-text{font-size:19px}}
+      @media(prefers-reduced-motion:reduce){.council-impatience{transition:none}.council-impatience-card:before,.council-impatience.level-3 .council-impatience-card,.council-impatience.level-4 .council-impatience-card{animation:none}}
     `;document.head.appendChild(style);
   }
   let el=document.querySelector('#councilImpatience');
@@ -31,18 +38,39 @@ function councilImpatienceFormat(seconds){const m=Math.floor(seconds/60),s=Math.
 function councilImpatienceDelay(windowSpec){return Math.round((windowSpec.min+Math.random()*(windowSpec.max-windowSpec.min))*1000)}
 function councilImpatienceKey(){const a=state.assignments?.[state.current];return a?`${state.seed}|${state.current}|${a.playerIdx}`:null}
 function councilImpatienceClear({hide=true,stopVoice=false}={}){if(!councilImpatience)return;for(const t of councilImpatience.timers||[])clearTimeout(t);if(councilImpatience.controller){try{councilImpatience.controller.abort()}catch(e){}}councilImpatience.timers=[];councilImpatience.controller=null;if(hide)councilImpatienceHide();if(stopVoice&&typeof councilStopVoice==='function')councilStopVoice();councilImpatience=null}
-function councilImpatienceHide(){const el=document.querySelector('#councilImpatience');el?.classList.remove('open','level-1','level-2','level-3')}
-function councilImpatienceShow(text,player,elapsedSeconds,level){
-  const el=councilImpatienceEnsureUi(),textEl=document.querySelector('#councilImpatienceText');el.classList.remove('level-1','level-2','level-3');el.classList.add(`level-${level}`);
-  const labels={1:'COUNCIL INTERRUPTION // DELIBERATION AUDIT',2:'COUNCIL INTERRUPTION // ADMINISTRATIVE EMERGENCY',3:'COUNCIL EMERGENCY // DELIBERATION INCIDENT: CRITICAL'};document.querySelector('#councilImpatienceLabel').textContent=labels[level]||labels[1];document.querySelector('#councilImpatienceSubject').textContent=`${player} // ${councilImpatienceFormat(elapsedSeconds)}`;
-  textEl.textContent='';textEl.style.opacity='0';requestAnimationFrame(()=>el.classList.add('open'));if(level===3&&typeof playCouncilStinger==='function')playCouncilStinger();else if(typeof councilIntelSound==='function')councilIntelSound();
-  let hidden=false,hideTimer=null;const finish=()=>{if(hidden)return;hidden=true;if(hideTimer)clearTimeout(hideTimer);councilImpatienceHide()};const reveal=()=>{textEl.textContent=text;textEl.style.opacity='1'};const revealFallback=()=>{reveal();hideTimer=setTimeout(finish,level===3?12000:9000)};
-  if(typeof councilSpeak==='function'&&typeof councilVoiceEnabled!=='undefined'&&councilVoiceEnabled){councilSpeak(text,'pick',()=>setTimeout(finish,650),()=>reveal(),()=>revealFallback())}else revealFallback();
+function councilImpatienceHide(){const el=document.querySelector('#councilImpatience');el?.classList.remove('open','level-1','level-2','level-3','level-4')}
+function councilImpatienceShow(text,player,elapsedSeconds,level,onDone=null){
+  const el=councilImpatienceEnsureUi(),textEl=document.querySelector('#councilImpatienceText');el.classList.remove('level-1','level-2','level-3','level-4');el.classList.add(`level-${level}`);
+  const labels={1:'COUNCIL INTERRUPTION // DELIBERATION AUDIT',2:'COUNCIL INTERRUPTION // ADMINISTRATIVE EMERGENCY',3:'COUNCIL EMERGENCY // DELIBERATION INCIDENT: CRITICAL',4:'COUNCIL SEIZURE // DECISION PRIVILEGES REVOKED'};document.querySelector('#councilImpatienceLabel').textContent=labels[level]||labels[1];document.querySelector('#councilImpatienceSubject').textContent=`${player} // ${councilImpatienceFormat(elapsedSeconds)}`;
+  textEl.textContent='';textEl.style.opacity='0';requestAnimationFrame(()=>el.classList.add('open'));if(level>=3&&typeof playCouncilStinger==='function')playCouncilStinger();else if(typeof councilIntelSound==='function')councilIntelSound();
+  let hidden=false,hideTimer=null;const finish=()=>{if(hidden)return;hidden=true;if(hideTimer)clearTimeout(hideTimer);councilImpatienceHide();if(typeof onDone==='function')onDone()};const reveal=()=>{textEl.textContent=text;textEl.style.opacity='1'};const revealFallback=()=>{reveal();hideTimer=setTimeout(finish,level===4?5000:level===3?12000:9000)};
+  if(typeof councilSpeak==='function'&&typeof councilVoiceEnabled!=='undefined'&&councilVoiceEnabled){councilSpeak(text,'pick',()=>setTimeout(finish,level===4?400:650),()=>reveal(),()=>revealFallback())}else revealFallback();
 }
 function councilImpatienceHistory(player){try{const h=typeof councilHistoryFor==='function'?councilHistoryFor(player):null;return h?{totalDraftPicks:h.total||0,factions:h.factions||{},achievements:h.achievements||[],tableLore:h.tableLore||h.profile?.lore||[]}:{} }catch(e){return{}}}
-function councilImpatienceContext(level){const a=state.assignments[state.current],player=playerName(a.playerIdx),elapsedSeconds=Math.max(0,Math.floor((Date.now()-councilImpatience.startedAt)/1000)),selected=a.options.find(x=>x.name===state.selected);return{mode:'stall',seed:state.seed,player,playerKey:typeof councilPlayerKey==='function'?councilPlayerKey(player):player.toLowerCase(),pickNumber:state.current+1,totalPlayers:state.players,speaker:state.current===0,elapsedSeconds,interruptionNumber:level,offered:a.options.map(x=>({name:x.name,tag:x.tag,blurb:x.blurb,expansion:E[x.exp]?.name||x.exp})),selected:selected?selected.name:null,alreadyPicked:state.picks.map(p=>({player:playerName(p.playerIdx),faction:p.faction.name,pick:p.pos+1})),previousInterruptions:[...(councilImpatience.texts||[])],history:councilImpatienceHistory(player),expansions:[...state.exp],temporal:typeof councilSessionTemporal==='function'?councilSessionTemporal():null}}
+function councilImpatienceContext(level){const a=state.assignments[state.current],player=playerName(a.playerIdx),elapsedSeconds=Math.max(0,Math.floor((Date.now()-councilImpatience.startedAt)/1000)),selected=a.options.find(x=>x.name===state.selected);return{mode:level===4?'auto-pick':'stall',seed:state.seed,player,playerKey:typeof councilPlayerKey==='function'?councilPlayerKey(player):player.toLowerCase(),pickNumber:state.current+1,totalPlayers:state.players,speaker:state.current===0,elapsedSeconds,interruptionNumber:level,offered:a.options.map(x=>({name:x.name,tag:x.tag,blurb:x.blurb,expansion:E[x.exp]?.name||x.exp})),selected:selected?selected.name:null,alreadyPicked:state.picks.map(p=>({player:playerName(p.playerIdx),faction:p.faction.name,pick:p.pos+1})),previousInterruptions:[...(councilImpatience.texts||[])],history:councilImpatienceHistory(player),expansions:[...state.exp],temporal:typeof councilSessionTemporal==='function'?councilSessionTemporal():null}}
 async function councilImpatienceInterrupt(level,key){if(!councilImpatience||councilImpatience.key!==key||state.phase!=='pick'||councilImpatience.count>=level)return;const ctx=councilImpatienceContext(level),controller=new AbortController();councilImpatience.controller=controller;const timer=setTimeout(()=>controller.abort(),12000);try{const r=await fetch(COUNCIL_IMPATIENCE_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(ctx),signal:controller.signal});let data={};try{data=await r.json()}catch(e){}if(!r.ok)throw new Error(String(data.code||`http_${r.status}`));const text=String(data.commentary||'').trim();if(!text)throw new Error('empty_response');if(!councilImpatience||councilImpatience.key!==key||state.phase!=='pick')return;councilImpatience.count=level;councilImpatience.texts.push(text);councilImpatienceShow(text,ctx.player,ctx.elapsedSeconds,level)}catch(e){if(e?.name!=='AbortError')console.warn('Council impatience uplink unavailable',e)}finally{clearTimeout(timer);if(councilImpatience?.key===key)councilImpatience.controller=null}}
-function councilImpatienceStart(){if(state.phase!=='pick')return;const key=councilImpatienceKey();if(!key)return;if(councilImpatience?.key===key)return;councilImpatienceClear({hide:true,stopVoice:false});councilImpatience={key,startedAt:Date.now(),count:0,texts:[],timers:[],controller:null};COUNCIL_IMPATIENCE_WINDOWS.forEach((w,i)=>{const t=setTimeout(()=>councilImpatienceInterrupt(i+1,key),councilImpatienceDelay(w));councilImpatience.timers.push(t)})}
+function councilImpatienceFallbackFaction(a,key){if(!a?.options?.length)return null;const raw=typeof councilHash==='function'?councilHash(`${key}|15-minute-auto-pick`):[...String(key||'')].reduce((n,ch)=>((n*33)^ch.charCodeAt(0))>>>0,5381);return a.options[Math.abs(Number(raw)||0)%a.options.length]}
+async function councilImpatienceAutoPick(key){
+  if(!councilImpatience||councilImpatience.key!==key||state.phase!=='pick')return;
+  const a=state.assignments[state.current];if(!a?.options?.length)return;
+  const ctx=councilImpatienceContext(4),controller=new AbortController();councilImpatience.controller=controller;const timer=setTimeout(()=>controller.abort(),12000);
+  let chosen=null,text='';
+  try{
+    const r=await fetch(COUNCIL_IMPATIENCE_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(ctx),signal:controller.signal});let data={};try{data=await r.json()}catch(e){}if(!r.ok)throw new Error(String(data.code||`http_${r.status}`));
+    chosen=a.options.find(x=>x.name===String(data.selectedFaction||''));text=String(data.commentary||'').trim();
+  }catch(e){if(e?.name!=='AbortError')console.warn('Council auto-pick uplink unavailable',e)}finally{clearTimeout(timer);if(councilImpatience?.key===key)councilImpatience.controller=null}
+  if(!councilImpatience||councilImpatience.key!==key||state.phase!=='pick')return;
+  chosen=chosen||councilImpatienceFallbackFaction(a,key);if(!chosen)return;
+  text=text||`Fifteen minutes. Decision privileges revoked. The Council selects ${chosen.name}. You had nine hundred seconds. This is now an administrative seizure.`;
+  councilImpatience.count=4;councilImpatience.texts.push(text);
+  councilImpatienceShow(text,ctx.player,Math.max(COUNCIL_AUTOPICK_SECONDS,ctx.elapsedSeconds),4,()=>{
+    if(!councilImpatience||councilImpatience.key!==key||state.phase!=='pick')return;
+    const current=state.assignments[state.current];if(!current?.options?.some(x=>x.name===chosen.name))return;
+    selectFaction(chosen.name);
+    setTimeout(()=>{if(state.phase==='pick'&&state.selected===chosen.name)confirmSelection()},250);
+  });
+}
+function councilImpatienceStart(){if(state.phase!=='pick')return;const key=councilImpatienceKey();if(!key)return;if(councilImpatience?.key===key)return;councilImpatienceClear({hide:true,stopVoice:false});councilImpatience={key,startedAt:Date.now(),count:0,texts:[],timers:[],controller:null};COUNCIL_IMPATIENCE_WINDOWS.forEach((w,i)=>{const t=setTimeout(()=>councilImpatienceInterrupt(i+1,key),councilImpatienceDelay(w));councilImpatience.timers.push(t)});const auto=setTimeout(()=>councilImpatienceAutoPick(key),COUNCIL_AUTOPICK_SECONDS*1000);councilImpatience.timers.push(auto)}
 
 const councilImpatienceBaseRenderPick=renderPick;
 renderPick=function(){const out=councilImpatienceBaseRenderPick();councilImpatienceStart();return out};
