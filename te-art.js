@@ -16,7 +16,7 @@ const FACTION_PORTRAITS={
   'The Xxcha Kingdom':{url:'https://res.cloudinary.com/grwiz5ap/image/upload/v1788411049/XXCHA_e3arss.webp',position:'50% 20%'},
   'The Yin Brotherhood':{url:'https://res.cloudinary.com/grwiz5ap/image/upload/v1788411049/YIN_oei1n3.webp',position:'50% 20%'},
   'The Yssaril Tribes':{url:'https://res.cloudinary.com/grwiz5ap/image/upload/v1788411049/YSSARIL_jzdnhx.webp',position:'50% 20%'},
-  'The Argent Flight':{url:'https://res.cloudinary.com/grwiz5ap/image/upload/v1788411044/ArgentAgentP_kzlimr.webp',position:'50% 20%'},
+  'The Argent Flight':{url:'https://res.cloudinary.com/grwiz5ap/image/upload/v1788629206/The_Argent_Flight_Profile_aahsnj.png',position:'50% 20%'},
   'The Empyrean':{url:'https://res.cloudinary.com/grwiz5ap/image/upload/v1788411044/EMPYREAN_gh3ja2.webp',position:'50% 20%'},
   'The Mahact Gene-Sorcerers':{url:'https://res.cloudinary.com/grwiz5ap/image/upload/v1788411045/MAHACT_oth6zf.webp',position:'50% 18%'},
   'The Naaz-Rokha Alliance':{url:'https://res.cloudinary.com/grwiz5ap/image/upload/v1788411047/NAAZROKHA_blad9f.webp',position:'50% 22%'},
