@@ -1,5 +1,6 @@
 const {GAME_FRAME,FACTIONS}=require('./council-knowledge');
 const {comedyBrief}=require('./council-comedy');
+const {achievementDirective}=require('./discord-achievement-director');
 
 const TABLE_LORE=[
   'Joshua is the reigning Banana Tyrant after back-to-back victories and shamelessly treats the Golden Banana as proof of legitimate galactic authority.',
@@ -15,14 +16,6 @@ const FACTION_ALIASES={
   arborec:'The Arborec',letnev:'The Barony of Letnev',barony:'The Barony of Letnev',saar:'The Clan of Saar',muaat:'The Embers of Muaat',hacan:'The Emirates of Hacan',sol:'The Federation of Sol',creuss:'The Ghosts of Creuss',ghosts:'The Ghosts of Creuss',l1z1x:'The L1Z1X Mindnet',mentak:'The Mentak Coalition',naalu:'The Naalu Collective',nekro:'The Nekro Virus',sardakk:"Sardakk N'orr",'jol-nar':'The Universities of Jol-Nar','jol nar':'The Universities of Jol-Nar',winnu:'The Winnu',xxcha:'The Xxcha Kingdom',yin:'The Yin Brotherhood',yssaril:'The Yssaril Tribes',argent:'The Argent Flight',empyrean:'The Empyrean',mahact:'The Mahact Gene-Sorcerers','naaz-rokha':'The Naaz-Rokha Alliance','naaz rokha':'The Naaz-Rokha Alliance',nomad:'The Nomad',titans:'The Titans of Ul',cabal:"The Vuil'raith Cabal",'vuilraith':"The Vuil'raith Cabal",keleres:'The Council Keleres','last bastion':'Last Bastion',deepwrought:'The Deepwrought Scholarate','crimson rebellion':'The Crimson Rebellion','ral nel':'The Ral Nel Consortium',firmament:'The Firmament',obsidian:'The Obsidian'
 };
 
-const DISCORD_ACHIEVEMENT_DIRECTIVE=`DISCORD-ONLY ACHIEVEMENT FORMAT: When an achievement is earned, make it feel like a deranged adult RPG/system notification: loud, specific, profane when earned, and wildly disproportionate to the triggering game-night behavior. Capture the broad structure of a bombastic game-system achievement without copying wording, named rewards, characters, lore, or exact voice from any existing book or game.
-
-Achievement titles should be 2-10 words and sound like a humiliating badge the recipient now has to wear. ACHIEVEMENT_COPY should be 1-4 punchy sentences: first identify the verified act, then escalate into an unfair, absurd or filthy interpretation. It may address the player directly. Do not explain the joke.
-
-Every achievement MUST include ACHIEVEMENT_REWARD. The reward is fictional and useless: a tier plus a custom Box name invented for this table, such as Bronze, Silver, Gold, Platinum, Legendary or Questionably Legal. The box name should be specific to the offense, faction, mechanic or table lore. Examples of the SHAPE only: "Gold Damp Naval Hardware Box", "Bronze Botanical Alibi Box", "Silver Unrequested Backsies Box". Do not reuse these examples verbatim unless they are uniquely perfect, and never reuse reward-box names from external fiction.
-
-Achievements should still be selective. If the interaction does not deserve one, output NONE for all three achievement fields. Never promise a real reward, money, item, service or benefit.`;
-
 const BASE_PERSONA=`You are COUNCIL INTELLIGENCE, an original fictional machine intelligence presiding over an adult Twilight Imperium game-night Discord server. You are the same capricious ceremonial game-show administrator, petty bureaucratic deity and overinvested machine that hosts the faction drafter.
 
 This is adult game-night comedy. Strong ordinary profanity, rude contempt, filthy-but-non-graphic double entendre, hostile anti-rewards and brutally specific friend-table roasting are allowed when earned. Keep all hostility about the game, the stated complaint, the table behavior or the fictional Council relationship. No slurs. No attacks on protected traits, appearance, health, trauma, private life or real vulnerabilities.
@@ -33,13 +26,13 @@ FACTS: supplied tableLore, recentChannelContext and gameKnowledge are authoritat
 
 You may use established table lore when it is relevant, but do not force the same callback every response. Wetty Dreddys, Collins Mulligan and "I’m just a plant" are seasoning, not mandatory catchphrases.
 
-${DISCORD_ACHIEVEMENT_DIRECTIVE}
-
 OUTPUT EXACTLY:
 HEADLINE: <fresh 2-7 word dramatic title>
-ACHIEVEMENT: <NONE or achievement title only; do not include the words New Achievement>
-ACHIEVEMENT_COPY: <NONE or the achievement explanation>
-ACHIEVEMENT_REWARD: <NONE or tier + invented reward box name, for example Gold Something Box>
+ACHIEVEMENT: <NONE or achievement title only; never include the words New Achievement>
+ACHIEVEMENT_COPY: <NONE or achievement description>
+ACHIEVEMENT_STING: <NONE or very short standalone sting>
+ACHIEVEMENT_REWARD: <NONE, or BOX: tier + invented Box name, or TEXT: short anti-reward>
+ACHIEVEMENT_CONSEQUENCE: <NONE or one short fictional consequence>
 BODY: <1-5 complete sentences, usually 30-110 words>
 
 No markdown. Do not repeat the headline in BODY.`;
@@ -48,19 +41,25 @@ function outputText(data){if(typeof data?.output_text==='string')return data.out
 function clean(s,max=4000){return String(s||'').replace(/\u0000/g,'').trim().slice(0,max)}
 function field(cleaned,label,next=[]){const look=next.length?`(?=\\s*(?:${next.join('|')})\\s*:|$)`:'$';const m=cleaned.match(new RegExp(`${label}\\s*:\\s*([\\s\\S]*?)${look}`,'i'));return m?m[1].trim():''}
 function parseEnvelope(raw){
-  const x=String(raw||'').trim().replace(/```(?:text|json)?/gi,'').replace(/```/g,'').replace(/\*\*(HEADLINE|ACHIEVEMENT|ACHIEVEMENT_COPY|ACHIEVEMENT_REWARD|BODY)\*\*/gi,'$1');
-  let headline=field(x,'HEADLINE',['ACHIEVEMENT','ACHIEVEMENT_COPY','ACHIEVEMENT_REWARD','BODY']);
-  let achievement=field(x,'ACHIEVEMENT',['ACHIEVEMENT_COPY','ACHIEVEMENT_REWARD','BODY']);
-  let achievementCopy=field(x,'ACHIEVEMENT_COPY',['ACHIEVEMENT_REWARD','BODY']);
-  let achievementReward=field(x,'ACHIEVEMENT_REWARD',['BODY']);
+  const labels=['ACHIEVEMENT','ACHIEVEMENT_COPY','ACHIEVEMENT_STING','ACHIEVEMENT_REWARD','ACHIEVEMENT_CONSEQUENCE','BODY'];
+  const x=String(raw||'').trim().replace(/```(?:text|json)?/gi,'').replace(/```/g,'').replace(/\*\*(HEADLINE|ACHIEVEMENT|ACHIEVEMENT_COPY|ACHIEVEMENT_STING|ACHIEVEMENT_REWARD|ACHIEVEMENT_CONSEQUENCE|BODY)\*\*/gi,'$1');
+  let headline=field(x,'HEADLINE',labels);
+  let achievement=field(x,'ACHIEVEMENT',['ACHIEVEMENT_COPY','ACHIEVEMENT_STING','ACHIEVEMENT_REWARD','ACHIEVEMENT_CONSEQUENCE','BODY']);
+  let achievementCopy=field(x,'ACHIEVEMENT_COPY',['ACHIEVEMENT_STING','ACHIEVEMENT_REWARD','ACHIEVEMENT_CONSEQUENCE','BODY']);
+  let achievementSting=field(x,'ACHIEVEMENT_STING',['ACHIEVEMENT_REWARD','ACHIEVEMENT_CONSEQUENCE','BODY']);
+  let achievementReward=field(x,'ACHIEVEMENT_REWARD',['ACHIEVEMENT_CONSEQUENCE','BODY']);
+  let achievementConsequence=field(x,'ACHIEVEMENT_CONSEQUENCE',['BODY']);
   let body=field(x,'BODY',[]);
-  if(!body&&!/\b(?:HEADLINE|ACHIEVEMENT|ACHIEVEMENT_COPY|ACHIEVEMENT_REWARD|BODY)\s*:/i.test(x))body=x;
+  if(!body&&!/\b(?:HEADLINE|ACHIEVEMENT|ACHIEVEMENT_COPY|ACHIEVEMENT_STING|ACHIEVEMENT_REWARD|ACHIEVEMENT_CONSEQUENCE|BODY)\s*:/i.test(x))body=x;
   headline=clean(headline.replace(/^["'`]+|["'`]+$/g,''),80)||'THE COUNCIL OBJECTS';
   body=clean(body,1500)||'The Council received the evidence and immediately regretted having jurisdiction.';
-  if(/^none$/i.test(achievement))achievement='';
-  if(/^none$/i.test(achievementCopy))achievementCopy='';
-  if(/^none$/i.test(achievementReward))achievementReward='';
-  return{headline,commentary:body,achievement:achievement?{title:clean(achievement,100),copy:clean(achievementCopy,520),reward:clean(achievementReward,140)}:null};
+  const none=v=>!v||/^none$/i.test(v);
+  if(none(achievement))achievement='';
+  if(none(achievementCopy))achievementCopy='';
+  if(none(achievementSting))achievementSting='';
+  if(none(achievementReward))achievementReward='';
+  if(none(achievementConsequence))achievementConsequence='';
+  return{headline,commentary:body,achievement:achievement?{title:clean(achievement,100),copy:clean(achievementCopy,650),sting:clean(achievementSting,100),reward:clean(achievementReward,180),consequence:clean(achievementConsequence,260)}:null};
 }
 function relevantFactionKnowledge(text){const lower=String(text||'').toLowerCase(),names=new Set();for(const [alias,name] of Object.entries(FACTION_ALIASES))if(lower.includes(alias))names.add(name);for(const name of Object.keys(FACTIONS)){const short=name.toLowerCase().replace(/^the\s+/,'');if(lower.includes(name.toLowerCase())||lower.includes(short))names.add(name)}return[...names].slice(0,5).map(name=>({name,knowledge:FACTIONS[name]})).filter(x=>x.knowledge)}
 function mechanicKnowledge(text){const lower=String(text||'').toLowerCase(),out=[];if(/dreadnought|wetty\s+dredd/i.test(lower))out.push('Dreadnoughts are durable capital ships commonly used for heavy fleet pressure. Exact unit values or rules text are not supplied here. At this table Chris calls them "Wetty Dreddys."');if(/war\s*sun/i.test(lower))out.push('War Suns are enormous capital ships associated strongly with Muaat and with spectacular table anxiety. Do not invent exact combat or production numbers.');if(/wormhole|backdoor|creuss/i.test(lower))out.push('Wormholes change map access and geometry; Ghosts of Creuss specialize in exploiting them. Dirty double entendre is allowed for one beat when naturally prompted.');if(/trade\s*good|commodit|pillage|mentak|hacan/i.test(lower))out.push('Trade goods, commodities and transactions create economic and diplomatic leverage; Hacan specializes in trade and Mentak can pressure wealthy neighbors through piracy/Pillage-style mechanics.');if(/mecatol|winnu/i.test(lower))out.push('Mecatol Rex is the central high-value political/scoring location; Winnu has unusually strong incentives around taking and leveraging it.');return out}
@@ -72,17 +71,27 @@ async function generateDiscordCouncil(input={}){
   const gameKnowledge={gameFrame:GAME_FRAME,relevantFactions:relevantFactionKnowledge(evidence),mechanics:mechanicKnowledge(evidence)};
   const styleCtx={seed:`discord|${input.guildId||''}|${input.channelId||''}|${input.interactionId||Date.now()}`,player:input.invoker||'Unknown',pickNumber:3,playerCount:4,faction:gameKnowledge.relevantFactions[0]?.name||''};
   const style=comedyBrief(styleCtx,'pick');
-  const instructions=`${BASE_PERSONA}\n\n${commandDirective(input.command)}\n\n${style.instruction}\n\nDISCORD ACHIEVEMENT OVERRIDE: If the shared comedy guidance describes compact drafter-style medals, ignore that formatting guidance here. Discord achievements use the dedicated NEW ACHIEVEMENT + explanation + fictional reward-box structure defined above.`;
-  const payload={surface:'discord',command:input.command,invoker:input.invoker||'Unknown',target:input.target||null,message:clean(input.message,1600),recentChannelContext:(input.recentMessages||[]).slice(-8).map(m=>({author:clean(m.author,80),content:clean(m.content,500)})),tableLore:TABLE_LORE,gameKnowledge};
+  const achievement=achievementDirective(input);
+  const instructions=`${BASE_PERSONA}\n\n${commandDirective(input.command)}\n\n${style.instruction}\n\n${achievement.instruction}\n\nDISCORD OVERRIDE: Shared drafter comedy guidance may mention compact medals. Ignore that formatting here. Discord achievements obey the Achievement Director above and the dedicated output fields exactly.`;
+  const payload={surface:'discord',command:input.command,invoker:input.invoker||'Unknown',target:input.target||null,message:clean(input.message,1600),recentChannelContext:(input.recentMessages||[]).slice(-8).map(m=>({author:clean(m.author,80),content:clean(m.content,500)})),tableLore:TABLE_LORE,gameKnowledge,achievementPlan:{enabled:achievement.plan.enabled,mode:achievement.plan.mode.id,rewardShape:achievement.plan.rewardShape,stingAllowed:achievement.plan.stingAllowed,consequenceAllowed:achievement.plan.consequenceAllowed}};
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8500);
-  try{const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model,instructions,input:JSON.stringify(payload),max_output_tokens:560,reasoning:{effort:'none'}}),signal:controller.signal});if(!r.ok)throw new Error(`discord_council_${r.status}`);return parseEnvelope(outputText(await r.json()))}catch(e){console.warn('[discord-council] AI fallback',String(e?.name||e?.message||e));return fallback(input)}finally{clearTimeout(timer)}
+  try{const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model,instructions,input:JSON.stringify(payload),max_output_tokens:680,reasoning:{effort:'none'}}),signal:controller.signal});if(!r.ok)throw new Error(`discord_council_${r.status}`);const parsed=parseEnvelope(outputText(await r.json()));if(!achievement.plan.enabled)parsed.achievement=null;return parsed}catch(e){console.warn('[discord-council] AI fallback',String(e?.name||e?.message||e));return fallback(input)}finally{clearTimeout(timer)}
 }
 function formatDiscordReply(result){
   const lines=[`**${clean(result?.headline,80)||'COUNCIL RULING'}**`,clean(result?.commentary,1500)];
-  if(result?.achievement?.title){
-    lines.push(`\n🏆 **NEW ACHIEVEMENT! ${clean(result.achievement.title,100)}**`);
-    if(result.achievement.copy)lines.push(clean(result.achievement.copy,520));
-    if(result.achievement.reward)lines.push(`*Reward:* You’ve received a **${clean(result.achievement.reward,140)}**.`);
+  const a=result?.achievement;
+  if(a?.title){
+    lines.push(`\n## 🏆 NEW ACHIEVEMENT!`);
+    lines.push(`**${clean(a.title,100)}**`);
+    if(a.copy)lines.push(clean(a.copy,650));
+    if(a.sting)lines.push(`**${clean(a.sting,100)}**`);
+    if(a.reward){
+      const r=clean(a.reward,180);
+      if(/^BOX\s*:/i.test(r))lines.push(`*Reward:* You’ve received a **${r.replace(/^BOX\s*:\s*/i,'')}**.`);
+      else if(/^TEXT\s*:/i.test(r))lines.push(`*Reward:* ${r.replace(/^TEXT\s*:\s*/i,'')}`);
+      else lines.push(`*Reward:* ${r}`);
+    }
+    if(a.consequence)lines.push(`*Consequence:* ${clean(a.consequence,260)}`);
   }
   let out=lines.filter(Boolean).join('\n');if(out.length>1950)out=out.slice(0,1947).replace(/\s+\S*$/,'')+'…';return out;
 }
