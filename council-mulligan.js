@@ -2,7 +2,7 @@
 (function(){
   const PICK_TRACES=new Map();
   let latestVerdictTrace=null;
-  let mulliganUses=0;
+  const mulliganUsedByPlayer=new Set();
 
   function clean(value){return String(value||'').replace(/\s+/g,' ').trim()}
   function removeRemembered(list,value,key){
@@ -26,11 +26,16 @@
       councilRecentComedyMotifs=removeRemembered(councilRecentComedyMotifs,motif,COUNCIL_RECENT_COMEDY_MOTIFS_KEY);
     }
   }
+  function mulliganTarget(){
+    const last=state?.picks?.[state.picks.length-1];
+    if(!last)return null;
+    return{playerIdx:last.playerIdx,player:playerName(last.playerIdx),faction:last.faction?.name||''};
+  }
   function labelMulliganButtons(){
     const pick=$('#undoBtn');
-    if(pick){pick.textContent='↶ Collins Mulligan';pick.title='Undo the last locked faction. One Mulligan per draft. A second request is medically inadvisable.';pick.setAttribute('aria-label','Collins Mulligan — undo last locked faction')}
+    if(pick){pick.textContent='↶ Collins Mulligan';pick.title='Undo the last locked faction. Each player gets one Mulligan per draft. A second attempt on the same player is medically inadvisable.';pick.setAttribute('aria-label','Collins Mulligan — undo last locked faction')}
     const final=$('#undoFinal');
-    if(final){final.textContent='↶ Collins Mulligan';final.title='Undo the final locked faction. One Mulligan per draft. Do not test the Council twice.';final.setAttribute('aria-label','Collins Mulligan — undo final locked faction')}
+    if(final){final.textContent='↶ Collins Mulligan';final.title='Undo the final locked faction. Each player gets one Mulligan per draft. Do not test the Council twice.';final.setAttribute('aria-label','Collins Mulligan — undo final locked faction')}
   }
   function ensureAssassinationUi(){
     if(!document.querySelector('#councilMulliganAssassinationStyle')){
@@ -52,20 +57,24 @@
     }
     let el=document.querySelector('#mulliganAssassination');
     if(!el){
-      el=document.createElement('div');el.id='mulliganAssassination';el.className='mulligan-assassination';el.setAttribute('role','alertdialog');el.setAttribute('aria-modal','true');el.innerHTML=`<div class="mulligan-assassination-card"><div class="mulligan-assassination-code">COUNCIL ERROR // CM-02</div><div class="mulligan-assassination-title">Second Mulligan Detected</div><div class="mulligan-assassination-text">The Council approved one act of cowardice. You requested another. This is no longer a redo. This is a lifestyle.</div><div class="mulligan-assassination-kill">ASSASSIN DISPATCHED // TARGET ACQUIRED</div><button type="button">Continue Posthumously →</button></div>`;document.body.appendChild(el);
+      el=document.createElement('div');el.id='mulliganAssassination';el.className='mulligan-assassination';el.setAttribute('role','alertdialog');el.setAttribute('aria-modal','true');el.innerHTML=`<div class="mulligan-assassination-card"><div class="mulligan-assassination-code">COUNCIL ERROR // CM-02</div><div class="mulligan-assassination-title">Second Mulligan Detected</div><div class="mulligan-assassination-text" id="mulliganAssassinationText">The Council approved one act of cowardice. You requested another. This is no longer a redo. This is a lifestyle.</div><div class="mulligan-assassination-kill">ASSASSIN DISPATCHED // TARGET ACQUIRED</div><button type="button">Continue Posthumously →</button></div>`;document.body.appendChild(el);
       el.querySelector('button').onclick=()=>el.classList.remove('open');
     }
     return el;
   }
-  function assassinateSecondMulligan(){
+  function assassinateSecondMulligan(target){
     if(typeof councilStopVoice==='function')councilStopVoice();
     if(typeof playCouncilStinger==='function')playCouncilStinger();
-    const el=ensureAssassinationUi();el.classList.add('open');setTimeout(()=>el.querySelector('button')?.focus({preventScroll:true}),120);
+    const el=ensureAssassinationUi(),copy=el.querySelector('#mulliganAssassinationText');
+    if(copy)copy.textContent=`${target?.player||'Delegate'}, the Council already approved one act of cowardice on your behalf. You requested another${target?.faction?` for ${target.faction}`:''}. This is no longer a redo. This is a lifestyle.`;
+    el.classList.add('open');setTimeout(()=>el.querySelector('button')?.focus({preventScroll:true}),120);
   }
   function requestMulligan(action){
-    if(mulliganUses>=1){assassinateSecondMulligan();return false}
+    const target=mulliganTarget();if(!target)return false;
+    const key=String(target.playerIdx);
+    if(mulliganUsedByPlayer.has(key)){assassinateSecondMulligan(target);return false}
     const changed=Boolean(action());
-    if(changed)mulliganUses++;
+    if(changed)mulliganUsedByPlayer.add(key);
     return changed;
   }
 
@@ -111,12 +120,13 @@
   };
 
   const baseResetSetup=resetSetup;
-  resetSetup=function(){mulliganUses=0;ensureAssassinationUi().classList.remove('open');return baseResetSetup()};
+  resetSetup=function(){mulliganUsedByPlayer.clear();ensureAssassinationUi().classList.remove('open');return baseResetSetup()};
 
   window.__councilMulliganDebug={
     pickTraceCount:()=>PICK_TRACES.size,
     hasVerdictTrace:()=>Boolean(latestVerdictTrace),
-    uses:()=>mulliganUses,
+    uses:()=>[...mulliganUsedByPlayer].map(Number),
+    usedByPlayer:()=>[...mulliganUsedByPlayer].map(key=>({playerIdx:Number(key),player:playerName(Number(key))})),
     recent:()=>({headlines:[...councilRecentHeadlines],achievements:[...councilRecentAchievements],shapes:[...councilRecentPerformanceShapes],bodyPatterns:[...councilRecentBodyPatterns],motifs:[...councilRecentComedyMotifs]})
   };
 })();
