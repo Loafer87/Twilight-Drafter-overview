@@ -1,6 +1,6 @@
 const COUNCIL_IMPATIENCE_API=location.hostname==='loafer87.github.io'?'https://twilight-drafter-overview.vercel.app/api/council-stall-v2':'/api/council-stall-v2';
-const COUNCIL_IMPATIENCE_WINDOWS=[{min:180,max:180},{min:420,max:420},{min:600,max:600}];
-const COUNCIL_AUTOPICK_SECONDS=900;
+const COUNCIL_IMPATIENCE_WINDOWS=[{min:90,max:90},{min:180,max:180},{min:300,max:300}];
+const COUNCIL_AUTOPICK_SECONDS=480;
 let councilImpatience=null;
 
 function councilImpatienceEnsureUi(){
@@ -49,7 +49,7 @@ function councilImpatienceShow(text,player,elapsedSeconds,level,onDone=null){
 function councilImpatienceHistory(player){try{const h=typeof councilHistoryFor==='function'?councilHistoryFor(player):null;return h?{totalDraftPicks:h.total||0,factions:h.factions||{},achievements:h.achievements||[],tableLore:h.tableLore||h.profile?.lore||[]}:{} }catch(e){return{}}}
 function councilImpatienceContext(level){const a=state.assignments[state.current],player=playerName(a.playerIdx),elapsedSeconds=Math.max(0,Math.floor((Date.now()-councilImpatience.startedAt)/1000)),selected=a.options.find(x=>x.name===state.selected);return{mode:level===4?'auto-pick':'stall',seed:state.seed,player,playerKey:typeof councilPlayerKey==='function'?councilPlayerKey(player):player.toLowerCase(),pickNumber:state.current+1,totalPlayers:state.players,speaker:state.current===0,elapsedSeconds,interruptionNumber:level,offered:a.options.map(x=>({name:x.name,tag:x.tag,blurb:x.blurb,expansion:E[x.exp]?.name||x.exp})),selected:selected?selected.name:null,alreadyPicked:state.picks.map(p=>({player:playerName(p.playerIdx),faction:p.faction.name,pick:p.pos+1})),previousInterruptions:[...(councilImpatience.texts||[])],history:councilImpatienceHistory(player),expansions:[...state.exp],temporal:typeof councilSessionTemporal==='function'?councilSessionTemporal():null}}
 async function councilImpatienceInterrupt(level,key){if(!councilImpatience||councilImpatience.key!==key||state.phase!=='pick'||councilImpatience.count>=level)return;const ctx=councilImpatienceContext(level),controller=new AbortController();councilImpatience.controller=controller;const timer=setTimeout(()=>controller.abort(),12000);try{const r=await fetch(COUNCIL_IMPATIENCE_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(ctx),signal:controller.signal});let data={};try{data=await r.json()}catch(e){}if(!r.ok)throw new Error(String(data.code||`http_${r.status}`));const text=String(data.commentary||'').trim();if(!text)throw new Error('empty_response');if(!councilImpatience||councilImpatience.key!==key||state.phase!=='pick')return;councilImpatience.count=level;councilImpatience.texts.push(text);councilImpatienceShow(text,ctx.player,ctx.elapsedSeconds,level)}catch(e){if(e?.name!=='AbortError')console.warn('Council impatience uplink unavailable',e)}finally{clearTimeout(timer);if(councilImpatience?.key===key)councilImpatience.controller=null}}
-function councilImpatienceFallbackFaction(a,key){if(!a?.options?.length)return null;const raw=typeof councilHash==='function'?councilHash(`${key}|15-minute-auto-pick`):[...String(key||'')].reduce((n,ch)=>((n*33)^ch.charCodeAt(0))>>>0,5381);return a.options[Math.abs(Number(raw)||0)%a.options.length]}
+function councilImpatienceFallbackFaction(a,key){if(!a?.options?.length)return null;const raw=typeof councilHash==='function'?councilHash(`${key}|8-minute-auto-pick`):[...String(key||'')].reduce((n,ch)=>((n*33)^ch.charCodeAt(0))>>>0,5381);return a.options[Math.abs(Number(raw)||0)%a.options.length]}
 async function councilImpatienceAutoPick(key){
   if(!councilImpatience||councilImpatience.key!==key||state.phase!=='pick')return;
   const a=state.assignments[state.current];if(!a?.options?.length)return;
@@ -61,7 +61,7 @@ async function councilImpatienceAutoPick(key){
   }catch(e){if(e?.name!=='AbortError')console.warn('Council auto-pick uplink unavailable',e)}finally{clearTimeout(timer);if(councilImpatience?.key===key)councilImpatience.controller=null}
   if(!councilImpatience||councilImpatience.key!==key||state.phase!=='pick')return;
   chosen=chosen||councilImpatienceFallbackFaction(a,key);if(!chosen)return;
-  text=text||`Fifteen minutes. Decision privileges revoked. The Council selects ${chosen.name}. You had nine hundred seconds. This is now an administrative seizure.`;
+  text=text||`Eight minutes. Decision privileges revoked. The Council selects ${chosen.name}. You had four hundred eighty seconds. This is now an administrative seizure.`;
   councilImpatience.count=4;councilImpatience.texts.push(text);
   councilImpatienceShow(text,ctx.player,Math.max(COUNCIL_AUTOPICK_SECONDS,ctx.elapsedSeconds),4,()=>{
     if(!councilImpatience||councilImpatience.key!==key||state.phase!=='pick')return;
