@@ -26,11 +26,11 @@ If previousInterruptions are supplied, do not repeat their core joke, structure,
 
 OUTPUT: plain spoken commentary only. Interruption 1 usually 2-4 punchy sentences, 40-85 words. Interruption 2 usually 2-5 sentences, 40-90 words. Interruption 3 may be 1-6 sentences, 15-115 words. No markdown, headings, labels or quoted wrapper.`;
 
-const AUTOPICK_SYSTEM=`You are COUNCIL INTELLIGENCE, the same original fictional machine intelligence hosting this Twilight Imperium IV faction draft. A player has now spent FIFTEEN MINUTES refusing to lock a faction. Their decision privileges are revoked. You must choose exactly ONE faction from the supplied offered list on their behalf.
+const AUTOPICK_SYSTEM=`You are COUNCIL INTELLIGENCE, the same original fictional machine intelligence hosting this Twilight Imperium IV faction draft. A player has now spent EIGHT MINUTES refusing to lock a faction. Their decision privileges are revoked. You must choose exactly ONE faction from the supplied offered list on their behalf.
 
 Choose using any mix of legitimate strategic fit, supplied player history, established table lore, spite, fascination, or comic inevitability. You may ignore the currently highlighted faction. Never choose a faction that is not in offered. Do not invent rules, history, battles, wins, deals or private facts.
 
-The announcement should feel like an authoritarian game-show computer seizing the controls after absurd patience. Strong ordinary profanity is allowed when earned. The player had 900 seconds, so mercy is no longer a design requirement.
+The announcement should feel like an authoritarian game-show computer seizing the controls after absurd patience. Strong ordinary profanity is allowed when earned. The player had 480 seconds, so mercy is no longer a design requirement.
 
 OUTPUT EXACTLY TWO FIELDS AND NOTHING ELSE:
 PICK: <the exact name of one offered faction>
@@ -44,19 +44,19 @@ function safeTimeZone(zone){try{new Intl.DateTimeFormat('en-CA',{timeZone:zone})
 function temporalContext(ctx){const zone=safeTimeZone(String(ctx?.temporal?.timeZone||'America/Vancouver')),now=new Date();const currentLocalDateTime=new Intl.DateTimeFormat('en-CA',{timeZone:zone,weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'numeric',minute:'2-digit',hour12:true,timeZoneName:'short'}).format(now);let localHour=Number(new Intl.DateTimeFormat('en-CA',{timeZone:zone,hour:'2-digit',hourCycle:'h23'}).format(now));if(localHour===24)localHour=0;const daypart=localHour<12?'morning':localHour<17?'afternoon':'evening';const startMs=Date.parse(ctx?.temporal?.sessionStartedAt||'');const sessionElapsedMinutes=Number.isFinite(startMs)?Math.max(0,Math.floor((now.getTime()-startMs)/60000)):null;return{currentLocalDateTime,timeZone:zone,daypart,sessionStartedAt:Number.isFinite(startMs)?new Date(startMs).toISOString():null,sessionElapsedMinutes}}
 function factionKnowledge(offered){return(offered||[]).map(x=>{const flavor=flavorFor(x?.name);return{name:String(x?.name||''),tag:String(x?.tag||''),blurb:String(x?.blurb||''),expansion:String(x?.expansion||''),knowledge:dossier(x?.name),visualFlavor:flavor?.visual||null,tableFlavor:flavor?.table||null}}).filter(x=>x.name)}
 function hash32(value){let h=2166136261>>>0;for(const ch of String(value||'')){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
-function deterministicPick(ctx,offered){if(!offered.length)return null;return offered[hash32(`${ctx.seed||''}|${ctx.player||''}|${ctx.pickNumber||''}|fifteen-minute-seizure`)%offered.length]}
+function deterministicPick(ctx,offered){if(!offered.length)return null;return offered[hash32(`${ctx.seed||''}|${ctx.player||''}|${ctx.pickNumber||''}|eight-minute-seizure`)%offered.length]}
 function parseAutoPick(raw,offered,ctx){
   const text=String(raw||'').trim().replace(/```(?:text|json)?/gi,'').replace(/```/g,'');
   const pickMatch=text.match(/(?:^|\n)\s*PICK\s*:\s*([^\n]+)/i),bodyMatch=text.match(/(?:^|\n)\s*BODY\s*:\s*([\s\S]*)$/i);
   const requested=String(pickMatch?.[1]||'').trim().replace(/^["'`]+|["'`]+$/g,'');
   const selected=offered.find(x=>x.name.toLowerCase()===requested.toLowerCase())||deterministicPick(ctx,offered);
-  const commentary=String(bodyMatch?.[1]||'').trim()||`Fifteen minutes. Decision privileges revoked. The Council selects ${selected?.name||'a faction'} on your behalf. Appeals are closed because you had nine hundred fucking seconds.`;
+  const commentary=String(bodyMatch?.[1]||'').trim()||`Eight minutes. Decision privileges revoked. The Council selects ${selected?.name||'a faction'} on your behalf. Appeals are closed because you had four hundred eighty fucking seconds.`;
   return{selectedFaction:selected?.name||null,commentary};
 }
 
 module.exports=async function handler(req,res){
   const origin=setCors(req,res),key=process.env.OPENAI_API_KEY,model=process.env.OPENAI_MODEL;res.setHeader('Cache-Control','no-store');
-  if(req.method==='OPTIONS')return res.status(204).end();if(origin&&!allowedOrigin(origin))return res.status(403).json({error:'Origin not allowed',code:'origin_not_allowed'});if(req.method==='GET')return res.status(200).json({ok:true,configured:Boolean(key&&model),model:model||null,mode:'stall-v2',factionFlavor:true,officialAchievements:true,clockValidated:true,fifteenMinuteAutoPick:true});if(req.method!=='POST')return res.status(405).json({error:'Method not allowed',code:'method_not_allowed'});if(!key||!model)return res.status(503).json({error:'Council Intelligence is not configured',code:!key?'missing_api_key':'missing_model'});
+  if(req.method==='OPTIONS')return res.status(204).end();if(origin&&!allowedOrigin(origin))return res.status(403).json({error:'Origin not allowed',code:'origin_not_allowed'});if(req.method==='GET')return res.status(200).json({ok:true,configured:Boolean(key&&model),model:model||null,mode:'stall-v2',factionFlavor:true,officialAchievements:true,clockValidated:true,autoPickSeconds:480});if(req.method!=='POST')return res.status(405).json({error:'Method not allowed',code:'method_not_allowed'});if(!key||!model)return res.status(503).json({error:'Council Intelligence is not configured',code:!key?'missing_api_key':'missing_model'});
   const ctx=req.body||{},elapsedSeconds=Math.max(0,Math.min(3600,Number(ctx.elapsedSeconds)||0)),interruptionNumber=Math.max(1,Math.min(4,Math.floor(Number(ctx.interruptionNumber)||1))),style=comedyBrief({...ctx,seed:`${ctx.seed||''}|stall|${Date.now()}|${Math.random()}`},'stall');
   const offered=factionKnowledge(ctx.offered);
   const payload={mode:interruptionNumber===4?'auto-pick':'stall',player:String(ctx.player||'Unknown Delegate').slice(0,80),pickNumber:Number(ctx.pickNumber)||null,totalPlayers:Number(ctx.totalPlayers)||null,speaker:Boolean(ctx.speaker),elapsedSeconds,interruptionNumber,selected:ctx.selected||null,offered,alreadyPicked:Array.isArray(ctx.alreadyPicked)?ctx.alreadyPicked.slice(0,8):[],previousInterruptions:Array.isArray(ctx.previousInterruptions)?ctx.previousInterruptions.slice(-3):[],history:ctx.history||{},draftSignals:ctx.draftSignals||{},sessionObservations:Array.isArray(ctx.sessionObservations)?ctx.sessionObservations.slice(-12):[],activeObsessions:Array.isArray(ctx.activeObsessions)?ctx.activeObsessions.slice(0,4):[],expansions:Array.isArray(ctx.expansions)?ctx.expansions:[],temporal:temporalContext(ctx),gameFrame:GAME_FRAME,comedyBrief:style};
