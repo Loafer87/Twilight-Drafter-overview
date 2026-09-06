@@ -42,12 +42,12 @@
       const style=document.createElement('style');style.id='councilMulliganAssassinationStyle';style.textContent=`
         .mulligan-assassination{position:fixed;inset:0;z-index:5000;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 45%,rgba(88,0,18,.58),rgba(3,0,8,.96) 58%,#020105 100%);opacity:0;pointer-events:none;transition:opacity .18s ease;font-family:'Rajdhani',sans-serif}
         .mulligan-assassination.open{opacity:1;pointer-events:auto}
-        .mulligan-assassination-card{width:min(760px,94vw);border:1px solid rgba(255,76,94,.95);box-shadow:0 0 0 1px rgba(255,255,255,.04) inset,0 30px 120px rgba(0,0,0,.85),0 0 90px rgba(255,25,60,.32);background:linear-gradient(145deg,rgba(32,1,10,.99),rgba(7,2,13,.995));padding:34px 38px;text-align:center;position:relative;overflow:hidden}
+        .mulligan-assassination-card{width:min(800px,94vw);border:1px solid rgba(255,76,94,.95);box-shadow:0 0 0 1px rgba(255,255,255,.04) inset,0 30px 120px rgba(0,0,0,.85),0 0 90px rgba(255,25,60,.32);background:linear-gradient(145deg,rgba(32,1,10,.99),rgba(7,2,13,.995));padding:34px 38px;text-align:center;position:relative;overflow:hidden}
         .mulligan-assassination-card:before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 4px,rgba(255,255,255,.018) 5px);pointer-events:none}
         .mulligan-assassination-code{font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:#ff7584;font-weight:700;margin-bottom:15px}
         .mulligan-assassination-title{font-family:'Cinzel',serif;font-size:clamp(28px,5vw,52px);line-height:1.02;color:#fff2f3;text-transform:uppercase;text-shadow:0 0 26px rgba(255,52,82,.35);margin-bottom:18px}
-        .mulligan-assassination-text{font-size:21px;line-height:1.42;color:#f1dfe4;max-width:640px;margin:0 auto 24px}
-        .mulligan-assassination-kill{font-size:14px;letter-spacing:.18em;text-transform:uppercase;color:#ff5268;font-weight:800;margin:22px 0}
+        .mulligan-assassination-text{font-size:21px;line-height:1.42;color:#f1dfe4;max-width:690px;margin:0 auto 24px}
+        .mulligan-assassination-kill{font-size:14px;letter-spacing:.18em;text-transform:uppercase;color:#ff5268;font-weight:800;margin:22px auto;max-width:690px}
         .mulligan-assassination button{border:1px solid rgba(255,107,126,.8);background:rgba(255,52,82,.08);color:#ffd9df;font:700 13px 'Rajdhani',sans-serif;letter-spacing:.16em;text-transform:uppercase;padding:11px 18px;cursor:pointer}
         .mulligan-assassination.open .mulligan-assassination-card{animation:mulliganAssassinationHit .18s linear 3}
         @keyframes mulliganAssassinationHit{50%{transform:translate(2px,-1px);filter:brightness(1.3)}75%{transform:translate(-2px,1px)}}
@@ -57,17 +57,28 @@
     }
     let el=document.querySelector('#mulliganAssassination');
     if(!el){
-      el=document.createElement('div');el.id='mulliganAssassination';el.className='mulligan-assassination';el.setAttribute('role','alertdialog');el.setAttribute('aria-modal','true');el.innerHTML=`<div class="mulligan-assassination-card"><div class="mulligan-assassination-code">COUNCIL ERROR // CM-02</div><div class="mulligan-assassination-title">Second Mulligan Detected</div><div class="mulligan-assassination-text" id="mulliganAssassinationText">The Council approved one act of cowardice. You requested another. This is no longer a redo. This is a lifestyle.</div><div class="mulligan-assassination-kill">ASSASSIN DISPATCHED // TARGET ACQUIRED</div><button type="button">Continue Posthumously →</button></div>`;document.body.appendChild(el);
+      el=document.createElement('div');el.id='mulliganAssassination';el.className='mulligan-assassination';el.setAttribute('role','alertdialog');el.setAttribute('aria-modal','true');el.innerHTML=`<div class="mulligan-assassination-card"><div class="mulligan-assassination-code">COUNCIL ERROR // CM-02</div><div class="mulligan-assassination-title">Second Mulligan Detected</div><div class="mulligan-assassination-text" id="mulliganAssassinationText"></div><div class="mulligan-assassination-kill" id="mulliganAssassinationKill"></div><button type="button">Continue as Next of Kin →</button></div>`;document.body.appendChild(el);
       el.querySelector('button').onclick=()=>el.classList.remove('open');
     }
     return el;
   }
+  function assassinationCopy(target){
+    const player=target?.player||'Delegate',faction=target?.faction?` for ${target.faction}`:'';
+    const body=`${player}. No. The Council already granted you one Collins Mulligan. You have now attempted to reverse causality${faction} AGAIN. This is no longer indecision. This is an unauthorized attack on linear time. Your draft privileges are revoked, your chair has been marked vacant, and an intern is already measuring it for your replacement.`;
+    const kill='CORRECTION PROTOCOL ACTIVE // ASSASSIN EN ROUTE // APPEAL DENIED IN ADVANCE';
+    const speech=`Council error C M zero two. Second Mulligan detected. ${body} Correction protocol active. Assassin en route. Appeal denied in advance. Please remain where you are. Running only makes the paperwork funnier.`;
+    return{body,kill,speech};
+  }
   function assassinateSecondMulligan(target){
     if(typeof councilStopVoice==='function')councilStopVoice();
     if(typeof playCouncilStinger==='function')playCouncilStinger();
-    const el=ensureAssassinationUi(),copy=el.querySelector('#mulliganAssassinationText');
-    if(copy)copy.textContent=`${target?.player||'Delegate'}, the Council already approved one act of cowardice on your behalf. You requested another${target?.faction?` for ${target.faction}`:''}. This is no longer a redo. This is a lifestyle.`;
+    const el=ensureAssassinationUi(),copy=el.querySelector('#mulliganAssassinationText'),kill=el.querySelector('#mulliganAssassinationKill'),lines=assassinationCopy(target);
+    if(copy)copy.textContent=lines.body;
+    if(kill)kill.textContent=lines.kill;
     el.classList.add('open');setTimeout(()=>el.querySelector('button')?.focus({preventScroll:true}),120);
+    if(typeof councilSpeak==='function'&&typeof councilVoiceEnabled!=='undefined'&&councilVoiceEnabled){
+      setTimeout(()=>councilSpeak(lines.speech,'pick',null,null,null,null,'council-meltdown'),180);
+    }
   }
   function requestMulligan(action){
     const target=mulliganTarget();if(!target)return false;
