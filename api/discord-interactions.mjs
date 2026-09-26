@@ -73,8 +73,8 @@ async function runCommand(interaction){
   let docketIntent=detectDocketIntent(input.message);
   if(docketIntent&&input.target)docketIntent.targetName=input.target;
   const docketContext=docketIntent?await fetchDocketContext(docketIntent,input.invoker):null;
-  const result=await generateDiscordCouncil({...input,command:docketIntent?.kind||input.command,recentMessages:history,docketIntent,docketContext,guildId,channelId:interaction.channel_id,interactionId:interaction.id});
-  if(docketIntent){
+  const result=await generateDiscordCouncil({...input,command:docketIntent?.formal?docketIntent.kind:input.command,recentMessages:history,docketIntent,docketContext,guildId,channelId:interaction.channel_id,interactionId:interaction.id});
+  if(docketIntent?.formal){
     const saved=await persistDocket({intent:docketIntent,invoker:input.invoker,invokerId:input.invokerId,result});
     if(saved?.case)result.docketRecord={caseNumber:saved.case.case_number,kind:docketIntent.kind,disposition:result.docketDisposition||saved.case.current_disposition||'ADVISORY',precedent:Boolean(saved.case.precedent),parentCaseNumber:docketIntent.caseNumber||null};
   }
