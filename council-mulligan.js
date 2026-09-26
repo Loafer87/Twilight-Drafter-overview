@@ -116,6 +116,18 @@
     const final=$('#undoFinal');
     if(final){final.textContent='↶ Collins Mulligan';final.title=`Undo the final locked faction. Each player gets one Mulligan per draft. Active house rules: ${mulliganRuleSummary()}. Do not test the Council twice.`;final.setAttribute('aria-label','Collins Mulligan — undo final locked faction')}
   }
+  function pauseImpatienceForMulligan(){
+    window.__councilMulliganPauseImpatience=true;
+    try{if(typeof councilImpatienceClear==='function')councilImpatienceClear({hide:true,stopVoice:false})}catch(e){}
+  }
+  function resumeImpatienceAfterMulligan(){
+    window.__councilMulliganPauseImpatience=false;
+    try{if(state?.phase==='pick'&&typeof councilImpatienceStart==='function')councilImpatienceStart()}catch(e){}
+  }
+  function closeMulliganRuling(){
+    const el=document.querySelector('#mulliganRuling');el?.classList.remove('open');
+    resumeImpatienceAfterMulligan();
+  }
   function ensureMulliganRulingUi(){
     if(!document.querySelector('#councilMulliganRulingStyle')){
       const style=document.createElement('style');style.id='councilMulliganRulingStyle';style.textContent=`
@@ -135,7 +147,7 @@
     if(!el){
       el=document.createElement('div');el.id='mulliganRuling';el.className='mulligan-ruling';el.setAttribute('role','alertdialog');el.setAttribute('aria-modal','true');
       el.innerHTML=`<div class="mulligan-ruling-card"><div class="mulligan-ruling-code">COUNCIL DISPENSATION // CM-01</div><div class="mulligan-ruling-title">Collins Mulligan Approved</div><div class="mulligan-ruling-text" id="mulliganRulingText"></div><div class="mulligan-ruling-consequences" id="mulliganRulingConsequences"></div><button type="button">Accept Consequences →</button></div>`;document.body.appendChild(el);
-      el.querySelector('button').onclick=()=>el.classList.remove('open');
+      el.querySelector('button').onclick=()=>closeMulliganRuling();
     }
     return el;
   }
@@ -151,7 +163,13 @@
     else if(penalty?.dropFaction)body+=' You have now lost one faction. Apparently indecision has a disposal fee.';
     else if(penalty?.dropOrder)body+=' You have now dropped one place in the draft order. Someone else gets to benefit from your crisis.';
     else body+=' No optional penalties are active, which the Council finds embarrassingly lenient.';
-    const speech=`Collins Mulligan approved. ${body} ${bits.join('. ')}.`;
+    const spoken=[];
+    if(penalty?.dropFaction&&penalty.burnedFaction)spoken.push(`Faction revoked: ${penalty.burnedFaction}`);
+    else if(mulliganRules.dropFaction)spoken.push('Faction penalty waived. One option minimum.');
+    if(penalty?.dropOrder)spoken.push('Draft order penalty: dropped one position.');
+    else if(mulliganRules.dropOrder)spoken.push('Draft order penalty waived. Already at the bottom.');
+    if(!spoken.length)spoken.push('No optional penalties are active.');
+    const speech=`Collins Mulligan approved. ${body} ${spoken.join(' ')}`;
     return{body,bits,speech};
   }
   function showMulliganRuling(target,penalty){
@@ -207,8 +225,9 @@
     const target=mulliganTarget();if(!target)return false;
     const key=String(target.playerIdx);
     if(mulliganUsedByPlayer.has(key)){assassinateSecondMulligan(target);return false}
+    pauseImpatienceForMulligan();
     const changed=Boolean(action());
-    if(!changed)return false;
+    if(!changed){resumeImpatienceAfterMulligan();return false}
     mulliganUsedByPlayer.add(key);
     const penalties=applyMulliganPenalties(target),penalty=mulliganPenaltyByPlayer.get(key);
     state.selected=null;renderPick();showMulliganRuling(target,penalty);
@@ -266,7 +285,7 @@
   };
 
   const baseResetSetup=resetSetup;
-  resetSetup=function(){mulliganUsedByPlayer.clear();mulliganPenaltyByPlayer.clear();ensureAssassinationUi().classList.remove('open');ensureMulliganRulingUi().classList.remove('open');const out=baseResetSetup();renderMulliganRules();return out};
+  resetSetup=function(){mulliganUsedByPlayer.clear();mulliganPenaltyByPlayer.clear();window.__councilMulliganPauseImpatience=false;ensureAssassinationUi().classList.remove('open');ensureMulliganRulingUi().classList.remove('open');const out=baseResetSetup();renderMulliganRules();return out};
 
   window.__councilMulliganDebug={
     pickTraceCount:()=>PICK_TRACES.size,
