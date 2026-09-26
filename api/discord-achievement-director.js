@@ -21,14 +21,14 @@ function notableEvidence(text){
     /\b(?:champion|claim|grudge|organizer|meme|ally|attack|revenge)\b/,
     /\b\d+\b/
   ];
-  for(const re of patterns)if(re.test(t))bonus+=7;
-  return Math.min(28,bonus);
+  for(const re of patterns)if(re.test(t))bonus+=4;
+  return Math.min(16,bonus);
 }
 
 function achievementPlan(input={}){
   const evidence=[input.message,...(input.recentMessages||[]).map(x=>x?.content)].filter(Boolean).join(' ');
-  const base=input.command==='accuse'?38:input.command==='grievance'?32:22;
-  const chance=Math.min(60,base+notableEvidence(evidence));
+  const base=input.command==='accuse'?18:input.command==='grievance'?14:8;
+  const chance=Math.min(32,base+notableEvidence(evidence));
   const key=`${input.guildId||''}|${input.channelId||''}|${input.interactionId||''}|${input.command||''}|${input.invoker||''}|${input.target||''}|${input.message||''}`;
   const roll=hash32(`${key}|achievement-roll`)%100;
   const enabled=input.forceAchievement===false?false:(input.forceAchievement===true||roll<chance);
