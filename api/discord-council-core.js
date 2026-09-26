@@ -255,7 +255,9 @@ async function generateDiscordCouncil(input={}){
 }
 function normalizeBoxPrize(value){let prize=clean(value,180).replace(/^BOX\s*:\s*/i,'').trim();if(!prize)return'';if(/\b(?:crate|chest|cache|pack)$/i.test(prize))prize=prize.replace(/\b(?:crate|chest|cache|pack)$/i,'Box');else if(!/\bbox$/i.test(prize))prize=`${prize} Box`;return prize}
 function formatDiscordReply(result){
-  const lines=[`**${clean(result?.headline,80)||'COUNCIL RULING'}**`,clean(result?.commentary,1500)];
+  const lines=[`**${clean(result?.headline,80)||'COUNCIL RULING'}**`];
+  const d=result?.docketRecord;if(d?.caseNumber){const n=String(d.caseNumber).padStart(3,'0'),bits=[`COUNCIL DOCKET #${n}`,String(d.kind||'filing').toUpperCase(),String(d.disposition||'ADVISORY').toUpperCase()];if(d.precedent)bits.push('PRECEDENT');lines.push(`*${bits.join(' • ')}*`)}
+  lines.push(clean(result?.commentary,1500));
   const a=result?.achievement;
   if(a?.title){
     lines.push(`\n## 🏆 NEW ACHIEVEMENT!`);
