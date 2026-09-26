@@ -3,6 +3,7 @@
   const PICK_TRACES=new Map();
   let latestVerdictTrace=null;
   const mulliganUsedByPlayer=new Set();
+  const mulliganPenaltyByPlayer=new Map();
   const RULES_KEY='ti4-collins-mulligan-rules-v1';
   const mulliganRules={dropOrder:false,dropFaction:false};
 
@@ -76,6 +77,8 @@
       state.assignments.forEach((a,i)=>a.pos=i);
       state.current=state.assignments.findIndex(a=>a.playerIdx===target.playerIdx);
     }
+    const penalty={used:true,dropOrder:Boolean(mulliganRules.dropOrder&&idx<state.assignments.length-1),dropFaction:Boolean(mulliganRules.dropFaction&&details.some(x=>x.endsWith(' burned'))),burnedFaction:details.find(x=>x.endsWith(' burned'))?.replace(/ burned$/,'')||null,details:[...details]};
+    mulliganPenaltyByPlayer.set(String(target.playerIdx),penalty);
     syncSessionOrder();
     return details;
   }
@@ -170,6 +173,13 @@
     return true;
   }
 
+  const baseCouncilContextForMulligan=councilContext;
+  councilContext=function(a,f){
+    const ctx=baseCouncilContextForMulligan(a,f),penalty=mulliganPenaltyByPlayer.get(String(a?.playerIdx));
+    if(penalty)ctx.collinsMulligan={...penalty};
+    return ctx;
+  };
+
   const baseRemote=councilRemoteReaction;
   councilRemoteReaction=async function(ctx){
     const result=await baseRemote(ctx);
@@ -212,7 +222,7 @@
   };
 
   const baseResetSetup=resetSetup;
-  resetSetup=function(){mulliganUsedByPlayer.clear();ensureAssassinationUi().classList.remove('open');const out=baseResetSetup();renderMulliganRules();return out};
+  resetSetup=function(){mulliganUsedByPlayer.clear();mulliganPenaltyByPlayer.clear();ensureAssassinationUi().classList.remove('open');const out=baseResetSetup();renderMulliganRules();return out};
 
   window.__councilMulliganDebug={
     pickTraceCount:()=>PICK_TRACES.size,
@@ -220,6 +230,7 @@
     uses:()=>[...mulliganUsedByPlayer].map(Number),
     usedByPlayer:()=>[...mulliganUsedByPlayer].map(key=>({playerIdx:Number(key),player:playerName(Number(key))})),
     rules:()=>({...mulliganRules}),
+    penalties:()=>[...mulliganPenaltyByPlayer.entries()].map(([playerIdx,penalty])=>({playerIdx:Number(playerIdx),player:playerName(Number(playerIdx)),...penalty})),
     recent:()=>({headlines:[...councilRecentHeadlines],achievements:[...councilRecentAchievements],shapes:[...councilRecentPerformanceShapes],bodyPatterns:[...councilRecentBodyPatterns],motifs:[...councilRecentComedyMotifs]})
   };
 
