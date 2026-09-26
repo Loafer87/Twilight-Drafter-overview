@@ -116,6 +116,50 @@
     const final=$('#undoFinal');
     if(final){final.textContent='↶ Collins Mulligan';final.title=`Undo the final locked faction. Each player gets one Mulligan per draft. Active house rules: ${mulliganRuleSummary()}. Do not test the Council twice.`;final.setAttribute('aria-label','Collins Mulligan — undo final locked faction')}
   }
+  function ensureMulliganRulingUi(){
+    if(!document.querySelector('#councilMulliganRulingStyle')){
+      const style=document.createElement('style');style.id='councilMulliganRulingStyle';style.textContent=`
+        .mulligan-ruling{position:fixed;inset:0;z-index:4900;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 42%,rgba(27,44,83,.48),rgba(3,4,12,.94) 62%,#020207 100%);opacity:0;pointer-events:none;transition:opacity .18s ease;font-family:'Rajdhani',sans-serif}
+        .mulligan-ruling.open{opacity:1;pointer-events:auto}
+        .mulligan-ruling-card{width:min(760px,94vw);padding:32px 36px;border:1px solid rgba(118,166,255,.72);background:linear-gradient(145deg,rgba(9,15,34,.99),rgba(5,4,16,.995));box-shadow:0 28px 110px rgba(0,0,0,.82),0 0 70px rgba(80,135,255,.18);text-align:center}
+        .mulligan-ruling-code{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#84b0ff;font-weight:800;margin-bottom:12px}
+        .mulligan-ruling-title{font-family:'Cinzel',serif;font-size:clamp(27px,4.6vw,46px);line-height:1.05;color:#f0f5ff;text-transform:uppercase;margin-bottom:15px}
+        .mulligan-ruling-text{font-size:20px;line-height:1.45;color:#d8e0ee;max-width:650px;margin:0 auto}
+        .mulligan-ruling-consequences{display:grid;gap:8px;margin:20px auto 23px;max-width:610px}
+        .mulligan-ruling-consequences div{padding:10px 12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);color:#bfcbe0;font-size:14px;letter-spacing:.06em;text-transform:uppercase}
+        .mulligan-ruling button{border:1px solid rgba(118,166,255,.66);background:rgba(82,130,230,.1);color:#e5eeff;font:800 12px 'Rajdhani',sans-serif;letter-spacing:.15em;text-transform:uppercase;padding:11px 18px;cursor:pointer}
+        @media(max-width:650px){.mulligan-ruling-card{padding:25px 20px}.mulligan-ruling-text{font-size:18px}}
+      `;document.head.appendChild(style);
+    }
+    let el=document.querySelector('#mulliganRuling');
+    if(!el){
+      el=document.createElement('div');el.id='mulliganRuling';el.className='mulligan-ruling';el.setAttribute('role','alertdialog');el.setAttribute('aria-modal','true');
+      el.innerHTML=`<div class="mulligan-ruling-card"><div class="mulligan-ruling-code">COUNCIL DISPENSATION // CM-01</div><div class="mulligan-ruling-title">Collins Mulligan Approved</div><div class="mulligan-ruling-text" id="mulliganRulingText"></div><div class="mulligan-ruling-consequences" id="mulliganRulingConsequences"></div><button type="button">Accept Consequences →</button></div>`;document.body.appendChild(el);
+      el.querySelector('button').onclick=()=>el.classList.remove('open');
+    }
+    return el;
+  }
+  function mulliganRulingCopy(target,penalty){
+    const player=target?.player||'Delegate',bits=[];
+    if(penalty?.dropFaction&&penalty.burnedFaction)bits.push(`FACTION REVOKED // ${penalty.burnedFaction}`);
+    else if(mulliganRules.dropFaction)bits.push('FACTION PENALTY WAIVED // ONE OPTION MINIMUM');
+    if(penalty?.dropOrder)bits.push('DRAFT ORDER // DROPPED ONE POSITION');
+    else if(mulliganRules.dropOrder)bits.push('DRAFT ORDER PENALTY WAIVED // ALREADY AT THE BOTTOM');
+    if(!bits.length)bits.push('OPTIONAL PENALTIES // NONE ACTIVE');
+    let body=`${player}, the Council is allowing the Collins Mulligan to proceed. This is already more mercy than the procedure deserves.`;
+    if(penalty?.dropFaction&&penalty?.dropOrder)body+=' You have now lost one faction and dropped one place in the draft order. The universe has charged a restocking fee.';
+    else if(penalty?.dropFaction)body+=' You have now lost one faction. Apparently indecision has a disposal fee.';
+    else if(penalty?.dropOrder)body+=' You have now dropped one place in the draft order. Someone else gets to benefit from your crisis.';
+    else body+=' No optional penalties are active, which the Council finds embarrassingly lenient.';
+    const speech=`Collins Mulligan approved. ${body} ${bits.join('. ')}.`;
+    return{body,bits,speech};
+  }
+  function showMulliganRuling(target,penalty){
+    const el=ensureMulliganRulingUi(),copy=mulliganRulingCopy(target,penalty),text=el.querySelector('#mulliganRulingText'),list=el.querySelector('#mulliganRulingConsequences');
+    if(text)text.textContent=copy.body;if(list)list.innerHTML=copy.bits.map(x=>`<div>${x}</div>`).join('');
+    el.classList.add('open');setTimeout(()=>el.querySelector('button')?.focus({preventScroll:true}),100);
+    if(typeof councilSpeak==='function'&&typeof councilVoiceEnabled!=='undefined'&&councilVoiceEnabled){setTimeout(()=>councilSpeak(copy.speech,'pick',null,null,null,null,'dry-judgment'),160)}
+  }
   function ensureAssassinationUi(){
     if(!document.querySelector('#councilMulliganAssassinationStyle')){
       const style=document.createElement('style');style.id='councilMulliganAssassinationStyle';style.textContent=`
@@ -166,8 +210,8 @@
     const changed=Boolean(action());
     if(!changed)return false;
     mulliganUsedByPlayer.add(key);
-    const penalties=applyMulliganPenalties(target);
-    state.selected=null;renderPick();
+    const penalties=applyMulliganPenalties(target),penalty=mulliganPenaltyByPlayer.get(key);
+    state.selected=null;renderPick();showMulliganRuling(target,penalty);
     const suffix=penalties.length?' • '+penalties.join(' • '):'';
     toast('COLLINS MULLIGAN GRANTED'+suffix);
     return true;
@@ -206,7 +250,7 @@
     const final=$('#undoFinal');
     if(final)final.onclick=()=>requestMulligan(()=>{
       if(!state.picks.length)return false;
-      const last=state.picks.pop();councilForgetPick(last.memoryId);const idx=state.assignments.findIndex(a=>a.playerIdx===last.playerIdx);if(idx>=0)state.assignments[idx].chosen=null;state.selected=null;return true;
+      const last=state.picks.pop();if(typeof restoreFactionPoolAfterUndo==='function')restoreFactionPoolAfterUndo(last);councilForgetPick(last.memoryId);const idx=state.assignments.findIndex(a=>a.playerIdx===last.playerIdx);if(idx>=0)state.assignments[idx].chosen=null;state.selected=null;return true;
     });
     return out;
   };
@@ -215,14 +259,14 @@
   undoPick=function(){
     return requestMulligan(()=>{
       if(!state?.picks?.length)return false;
-      const last=state.picks.pop();councilForgetPick(last.memoryId);
+      const last=state.picks.pop();if(typeof restoreFactionPoolAfterUndo==='function')restoreFactionPoolAfterUndo(last);councilForgetPick(last.memoryId);
       const idx=state.assignments.findIndex(a=>a.playerIdx===last.playerIdx);if(idx>=0)state.assignments[idx].chosen=null;
       state.selected=null;return true;
     });
   };
 
   const baseResetSetup=resetSetup;
-  resetSetup=function(){mulliganUsedByPlayer.clear();mulliganPenaltyByPlayer.clear();ensureAssassinationUi().classList.remove('open');const out=baseResetSetup();renderMulliganRules();return out};
+  resetSetup=function(){mulliganUsedByPlayer.clear();mulliganPenaltyByPlayer.clear();ensureAssassinationUi().classList.remove('open');ensureMulliganRulingUi().classList.remove('open');const out=baseResetSetup();renderMulliganRules();return out};
 
   window.__councilMulliganDebug={
     pickTraceCount:()=>PICK_TRACES.size,
