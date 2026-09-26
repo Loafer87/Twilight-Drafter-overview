@@ -94,6 +94,9 @@ if(typeof councilOpeningContext==='function'){
         wins:h.wins||0,
         winRate:h.winRate||0,
         winStreak:h.winStreak||0,
+        holdsBanana:Boolean(h.holdsBanana),
+        bananaDefenses:Number(h.bananaDefenses||0),
+        bananaTakes:Number(h.bananaTakes||0),
         legacyRecord:h.legacyRecord||'',
         lastGame:null
       }};
