@@ -13,6 +13,8 @@ function councilDeleteProfile(profileId){
     if(session.winnerId===profileId){session.status='drafted';session.completedAt=null;session.winnerId=null;session.winnerName=null;session.winnerVp=null}
     return session;
   }).filter(session=>(session.players||[]).length>0);
+  if(store.meta?.bananaHolderId===profileId||store.meta?.bananaAnchorHolderId===profileId){store.meta.bananaHolderId=null;store.meta.bananaHolderName=null;store.meta.bananaAnchorHolderId=null;store.meta.bananaAnchorAt=0}
+  if(typeof councilRebuildBanana==='function')councilRebuildBanana(store);
   if(typeof councilRebuildResultAchievements==='function')councilRebuildResultAchievements(store);
   councilSaveStore(store);return{blocked:false,profile};
 }
