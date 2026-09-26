@@ -21,29 +21,29 @@ function commandInput(interaction){
   const command=String(interaction?.data?.name||'council').toLowerCase(),invoker=userDisplay(interaction),invokerId=userId(interaction);
   if(command==='accuse'){
     const id=option(interaction.data,'player'),target=resolvedUserName(interaction,id),crime=clean(option(interaction.data,'crime'));
-    const message=\`Accusation against \${target||'unknown'}: \${crime}\`;
+    const message=`Accusation against ${target||'unknown'}: ${crime}`;
     return{command,invoker,invokerId,target,message};
   }
   if(command==='grievance'){
     const id=option(interaction.data,'against'),target=resolvedUserName(interaction,id),details=clean(option(interaction.data,'details'));
-    const message=\`File a grievance\${target?\` against \${target}\`:''}: \${details}\`;
+    const message=`File a grievance${target?` against ${target}`:''}: ${details}`;
     return{command,invoker,invokerId,target,message};
   }
   if(command==='appeal'){
     const caseNumber=Number(option(interaction.data,'case')||0),grounds=clean(option(interaction.data,'grounds'));
-    return{command,invoker,invokerId,target:null,message:\`Appeal Docket #\${caseNumber}: \${grounds}\`};
+    return{command,invoker,invokerId,target:null,message:`Appeal Docket #${caseNumber}: ${grounds}`};
   }
   if(command==='motion'){
     const caseNumber=Number(option(interaction.data,'case')||0),request=clean(option(interaction.data,'request'));
-    return{command,invoker,invokerId,target:null,message:\`Motion\${caseNumber?\` in Docket #\${caseNumber}\`:''}: \${request}\`};
+    return{command,invoker,invokerId,target:null,message:`Motion${caseNumber?` in Docket #${caseNumber}`:''}: ${request}`};
   }
   if(command==='injunction'){
     const caseNumber=Number(option(interaction.data,'case')||0),request=clean(option(interaction.data,'request'));
-    return{command,invoker,invokerId,target:null,message:\`Emergency injunction\${caseNumber?\` in Docket #\${caseNumber}\`:''}: \${request}\`};
+    return{command,invoker,invokerId,target:null,message:`Emergency injunction${caseNumber?` in Docket #${caseNumber}`:''}: ${request}`};
   }
   if(command==='objection'){
     const caseNumber=Number(option(interaction.data,'case')||0),grounds=clean(option(interaction.data,'grounds'));
-    return{command,invoker,invokerId,target:null,message:\`Objection\${caseNumber?\` in Docket #\${caseNumber}\`:''}: \${grounds}\`};
+    return{command,invoker,invokerId,target:null,message:`Objection${caseNumber?` in Docket #${caseNumber}`:''}: ${grounds}`};
   }
   return{command:'council',invoker,invokerId,target:null,message:clean(option(interaction.data,'message'))};
 }
@@ -51,7 +51,7 @@ function commandInput(interaction){
 async function recentMessages(channelId){
   const token=env('DISCORD_BOT_TOKEN');if(!token||!channelId)return[];
   try{
-    const r=await fetch(\`https://discord.com/api/v10/channels/\${channelId}/messages?limit=8\`,{headers:{Authorization:\`Bot \${token}\`}});
+    const r=await fetch(`https://discord.com/api/v10/channels/${channelId}/messages?limit=8`,{headers:{Authorization:`Bot ${token}`}});
     if(!r.ok)return[];
     const rows=await r.json();
     return(rows||[]).filter(m=>!m?.author?.bot&&String(m?.content||'').trim()).slice(0,8).reverse().map(m=>({
@@ -62,7 +62,7 @@ async function recentMessages(channelId){
   }catch(e){return[]}
 }
 async function editOriginal(interaction,content){
-  const appId=env('DISCORD_APP_ID',DEFAULT_APP_ID),url=\`https://discord.com/api/v10/webhooks/\${appId}/\${interaction.token}/messages/@original\`;
+  const appId=env('DISCORD_APP_ID',DEFAULT_APP_ID),url=`https://discord.com/api/v10/webhooks/${appId}/${interaction.token}/messages/@original`;
   const r=await fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({content,allowed_mentions:{parse:[]}})});
   if(!r.ok){let detail='';try{detail=await r.text()}catch(e){}console.warn('[discord] failed editing interaction response',r.status,detail.slice(0,240))}
 }
@@ -87,7 +87,7 @@ export default {
     if(request.method!=='POST')return new Response('Method not allowed',{status:405});
     const raw=await request.text();
     if(!validSignature(request,raw))return new Response('invalid request signature',{status:401});
-    let interaction;try{interaction=JSON.parse(raw)}catch(e){return new Response('invalid json',{status:400})
+    let interaction;try{interaction=JSON.parse(raw)}catch(e){return new Response('invalid json',{status:400})}
     if(interaction.type===1)return Response.json({type:1});
     if(interaction.type!==2)return Response.json({type:4,data:{content:'The Council received an unsupported ritual.',flags:64,allowed_mentions:{parse:[]}}});
     const job=runCommand(interaction).catch(async e=>{console.error('[discord] command failed',String(e?.stack||e));try{await editOriginal(interaction,'**COUNCIL UPLINK FAILURE**\nThe machine has fallen down the stairs. Try that again.')}catch(_){}});
