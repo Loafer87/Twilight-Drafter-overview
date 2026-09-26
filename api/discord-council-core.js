@@ -66,7 +66,7 @@ No markdown. Do not repeat the headline in BODY.`;
 
 function outputText(data){if(typeof data?.output_text==='string')return data.output_text;for(const item of data?.output||[])for(const c of item.content||[])if(c.type==='output_text'&&c.text)return c.text;return''}
 function clean(s,max=4000){return String(s||'').replace(/\u0000/g,'').trim().slice(0,max)}
-function aliasRegex(alias){const escaped=String(alias).replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&');return new RegExp('(^|[^a-z0-9])'+escaped+'([^a-z0-9]|$)','i')}
+function aliasRegex(alias){return new RegExp('(^|[^a-z0-9])'+String(alias)+'([^a-z0-9]|$)','i')}
 function canonicalPlayerName(raw){
   const source=clean(raw,100);
   const lower=source.toLowerCase();
