@@ -47,7 +47,7 @@ module.exports=async function handler(req,res){
     const invoker=clean(body.authorName,100)||'Unknown',invokerId=clean(body.authorId,32)||null;
     const docketIntent=detectDocketIntent(content),docketContext=docketIntent?await fetchDocketContext(docketIntent,invoker):null;
     const result=await generateDiscordCouncil({
-      command:docketIntent?.kind||'council',
+      command:docketIntent?.formal?docketIntent.kind:'council',
       invoker,
       invokerId,
       councilInteractionOrdinal:Math.max(0,Number(body.councilInteractionOrdinal||0)),
@@ -59,7 +59,7 @@ module.exports=async function handler(req,res){
       channelId,
       interactionId:`gateway-${clean(body.messageId,32)||Date.now()}`
     });
-    if(docketIntent){const saved=await persistDocket({intent:docketIntent,invoker,invokerId,result});if(saved?.case)result.docketRecord={caseNumber:saved.case.case_number,kind:docketIntent.kind,disposition:result.docketDisposition||saved.case.current_disposition||'ADVISORY',precedent:Boolean(saved.case.precedent),parentCaseNumber:docketIntent.caseNumber||null};}
+    if(docketIntent?.formal){const saved=await persistDocket({intent:docketIntent,invoker,invokerId,result});if(saved?.case)result.docketRecord={caseNumber:saved.case.case_number,kind:docketIntent.kind,disposition:result.docketDisposition||saved.case.current_disposition||'ADVISORY',precedent:Boolean(saved.case.precedent),parentCaseNumber:docketIntent.caseNumber||null};}
     const reply=formatDiscordReply(result);
     return res.status(200).json({ok:true,reply,result:{headline:result?.headline||null,achievement:Boolean(result?.achievement),docket:result?.docketRecord||null}});
   }catch(e){
