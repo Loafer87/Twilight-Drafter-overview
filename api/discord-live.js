@@ -13,6 +13,7 @@ function canonical(body={}){
     messageId:clean(body.messageId,32),
     authorId:clean(body.authorId,32),
     authorName:clean(body.authorName,100),
+    councilInteractionOrdinal:Number(body.councilInteractionOrdinal||0),
     content:clean(body.content,1800),
     recentMessages:Array.isArray(body.recentMessages)?body.recentMessages.slice(-10).map(m=>({id:clean(m?.id,32),author:clean(m?.author,100),content:clean(m?.content,600)})):[]
   });
@@ -46,6 +47,7 @@ module.exports=async function handler(req,res){
       command:'council',
       invoker:clean(body.authorName,100)||'Unknown',
       invokerId:clean(body.authorId,32)||null,
+      councilInteractionOrdinal:Math.max(0,Number(body.councilInteractionOrdinal||0)),
       message:content,
       recentMessages,
       guildId,
