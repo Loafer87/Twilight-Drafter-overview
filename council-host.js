@@ -2,10 +2,10 @@ function councilHistoryPayload(history){return{totalDraftPicks:history.total,fac
 function councilOpeningContext(){
   const players=state.assignments.map((a,i)=>{
     const name=playerName(a.playerIdx),history=councilHistoryFor(name);
-    return {name:history.profile?.displayName||name,playerId:history.profile?.id||null,order:i+1,speaker:i===0,history:councilHistoryPayload(history)};
+    return {name:history.profile?.displayName||name,playerId:history.profile?.id||null,order:i+1,speaker:Boolean(a.speaker??i===0),history:councilHistoryPayload(history)};
   });
   const store=councilLoadStore(),banana=councilBananaHolder(store),session=councilCurrentSession(store),bananaPreview=session?councilBananaPreviewForSession(session,store):{holder:banana,seated:Boolean(banana&&players.some(p=>p.playerId===banana.id)),atStake:Boolean(banana&&players.some(p=>p.playerId===banana.id))};
-  return {mode:'opening',seed:state.seed,totalPlayers:state.players,speaker:players[0]?.name||'',expansions:[...state.exp].map(id=>E[id]?.name||id),bananaHolder:banana?{playerId:banana.id,name:banana.displayName}:null,bananaAtStake:Boolean(bananaPreview.atStake),players};
+  return {mode:'opening',seed:state.seed,totalPlayers:state.players,speaker:players.find(p=>p.speaker)?.name||players[0]?.name||'',expansions:[...state.exp].map(id=>E[id]?.name||id),bananaHolder:banana?{playerId:banana.id,name:banana.displayName}:null,bananaAtStake:Boolean(bananaPreview.atStake),players};
 }
 function councilLocalOpening(ctx){
   const returning=ctx.players.filter(p=>p.history.totalDraftPicks>0||p.history.games>0).sort((a,b)=>(b.history.games||0)-(a.history.games||0)||b.history.totalDraftPicks-a.history.totalDraftPicks);
@@ -24,13 +24,13 @@ function prepareCouncilOpening(){
 function councilVerdictContext(){
   const players=state.assignments.map((a,i)=>{
     const raw=playerName(a.playerIdx),history=councilHistoryFor(raw),chosen=a.chosen;
-    return {name:history.profile?.displayName||raw,playerId:history.profile?.id||null,order:i+1,speaker:i===0,faction:chosen?.name||null,tag:chosen?.tag||null,expansion:chosen?E[chosen.exp]?.name||chosen.exp:null,rejected:a.options.filter(f=>!chosen||f.name!==chosen.name).map(f=>f.name),history:councilHistoryPayload(history)};
+    return {name:history.profile?.displayName||raw,playerId:history.profile?.id||null,order:i+1,speaker:Boolean(a.speaker??i===0),faction:chosen?.name||null,tag:chosen?.tag||null,expansion:chosen?E[chosen.exp]?.name||chosen.exp:null,rejected:a.options.filter(f=>!chosen||f.name!==chosen.name).map(f=>f.name),history:councilHistoryPayload(history)};
   });
   const store=councilLoadStore(),banana=councilBananaHolder(store),session=councilCurrentSession(store),bananaPreview=session?councilBananaPreviewForSession(session,store):{holder:banana,seated:Boolean(banana&&players.some(p=>p.playerId===banana.id)),atStake:Boolean(banana&&players.some(p=>p.playerId===banana.id))};
-  return {mode:'verdict',seed:state.seed,totalPlayers:state.players,speaker:players[0]?.name||'',expansions:[...state.exp].map(id=>E[id]?.name||id),bananaHolder:banana?{playerId:banana.id,name:banana.displayName}:null,bananaAtStake:Boolean(bananaPreview.atStake),players};
+  return {mode:'verdict',seed:state.seed,totalPlayers:state.players,speaker:players.find(p=>p.speaker)?.name||players[0]?.name||'',expansions:[...state.exp].map(id=>E[id]?.name||id),bananaHolder:banana?{playerId:banana.id,name:banana.displayName}:null,bananaAtStake:Boolean(bananaPreview.atStake),players};
 }
 function councilLocalVerdict(ctx){
-  const speaker=ctx.players[0],chaos=ctx.players.find(p=>/chaos|aggressive|military/i.test(String(p.tag||'')))||ctx.players[ctx.players.length-1],repeat=ctx.players.find(p=>(p.history?.factions?.[p.faction]||0)>1);
+  const speaker=ctx.players.find(p=>p.speaker)||ctx.players[0],chaos=ctx.players.find(p=>/chaos|aggressive|military/i.test(String(p.tag||'')))||ctx.players[ctx.players.length-1],repeat=ctx.players.find(p=>(p.history?.factions?.[p.faction]||0)>1);
   const repeatLine=repeat?` ${repeat.name} has returned to ${repeat.faction}; the pattern-recognition subsystem has stopped pretending this is coincidence.`:'';
   return `All ${ctx.totalPlayers} delegations are locked. ${speaker.name} used first priority on ${speaker.faction}, which the Council will classify as either leadership or an early confession.${repeatLine} ${chaos.name} currently carries the highest provisional entertainment risk. Final ruling: grudges are authorized, excuses are not.`;
 }
