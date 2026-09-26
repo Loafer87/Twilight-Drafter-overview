@@ -1,5 +1,6 @@
 const crypto=require('crypto');
 const {generateDiscordCouncil,formatDiscordReply}=require('./discord-council-core');
+const {detectDocketIntent,fetchDocketContext,persistDocket}=require('./discord-docket');
 
 const DEFAULT_GUILD_ID='1538780933082193980';
 const DEFAULT_CHANNEL_IDS='1540805179388203078,1538785106351624233';
@@ -43,19 +44,24 @@ module.exports=async function handler(req,res){
   const content=clean(body.content,1800);if(!content)return res.status(400).json({ok:false,error:'empty_message'});
   const recentMessages=Array.isArray(body.recentMessages)?body.recentMessages.slice(-10).map(m=>({authorId:clean(m?.authorId,32)||null,author:clean(m?.author,100)||'Unknown',content:clean(m?.content,600)})).filter(m=>m.content):[];
   try{
+    const invoker=clean(body.authorName,100)||'Unknown',invokerId=clean(body.authorId,32)||null;
+    const docketIntent=detectDocketIntent(content),docketContext=docketIntent?await fetchDocketContext(docketIntent,invoker):null;
     const result=await generateDiscordCouncil({
-      command:'council',
-      invoker:clean(body.authorName,100)||'Unknown',
-      invokerId:clean(body.authorId,32)||null,
+      command:docketIntent?.kind||'council',
+      invoker,
+      invokerId,
       councilInteractionOrdinal:Math.max(0,Number(body.councilInteractionOrdinal||0)),
       message:content,
       recentMessages,
+      docketIntent,
+      docketContext,
       guildId,
       channelId,
       interactionId:`gateway-${clean(body.messageId,32)||Date.now()}`
     });
+    if(docketIntent){const saved=await persistDocket({intent:docketIntent,invoker,invokerId,result});if(saved?.case)result.docketRecord={caseNumber:saved.case.case_number,kind:docketIntent.kind,disposition:result.docketDisposition||saved.case.current_disposition||'ADVISORY',precedent:Boolean(saved.case.precedent),parentCaseNumber:docketIntent.caseNumber||null};}
     const reply=formatDiscordReply(result);
-    return res.status(200).json({ok:true,reply,result:{headline:result?.headline||null,achievement:Boolean(result?.achievement)}});
+    return res.status(200).json({ok:true,reply,result:{headline:result?.headline||null,achievement:Boolean(result?.achievement),docket:result?.docketRecord||null}});
   }catch(e){
     console.error('[discord-live] generation failed',e?.stack||e?.message||e);
     return res.status(500).json({ok:false,error:'generation_failed'});
