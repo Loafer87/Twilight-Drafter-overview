@@ -39,6 +39,23 @@ async function discord(path,options={}){
   }finally{clearTimeout(timer)}
 }
 
+async function registerGuildCommands(){
+  if(!botId)return;
+  const commands=[
+    {name:'council',description:'Summon Council Intelligence',options:[{name:'message',description:'What the Council should judge',type:3,required:true}]},
+    {name:'grievance',description:'File a formal grievance with the Galactic Council',options:[{name:'details',description:'State the grievance',type:3,required:true},{name:'against',description:'Optional target of the grievance',type:6,required:false}]},
+    {name:'accuse',description:'Formally accuse a player of game-night crimes',options:[{name:'player',description:'The accused',type:6,required:true},{name:'crime',description:'The alleged offense',type:3,required:true}]},
+    {name:'appeal',description:'Appeal an existing Council docket ruling',options:[{name:'case',description:'Council docket number',type:4,required:true,min_value:1},{name:'grounds',description:'Why the machine should reconsider',type:3,required:true}]},
+    {name:'motion',description:'File a procedural motion with the Council',options:[{name:'request',description:'What you want the Council to do',type:3,required:true},{name:'case',description:'Optional related docket number',type:4,required:false,min_value:1}]},
+    {name:'injunction',description:'Request an emergency fictional Council injunction',options:[{name:'request',description:'What must allegedly be stopped',type:3,required:true},{name:'case',description:'Optional related docket number',type:4,required:false,min_value:1}]},
+    {name:'objection',description:'Object to Council or table procedure',options:[{name:'grounds',description:'State the objection',type:3,required:true},{name:'case',description:'Optional related docket number',type:4,required:false,min_value:1}]}
+  ];
+  try{
+    await discord(`/applications/${botId}/guilds/${GUILD_ID}/commands`,{method:'PUT',body:JSON.stringify(commands)});
+    console.log('[gateway] guild commands registered',{commands:commands.map(x=>x.name)});
+  }catch(e){console.warn('[gateway] command registration failed',e?.status||e?.message||e)}
+}
+
 async function fetchRecent(channelId,beforeId){
   try{
     const rows=await discord(`/channels/${channelId}/messages?limit=10&before=${encodeURIComponent(beforeId)}`,{method:'GET'});
@@ -76,7 +93,7 @@ function autonomousTrigger(m){
   if(!AUTONOMOUS||!AUTONOMOUS_CHANNEL_IDS.has(m.channel_id))return false;
   const now=Date.now(),last=lastAutonomousByChannel.get(m.channel_id)||0;if(now-last<AUTONOMOUS_COOLDOWN_MS)return false;
   const text=String(m.content||'').toLowerCase();
-  const strong=/wetty\s+dredd|collins\s+mulligan|backsies|take (?:that|it) back|i.?m just a plant|i.?m just a girl|golden banana|rage quit|you cheated|that.?s bullshit|claimed? (?:that )?planet|my planet/.test(text);
+  const strong=/wetty\s+dredd|collins\s+mulligan|backsies|take (?:that|it) back|i.?m just a plant|i.?m just a girl|golden banana|rage quit|you cheated|that.?s bullshit|claimed? (?:that )?planet|my planet|\bgrievance\b|\bappeal\b|\binjunction\b|\bobjection\b|\bmotion\b/.test(text);
   const ti=/mentak|arborec|mecatol|war sun|dreadnought|trade goods?|alliance|ally|attack|planet|champion|banana|faction|speaker|strategy card|promissory|support for the throne|ceasefire|deal|rules?/.test(text);
   if(!strong&&!ti)return false;
   const n=Number(BigInt(m.id)%100n),threshold=strong?35:8;if(n>=threshold)return false;
@@ -146,7 +163,7 @@ function connect(resuming=false){
       if(p.op===7){try{ws.close(4000,'server requested reconnect')}catch{}return}
       if(p.op===9){const resumable=Boolean(p.d);if(!resumable){sessionId=null;seq=null;resumeGatewayUrl=null}try{ws.close(4000,'invalid session')}catch{};setTimeout(()=>scheduleReconnect(resumable),1000+Math.floor(Math.random()*4000));return}
       if(p.op!==0)return;
-      if(p.t==='READY'){botId=p.d?.user?.id||botId;sessionId=p.d?.session_id||sessionId;resumeGatewayUrl=p.d?.resume_gateway_url||resumeGatewayUrl;console.log('[gateway] READY',{botId,sessionId:Boolean(sessionId),guild:GUILD_ID,channels:[...CHANNEL_IDS],autonomousChannels:[...AUTONOMOUS_CHANNEL_IDS]});return}
+      if(p.t==='READY'){botId=p.d?.user?.id||botId;sessionId=p.d?.session_id||sessionId;resumeGatewayUrl=p.d?.resume_gateway_url||resumeGatewayUrl;console.log('[gateway] READY',{botId,sessionId:Boolean(sessionId),guild:GUILD_ID,channels:[...CHANNEL_IDS],autonomousChannels:[...AUTONOMOUS_CHANNEL_IDS]});registerGuildCommands().catch(()=>{});return}
       if(p.t==='RESUMED'){console.log('[gateway] RESUMED');return}
       if(p.t==='MESSAGE_CREATE')onMessageCreate(p.d).catch(e=>console.error('[gateway] message handler failed',e));
     }catch(e){console.error('[gateway] frame parse failed',e?.message||e)}
