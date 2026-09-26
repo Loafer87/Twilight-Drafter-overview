@@ -24,22 +24,22 @@ function inferTarget(text){
     const re=new RegExp('(?:against|vs\\.?|versus|from|on)\\s+(?:<@!?\\d+>|@)?'+alias+'\\b','i');
     if(re.test(source))return name;
   }
-  const named=source.match(/(?:against|vs\\.?|versus)\\s+([A-Za-z][A-Za-z0-9_-]{1,30})/i);
+  const named=source.match(/(?:against|vs\.?|versus)\s+([A-Za-z][A-Za-z0-9_-]{1,30})/i);
   return named?canonicalPlayer(named[1]):null;
 }
 function extractCaseNumber(text){
-  const m=String(text||'').match(/(?:case|docket|appeal|motion|injunction|objection)\\s*#?\\s*(\\d{1,6})/i);
+  const m=String(text||'').match(/(?:case|docket|appeal|motion|injunction|objection)\s*#?\s*(\d{1,6})/i);
   return m?Number(m[1]):null;
 }
 function detectDocketIntent(message){
   const text=clean(message,1800),lower=text.toLowerCase();
   let kind=null;
-  if(/\\b(?:file\\s+)?(?:a\\s+)?grievance\\b|\\bgrievance\\s+against\\b/i.test(text))kind='grievance';
-  else if(/\\bappeal\\b|\\bmotion\\s+to\\s+reconsider\\b/i.test(text))kind='appeal';
-  else if(/\\b(?:emergency\\s+)?injunction\\b|\\bstay\\b/i.test(text))kind='injunction';
-  else if(/\\bmotion\\b/i.test(text))kind='motion';
-  else if(/\\bobjection\\b/i.test(text))kind='objection';
-  else if(/\\baccus(?:e|ation)\\b/i.test(text))kind='accuse';
+  if(/\b(?:file\s+)?(?:a\s+)?grievance\b|\bgrievance\s+against\b/i.test(text))kind='grievance';
+  else if(/\bappeal\b|\bmotion\s+to\s+reconsider\b/i.test(text))kind='appeal';
+  else if(/\b(?:emergency\s+)?injunction\b|\bstay\b/i.test(text))kind='injunction';
+  else if(/\bmotion\b/i.test(text))kind='motion';
+  else if(/\bobjection\b/i.test(text))kind='objection';
+  else if(/\baccus(?:e|ation)\b/i.test(text))kind='accuse';
   if(!kind)return null;
   return{
     kind,
@@ -47,7 +47,7 @@ function detectDocketIntent(message){
     targetName:inferTarget(text),
     text,
     explicit:true,
-    asksToOverrule:/\\boverrule|vacate|reverse|reconsider|strike|set aside\\b/i.test(lower)
+    asksToOverrule:/\b(?:overrule|vacate|reverse|reconsider|strike|set aside)\b/i.test(lower)
   };
 }
 async function docketFetch(path='?limit=16'){
@@ -58,7 +58,7 @@ async function docketFetch(path='?limit=16'){
   }catch(e){return null}finally{clearTimeout(timer)}
 }
 function keywords(text){
-  return new Set(String(text||'').toLowerCase().replace(/[^a-z0-9\\s-]/g,' ').split(/\\s+/).filter(x=>x.length>=5).slice(0,30));
+  return new Set(String(text||'').toLowerCase().replace(/[^a-z0-9\s-]/g,' ').split(/\s+/).filter(x=>x.length>=5).slice(0,30));
 }
 function relevantCases(cases,intent,invoker){
   const target=canonicalPlayer(intent?.targetName),speaker=canonicalPlayer(invoker),ks=keywords(intent?.text);
@@ -111,9 +111,9 @@ function docketDirective(intent,context){
   if(!intent)return'COURT MODE: No formal filing is active. Do not invent a docket number or pretend ordinary banter is a legal filing.';
   const caseText=context?.exactCase?JSON.stringify(context.exactCase):JSON.stringify(context?.cases||[]);
   const kind=String(intent.kind||'grievance').toUpperCase();
-  return \`COUNCIL COURT MODE — \${kind}: This is a formal fictional filing before Council Intelligence. The AI/System is the final adjudicator inside this game-night fiction. Humans may petition, argue, appeal, move, object and ask for stays; they do NOT automatically control the ruling. You may grant, deny, dismiss, uphold, modify, vacate, overrule or sanction fictional procedure as appropriate.
+  return `COUNCIL COURT MODE — ${kind}: This is a formal fictional filing before Council Intelligence. The AI/System is the final adjudicator inside this game-night fiction. Humans may petition, argue, appeal, move, object and ask for stays; they do NOT automatically control the ruling. You may grant, deny, dismiss, uphold, modify, vacate, overrule or sanction fictional procedure as appropriate.
 
-Docket evidence: \${caseText}
+Docket evidence: ${caseText}
 
 LEGAL MEMORY RULES:
 - A grievance is an allegation, not proof that the target actually did the alleged thing.
@@ -124,7 +124,7 @@ LEGAL MEMORY RULES:
 - For appeals/motions that cite a case number, reason from the supplied exact case. If no matching case exists, dismiss for nonexistent jurisdiction instead of inventing history.
 - This is fictional game-night procedure. Do not present it as real legal advice.
 
-For this filing, DOCKET_DISPOSITION must be one of GRANTED, DENIED, DISMISSED, UPHELD, MODIFIED, OVERRULED, VACATED, SANCTIONED, or ADVISORY. DOCKET_PRECEDENT must be YES or NO. DOCKET_TARGET should name the subject of the filing if one is clear, otherwise NONE.\`;
+For this filing, DOCKET_DISPOSITION must be one of GRANTED, DENIED, DISMISSED, UPHELD, MODIFIED, OVERRULED, VACATED, SANCTIONED, or ADVISORY. DOCKET_PRECEDENT must be YES or NO. DOCKET_TARGET should name the subject of the filing if one is clear, otherwise NONE.`;
 }
 
 module.exports={detectDocketIntent,fetchDocketContext,persistDocket,docketDirective,canonicalPlayer};
