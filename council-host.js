@@ -1,18 +1,20 @@
-function councilHistoryPayload(history){return{totalDraftPicks:history.total,factions:history.factions,speakerCount:history.speakerCount,achievements:history.achievements,games:history.games,wins:history.wins,winRate:history.winRate,winStreak:history.winStreak,legacyRecord:history.legacyRecord,lastGame:history.lastGame}}
+function councilHistoryPayload(history){return{totalDraftPicks:history.total,factions:history.factions,speakerCount:history.speakerCount,achievements:history.achievements,games:history.games,wins:history.wins,winRate:history.winRate,winStreak:history.winStreak,holdsBanana:Boolean(history.holdsBanana),bananaDefenses:Number(history.bananaDefenses||0),bananaTakes:Number(history.bananaTakes||0),legacyRecord:history.legacyRecord,lastGame:history.lastGame}}
 function councilOpeningContext(){
   const players=state.assignments.map((a,i)=>{
     const name=playerName(a.playerIdx),history=councilHistoryFor(name);
     return {name:history.profile?.displayName||name,playerId:history.profile?.id||null,order:i+1,speaker:i===0,history:councilHistoryPayload(history)};
   });
-  return {mode:'opening',seed:state.seed,totalPlayers:state.players,speaker:players[0]?.name||'',expansions:[...state.exp].map(id=>E[id]?.name||id),players};
+  const store=councilLoadStore(),banana=councilBananaHolder(store),session=councilCurrentSession(store),bananaPreview=session?councilBananaPreviewForSession(session,store):{holder:banana,seated:Boolean(banana&&players.some(p=>p.playerId===banana.id)),atStake:Boolean(banana&&players.some(p=>p.playerId===banana.id))};
+  return {mode:'opening',seed:state.seed,totalPlayers:state.players,speaker:players[0]?.name||'',expansions:[...state.exp].map(id=>E[id]?.name||id),bananaHolder:banana?{playerId:banana.id,name:banana.displayName}:null,bananaAtStake:Boolean(bananaPreview.atStake),players};
 }
 function councilLocalOpening(ctx){
   const returning=ctx.players.filter(p=>p.history.totalDraftPicks>0||p.history.games>0).sort((a,b)=>(b.history.games||0)-(a.history.games||0)||b.history.totalDraftPicks-a.history.totalDraftPicks);
   const veterans=returning.length?`Prior violations are on file for ${returning.slice(0,3).map(p=>p.name).join(', ')}.`:'No prior violations are on file. The Council finds this suspicious rather than reassuring.';
   const achievements=ctx.players.flatMap(p=>(p.history.achievements||[]).map(a=>`${p.name}: ${a.title}`));
   const record=achievements.length?` Recorded honors include ${achievements.slice(0,2).join(' and ')}.`:'';
-  const champion=ctx.players.find(p=>p.history.winStreak>0),wins=champion?` ${champion.name} enters with a recorded win streak of ${champion.history.winStreak}; confidence containment protocols have failed.`:'';
-  return `${ctx.totalPlayers} delegations detected. ${ctx.speaker} has acquired the Speaker token and therefore a medically inadvisable amount of confidence.\n\n${veterans}${record}${wins} Faction selection may now begin; future regret has been pre-authorized.`;
+  const champion=ctx.players.find(p=>p.history.winStreak>0),wins=champion?` ${champion.name} enters with a personal recorded win streak of ${champion.history.winStreak}; confidence containment protocols have failed.`:'';
+  const banana=ctx.bananaHolder?(ctx.bananaAtStake?` The Golden Banana is physically present via ${ctx.bananaHolder.name}. It is therefore legally vulnerable tonight.`:` The Golden Banana remains with ${ctx.bananaHolder.name}, who is not seated; tonight's winner may take a win, but not the fruit.`):' No Golden Banana holder is currently registered.';
+  return `${ctx.totalPlayers} delegations detected. ${ctx.speaker} has acquired the Speaker token and therefore a medically inadvisable amount of confidence.\n\n${veterans}${record}${wins}${banana} Faction selection may now begin; future regret has been pre-authorized.`;
 }
 function prepareCouncilOpening(){
   const ctx=councilOpeningContext(),local=councilLocalOpening(ctx);
@@ -24,7 +26,8 @@ function councilVerdictContext(){
     const raw=playerName(a.playerIdx),history=councilHistoryFor(raw),chosen=a.chosen;
     return {name:history.profile?.displayName||raw,playerId:history.profile?.id||null,order:i+1,speaker:i===0,faction:chosen?.name||null,tag:chosen?.tag||null,expansion:chosen?E[chosen.exp]?.name||chosen.exp:null,rejected:a.options.filter(f=>!chosen||f.name!==chosen.name).map(f=>f.name),history:councilHistoryPayload(history)};
   });
-  return {mode:'verdict',seed:state.seed,totalPlayers:state.players,speaker:players[0]?.name||'',expansions:[...state.exp].map(id=>E[id]?.name||id),players};
+  const store=councilLoadStore(),banana=councilBananaHolder(store),session=councilCurrentSession(store),bananaPreview=session?councilBananaPreviewForSession(session,store):{holder:banana,seated:Boolean(banana&&players.some(p=>p.playerId===banana.id)),atStake:Boolean(banana&&players.some(p=>p.playerId===banana.id))};
+  return {mode:'verdict',seed:state.seed,totalPlayers:state.players,speaker:players[0]?.name||'',expansions:[...state.exp].map(id=>E[id]?.name||id),bananaHolder:banana?{playerId:banana.id,name:banana.displayName}:null,bananaAtStake:Boolean(bananaPreview.atStake),players};
 }
 function councilLocalVerdict(ctx){
   const speaker=ctx.players[0],chaos=ctx.players.find(p=>/chaos|aggressive|military/i.test(String(p.tag||'')))||ctx.players[ctx.players.length-1],repeat=ctx.players.find(p=>(p.history?.factions?.[p.faction]||0)>1);
