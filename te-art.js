@@ -33,7 +33,7 @@ const FACTION_PORTRAITS={
 
 const TE_REFERENCES={
   'The Council Keleres':'https://res.cloudinary.com/grwiz5ap/image/upload/v1788625356/KeleresFactionSheet_xpdjvv.webp',
-  'Last Bastion':'https://images-cdn.fantasyflightgames.com/filer_public/f9/b6/f9b6d799-cdc5-48dc-af93-47cd68ebd022/ti11_faction-article_factions_sheet_lastbastion.png',
+  'Last Bastion':'https://res.cloudinary.com/grwiz5ap/image/upload/v1790451134/r_last_bastion_oannid.jpg',
   'The Deepwrought Scholarate':'https://images-cdn.fantasyflightgames.com/filer_public/10/20/102016e2-4737-4c57-97c3-7dee24f39f09/ti11_faction-article_factions_sheet_thedeepwroughtscholarate.png',
   'The Crimson Rebellion':'https://images-cdn.fantasyflightgames.com/filer_public/aa/f4/aaf4c0bc-cc93-4b9c-bde3-dc5b1b4eb7ae/ti11_faction-article_factions_sheet_thecrimsonrebellion.png',
   'The Ral Nel Consortium':'https://images-cdn.fantasyflightgames.com/filer_public/f0/4e/f04e4aa0-6b97-48e6-957c-233dcf2c9ccd/ti11_article_factions_sheet_theralnelconsortium.png',
