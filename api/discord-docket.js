@@ -40,9 +40,11 @@ function detectDocketIntent(message){
   else if(/\bmotion\b/i.test(text))kind='motion';
   else if(/\bobjection\b/i.test(text))kind='objection';
   else if(/\baccus(?:e|ation)\b/i.test(text))kind='accuse';
+  else if(/\b(?:docket|case law|precedent|prior ruling|previous ruling|what did you rule|what was the ruling|court|legal|illegal|allowed|banned)\b/i.test(text))kind='reference';
   if(!kind)return null;
   return{
     kind,
+    formal:kind!=='reference',
     caseNumber:extractCaseNumber(text),
     targetName:inferTarget(text),
     text,
@@ -111,6 +113,7 @@ function docketDirective(intent,context){
   if(!intent)return'COURT MODE: No formal filing is active. Do not invent a docket number or pretend ordinary banter is a legal filing.';
   const caseText=context?.exactCase?JSON.stringify(context.exactCase):JSON.stringify(context?.cases||[]);
   const kind=String(intent.kind||'grievance').toUpperCase();
+  if(intent.kind==='reference')return `COUNCIL CASE-LAW REFERENCE: The user is asking about legality, precedent, a prior ruling, or Council case history. Relevant docket evidence: ${caseText}. Use it only when genuinely relevant. Do not create a new case, do not claim an allegation was proven merely because it was filed, and do not invent precedent if none is supplied.`;
   return `COUNCIL COURT MODE — ${kind}: This is a formal fictional filing before Council Intelligence. The AI/System is the final adjudicator inside this game-night fiction. Humans may petition, argue, appeal, move, object and ask for stays; they do NOT automatically control the ruling. You may grant, deny, dismiss, uphold, modify, vacate, overrule or sanction fictional procedure as appropriate.
 
 Docket evidence: ${caseText}
