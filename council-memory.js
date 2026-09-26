@@ -1,6 +1,7 @@
 const COUNCIL_STORE_KEY='ti4-council-store-v2';
 const COUNCIL_LEGACY_KEY='ti4-council-memory-v1';
 const COUNCIL_JOSHUA_SEED_VERSION=1;
+const COUNCIL_SHARED_STATE_URL='https://dwngxrdmpbknjzzphkjd.supabase.co/functions/v1/galactic-council-state';
 function councilNormalizeName(name){return String(name||'').trim().toLowerCase().replace(/\s+/g,' ')}
 function councilNewId(prefix='id'){try{return `${prefix}_${crypto.randomUUID().replace(/-/g,'').slice(0,12)}`}catch(e){return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`}}
 function councilEmptyStore(){return{version:2,meta:{},profiles:[],events:[],achievements:{},sessions:[]}}
@@ -47,8 +48,32 @@ function councilResolveProfile(name,create=true){
   p={id:councilNewId('p'),displayName,aliases:[displayName],aliasKeys:[key],createdAt:Date.now()};store.profiles.push(p);councilSaveStore(store);return p;
 }
 function councilProfileName(id){const store=councilLoadStore(),p=councilFindProfile(store,id);return p?.displayName||String(id||'Unknown')}
-function councilBananaHolder(store=councilLoadStore()){const id=store?.meta?.bananaHolderId;if(!id)return null;return councilFindProfile(store,id)}
+function councilBananaHolder(store=councilLoadStore()){const id=store?.meta?.bananaHolderId;if(id){const direct=councilFindProfile(store,id);if(direct)return direct}const byName=store?.meta?.bananaHolderName?councilFindProfile(store,store.meta.bananaHolderName):null;if(byName){store.meta.bananaHolderId=byName.id;return byName}return store?.meta?.bananaHolderName?{id:null,displayName:store.meta.bananaHolderName,sharedOnly:true}:null}
 function councilBananaAnchorHolder(store=councilLoadStore()){const id=store?.meta?.bananaAnchorHolderId||store?.meta?.bananaHolderId;if(!id)return null;return councilFindProfile(store,id)}
+async function councilFetchSharedState(){
+  try{
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),1800);
+    const r=await fetch(COUNCIL_SHARED_STATE_URL,{method:'GET',headers:{Accept:'application/json'},signal:controller.signal});clearTimeout(timer);
+    if(!r.ok)return null;return await r.json();
+  }catch(e){return null}
+}
+async function councilPushSharedBanana(profileOrNull){
+  try{
+    const payload={holderName:profileOrNull?.displayName||null};
+    const r=await fetch(COUNCIL_SHARED_STATE_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    return r.ok?await r.json():null;
+  }catch(e){return null}
+}
+async function councilSyncSharedBanana(){
+  const shared=await councilFetchSharedState();if(!shared||!Object.prototype.hasOwnProperty.call(shared,'holderName'))return null;
+  const store=councilLoadStore();store.meta=store.meta||{};store.meta.bananaHolderName=shared.holderName||null;
+  const local=shared.holderName?councilFindProfile(store,shared.holderName):null;
+  store.meta.bananaHolderId=local?.id||null;
+  if(shared.holderName&&!store.meta.bananaAnchorHolderId){store.meta.bananaAnchorHolderId=local?.id||null;store.meta.bananaAnchorAt=Date.now()}
+  councilSaveStore(store);
+  try{if(document?.querySelector?.('#historyView.active')&&typeof councilRenderArchive==='function')councilRenderArchive()}catch(e){}
+  return shared;
+}
 function councilRebuildBanana(store){
   store.meta=store.meta||{};
   const anchorId=store.meta.bananaAnchorHolderId||store.meta.bananaHolderId||null,anchorAt=Math.max(0,Number(store.meta.bananaAnchorAt)||0);
@@ -69,7 +94,7 @@ function councilRebuildBanana(store){
 function councilSetBananaHolder(profileId){
   const store=councilLoadStore(),profile=profileId?councilFindProfile(store,profileId):null;
   store.meta=store.meta||{};store.meta.bananaAnchorHolderId=profile?.id||null;store.meta.bananaAnchorAt=Date.now();store.meta.bananaHolderId=profile?.id||null;store.meta.bananaHolderName=profile?.displayName||null;
-  councilSaveStore(store);return profile;
+  councilSaveStore(store);councilPushSharedBanana(profile);return profile;
 }
 function councilBananaPreviewForSession(session,store=councilLoadStore()){
   const holder=councilBananaHolder(store),seated=Boolean(holder&&(session?.players||[]).some(p=>p.profileId===holder.id));
@@ -81,7 +106,7 @@ function councilDeleteSession(sessionId){
   store.events=(store.events||[]).filter(e=>e.sessionId!==sessionId);
   Object.keys(store.achievements||{}).forEach(pid=>store.achievements[pid]=(store.achievements[pid]||[]).filter(a=>a.sourceSessionId!==sessionId&&!eventIds.has(a.sourceEventId)));
   store.sessions=(store.sessions||[]).filter(s=>s.id!==sessionId);
-  councilRebuildBanana(store);councilRebuildResultAchievements(store);councilSaveStore(store);
+  const holder=councilRebuildBanana(store);councilRebuildResultAchievements(store);councilSaveStore(store);councilPushSharedBanana(holder);
   if(typeof state!=='undefined'&&state.councilSessionId===sessionId)state.councilSessionId=null;
   return session;
 }
@@ -124,7 +149,7 @@ function councilRebuildResultAchievements(store){
     if((defenses[pid]||0)===2){const list=store.achievements[pid]||[];if(!list.some(a=>a.title==='GOLDEN BANANA DYNASTY'))list.push({title:'GOLDEN BANANA DYNASTY',copy:'Defend the Golden Banana in two recorded Banana games. The fruit has become hereditary.',source:'session',sourceSessionId:s.id,ts:s.completedAt||Date.now()});store.achievements[pid]=list}
   });
 }
-function councilCompleteSession(sessionId,{winnerId,vp=null,note=''}){const store=councilLoadStore(),session=store.sessions.find(s=>s.id===sessionId);if(!session)return null;const winner=session.players.find(p=>p.profileId===winnerId);if(!winner)return null;const wasComplete=session.status==='complete';session.status='complete';if(!wasComplete||!session.completedAt)session.completedAt=Date.now();session.winnerId=winnerId;session.winnerName=winner.name;session.winnerVp=vp===''||vp==null?null:Number(vp);session.note=String(note||'').trim().slice(0,500);councilRebuildBanana(store);councilRebuildResultAchievements(store);councilSaveStore(store);return session}
+function councilCompleteSession(sessionId,{winnerId,vp=null,note=''}){const store=councilLoadStore(),session=store.sessions.find(s=>s.id===sessionId);if(!session)return null;const winner=session.players.find(p=>p.profileId===winnerId);if(!winner)return null;const wasComplete=session.status==='complete';session.status='complete';if(!wasComplete||!session.completedAt)session.completedAt=Date.now();session.winnerId=winnerId;session.winnerName=winner.name;session.winnerVp=vp===''||vp==null?null:Number(vp);session.note=String(note||'').trim().slice(0,500);const holder=councilRebuildBanana(store);councilRebuildResultAchievements(store);councilSaveStore(store);councilPushSharedBanana(holder);return session}
 function councilAddAlias(profileId,alias){
   const clean=String(alias||'').trim(),key=councilNormalizeName(clean);if(!clean||!key)return false;const store=councilLoadStore(),target=store.profiles.find(p=>p.id===profileId);if(!target)return false;const source=store.profiles.find(p=>p.id!==profileId&&((p.aliasKeys||[]).includes(key)||councilNormalizeName(p.displayName)===key));
   if(source){store.events.forEach(e=>{if(e.playerId===source.id||e.playerKey===source.id){e.playerId=target.id;e.playerKey=target.id;e.player=target.displayName}});store.sessions.forEach(s=>{s.players?.forEach(p=>{if(p.profileId===source.id){p.profileId=target.id;p.name=target.displayName}});if(s.winnerId===source.id){s.winnerId=target.id;s.winnerName=target.displayName}});if(store.meta?.bananaHolderId===source.id)store.meta.bananaHolderId=target.id;if(store.meta?.bananaAnchorHolderId===source.id)store.meta.bananaAnchorHolderId=target.id;store.achievements[target.id]=[...(store.achievements[target.id]||[]),...(store.achievements[source.id]||[])].filter((a,i,arr)=>arr.findIndex(x=>x.title===a.title)===i);delete store.achievements[source.id];if(source.legacy)target.legacy={...(target.legacy||{}),games:Math.max(Number(target.legacy?.games)||0,Number(source.legacy.games)||0),wins:Math.max(Number(target.legacy?.wins)||0,Number(source.legacy.wins)||0),winStreak:Math.max(Number(target.legacy?.winStreak)||0,Number(source.legacy.winStreak)||0),note:target.legacy?.note||source.legacy.note||''};target.aliases=[...(target.aliases||[]),source.displayName,...(source.aliases||[])];store.profiles=store.profiles.filter(p=>p.id!==source.id)}
@@ -132,3 +157,5 @@ function councilAddAlias(profileId,alias){
 }
 function councilClearTestRecords(){const store=councilLoadStore(),isTest=p=>[p.displayName,...(p.aliases||[])].some(n=>/^test(?:\s*\d+)?$/i.test(String(n).trim())||/^test\d+$/i.test(String(n).trim())),ids=new Set(store.profiles.filter(isTest).map(p=>p.id));if(!ids.size)return 0;store.events=store.events.filter(e=>!ids.has(e.playerId));store.sessions=store.sessions.filter(s=>!(s.players||[]).some(p=>ids.has(p.profileId)));ids.forEach(id=>delete store.achievements[id]);store.profiles=store.profiles.filter(p=>!ids.has(p.id));if(ids.has(store.meta?.bananaHolderId)||ids.has(store.meta?.bananaAnchorHolderId)){store.meta.bananaHolderId=null;store.meta.bananaAnchorHolderId=null;store.meta.bananaAnchorAt=0}councilRebuildBanana(store);councilRebuildResultAchievements(store);councilSaveStore(store);return ids.size}
 function councilWipeAllMemory(){const store=councilEmptyStore();store.meta.joshuaChampionSeed=COUNCIL_JOSHUA_SEED_VERSION;store.meta.bananaHolderId=null;store.meta.bananaAnchorHolderId=null;store.meta.bananaAnchorAt=0;councilSaveStore(store);state.councilSessionId=null}
+
+try{setTimeout(()=>councilSyncSharedBanana(),120)}catch(e){}
