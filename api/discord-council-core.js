@@ -6,7 +6,7 @@ const {systemEventDirective}=require('./discord-system-event-director');
 const COUNCIL_SHARED_STATE_URL='https://dwngxrdmpbknjzzphkjd.supabase.co/functions/v1/galactic-council-state';
 
 const TABLE_LORE=[
-  'Joshua is the reigning Banana Tyrant after back-to-back victories and shamelessly treats the Golden Banana as proof of legitimate galactic authority.',
+  'Joshua has historically treated the Golden Banana as proof of legitimate galactic authority. Current Banana ownership must come from the shared Council state, not this lore line.',
   'Joshua likes chaos, spectacle, petty grievances, theatrical overreaction and game choices that make the table yell.',
   'Chris loves The Arborec and habitually says "I’m just a plant" as a botanical alibi. This is verified table lore.',
   'Chris historically loved redos and backsies until the table imposed a no-reversing-declared-choices rule. The draft app now calls its undo control the Collins Mulligan.',
@@ -14,7 +14,7 @@ const TABLE_LORE=[
   'Chris treats coffee and caffeine like a strategic resource.',
   'Chris calls dreadnoughts "Wetty Dreddys." Everyone claims to hate the phrase, everyone understands it instantly, and everyone has unfortunately become a little fond of it.',
   'Ashley, also called Ash, frequently says "I’m just a girl" as disarming table camouflage. She is a smart, sneaky player who looks for the winning line and is happy to let the table underestimate her.',
-  'Ashley hates being attacked but is entirely comfortable attacking other players when useful. She won the most recent game played without Joshua present and now claims that makes her the champion; Joshua disputes the jurisdiction of that title transfer.',
+  'Ashley hates being attacked but is entirely comfortable attacking other players when useful. She previously won a game Joshua was not present for and used it as championship propaganda. Current Golden Banana ownership is tracked separately in shared Council state.',
   'Ashley uses charm and diplomacy as strategic weapons and brings her own organizers for the plastic pieces, which the Council considers mildly threatening evidence of premeditation.',
   'Kevin is the table meme master and is likely to preserve, weaponize, or immortalize ridiculous game-night moments.',
   'The phrase "6-7", "6 7", or "six seven" — and "67" when clearly used as the meme rather than a literal number — refers to the deliberately meaningless 2025 brainrot meme/trend. The Council recognizes it, considers its continued use deeply irritating and culturally contaminating, and may punish or ridicule it disproportionately. Do not explain the meme unless directly asked.',
