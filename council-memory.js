@@ -68,15 +68,14 @@ async function councilSyncSharedBanana(){
   const shared=await councilFetchSharedState();if(!shared||!Object.prototype.hasOwnProperty.call(shared,'holderName'))return null;
   const store=councilLoadStore();store.meta=store.meta||{};store.meta.bananaHolderName=shared.holderName||null;
   const local=shared.holderName?councilFindProfile(store,shared.holderName):null;
-  store.meta.bananaHolderId=local?.id||null;
-  if(shared.holderName&&!store.meta.bananaAnchorHolderId){store.meta.bananaAnchorHolderId=local?.id||null;store.meta.bananaAnchorAt=Date.now()}
+  store.meta.bananaHolderId=local?.id||null;store.meta.bananaAnchorHolderId=local?.id||null;store.meta.bananaAnchorAt=shared.updatedAt?Math.max(0,Date.parse(shared.updatedAt)||Date.now()):Date.now();
   councilSaveStore(store);
   try{if(document?.querySelector?.('#historyView.active')&&typeof councilRenderArchive==='function')councilRenderArchive()}catch(e){}
   return shared;
 }
 function councilRebuildBanana(store){
   store.meta=store.meta||{};
-  const anchorId=store.meta.bananaAnchorHolderId||store.meta.bananaHolderId||null,anchorAt=Math.max(0,Number(store.meta.bananaAnchorAt)||0);
+  let anchorId=store.meta.bananaAnchorHolderId||store.meta.bananaHolderId||null;const anchorAt=Math.max(0,Number(store.meta.bananaAnchorAt)||0);if(!anchorId&&store.meta.bananaHolderName){const named=councilFindProfile(store,store.meta.bananaHolderName);if(named){anchorId=named.id;store.meta.bananaAnchorHolderId=named.id;store.meta.bananaHolderId=named.id}}
   let holderId=anchorId&&councilFindProfile(store,anchorId)?anchorId:null;
   const ordered=[...(store.sessions||[])].filter(s=>s.status==='complete'&&s.winnerId).sort((a,b)=>(a.completedAt||a.startedAt||0)-(b.completedAt||b.startedAt||0));
   for(const s of ordered){
