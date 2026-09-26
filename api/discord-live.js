@@ -40,11 +40,12 @@ module.exports=async function handler(req,res){
   const expectedGuild=process.env.DISCORD_GUILD_ID||DEFAULT_GUILD_ID;
   if(guildId!==expectedGuild||!allowedChannels().has(channelId))return res.status(403).json({ok:false,error:'location_not_allowed'});
   const content=clean(body.content,1800);if(!content)return res.status(400).json({ok:false,error:'empty_message'});
-  const recentMessages=Array.isArray(body.recentMessages)?body.recentMessages.slice(-10).map(m=>({author:clean(m?.author,100)||'Unknown',content:clean(m?.content,600)})).filter(m=>m.content):[];
+  const recentMessages=Array.isArray(body.recentMessages)?body.recentMessages.slice(-10).map(m=>({authorId:clean(m?.authorId,32)||null,author:clean(m?.author,100)||'Unknown',content:clean(m?.content,600)})).filter(m=>m.content):[];
   try{
     const result=await generateDiscordCouncil({
       command:'council',
       invoker:clean(body.authorName,100)||'Unknown',
+      invokerId:clean(body.authorId,32)||null,
       message:content,
       recentMessages,
       guildId,
