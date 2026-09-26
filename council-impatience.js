@@ -70,7 +70,7 @@ async function councilImpatienceAutoPick(key){
     setTimeout(()=>{if(state.phase==='pick'&&state.selected===chosen.name)confirmSelection()},250);
   });
 }
-function councilImpatienceStart(){if(state.phase!=='pick')return;const key=councilImpatienceKey();if(!key)return;if(councilImpatience?.key===key)return;councilImpatienceClear({hide:true,stopVoice:false});councilImpatience={key,startedAt:Date.now(),count:0,texts:[],timers:[],controller:null};COUNCIL_IMPATIENCE_WINDOWS.forEach((w,i)=>{const t=setTimeout(()=>councilImpatienceInterrupt(i+1,key),councilImpatienceDelay(w));councilImpatience.timers.push(t)});const auto=setTimeout(()=>councilImpatienceAutoPick(key),COUNCIL_AUTOPICK_SECONDS*1000);councilImpatience.timers.push(auto)}
+function councilImpatienceStart(){if(window.__councilMulliganPauseImpatience===true)return;if(state.phase!=='pick')return;const key=councilImpatienceKey();if(!key)return;if(councilImpatience?.key===key)return;councilImpatienceClear({hide:true,stopVoice:false});councilImpatience={key,startedAt:Date.now(),count:0,texts:[],timers:[],controller:null};COUNCIL_IMPATIENCE_WINDOWS.forEach((w,i)=>{const t=setTimeout(()=>councilImpatienceInterrupt(i+1,key),councilImpatienceDelay(w));councilImpatience.timers.push(t)});const auto=setTimeout(()=>councilImpatienceAutoPick(key),COUNCIL_AUTOPICK_SECONDS*1000);councilImpatience.timers.push(auto)}
 
 const councilImpatienceBaseRenderPick=renderPick;
 renderPick=function(){const out=councilImpatienceBaseRenderPick();councilImpatienceStart();return out};
