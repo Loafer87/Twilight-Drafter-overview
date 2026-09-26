@@ -27,16 +27,16 @@ function evidenceScore(text){
     /\b(?:claim|planet|grudge|revenge|attack|betray|charm|sneak|rules?|turn order|keep.*track)\b/,
     /\b(?:war sun|dreadnought|mecatol|wormhole|fleet|objective|speaker|strategy card)\b/
   ];
-  for(const re of patterns)if(re.test(t))score+=7;
-  return Math.min(35,score);
+  for(const re of patterns)if(re.test(t))score+=4;
+  return Math.min(16,score);
 }
 
 function eventPlan(input={},achievementEnabled=false){
   const evidence=[input.message,...(input.recentMessages||[]).map(x=>x?.content)].filter(Boolean).join(' ');
   const key=`${input.guildId||''}|${input.channelId||''}|${input.interactionId||''}|${input.command||''}|${input.invoker||''}|${input.target||''}|${input.message||''}`;
   if(achievementEnabled)return{enabled:false,type:'none',chance:0,roll:100,mode:null,level:null};
-  const base=input.command==='grievance'?24:input.command==='accuse'?20:18;
-  const chance=Math.min(58,base+evidenceScore(evidence));
+  const base=input.command==='grievance'?12:input.command==='accuse'?12:9;
+  const chance=Math.min(28,base+evidenceScore(evidence));
   const roll=hash32(`${key}|system-event-roll`)%100;
   const enabled=input.forceSystemEvent===true||roll<chance;
   const typeRoll=hash32(`${key}|system-event-type`)%100;
