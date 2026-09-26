@@ -42,7 +42,7 @@ async function discord(path,options={}){
 async function fetchRecent(channelId,beforeId){
   try{
     const rows=await discord(`/channels/${channelId}/messages?limit=10&before=${encodeURIComponent(beforeId)}`,{method:'GET'});
-    return (Array.isArray(rows)?rows:[]).filter(m=>!m?.author?.bot&&!m?.webhook_id&&m?.content).reverse().slice(-8).map(m=>({id:clean(m.id,32),author:clean(m.member?.nick||m.author?.global_name||m.author?.username||'Unknown',100),content:clean(m.content,600)}));
+    return (Array.isArray(rows)?rows:[]).filter(m=>!m?.author?.bot&&!m?.webhook_id&&m?.content).reverse().slice(-8).map(m=>({id:clean(m.id,32),authorId:clean(m.author?.id,32),author:clean(m.member?.nick||m.author?.global_name||m.author?.username||'Unknown',100),content:clean(m.content,600)}));
   }catch(e){console.warn('[gateway] recent context unavailable',e?.status||e?.message||e);return[]}
 }
 
