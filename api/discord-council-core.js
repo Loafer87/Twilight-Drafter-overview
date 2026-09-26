@@ -2,6 +2,7 @@ const {GAME_FRAME,FACTIONS}=require('./council-knowledge');
 const {comedyBrief}=require('./council-comedy');
 const {achievementDirective}=require('./discord-achievement-director');
 const {systemEventDirective}=require('./discord-system-event-director');
+const {docketDirective}=require('./discord-docket');
 
 const COUNCIL_SHARED_STATE_URL='https://dwngxrdmpbknjzzphkjd.supabase.co/functions/v1/galactic-council-state';
 
@@ -66,6 +67,9 @@ SYSTEM_LEVEL: <NONE or integer for SKILL>
 SYSTEM_COPY: <NONE or event description>
 SYSTEM_EFFECT: <NONE or concise fake game-system effect>
 SYSTEM_DURATION: <NONE or short duration/cleansing condition for STATUS>
+DOCKET_DISPOSITION: <NONE unless a formal filing is active; otherwise GRANTED, DENIED, DISMISSED, UPHELD, MODIFIED, OVERRULED, VACATED, SANCTIONED, or ADVISORY>
+DOCKET_PRECEDENT: <NONE unless a formal filing is active; otherwise YES or NO>
+DOCKET_TARGET: <NONE unless a formal filing is active; otherwise the named subject of the filing if clear>
 BODY: <1-5 complete sentences, usually 30-110 words>
 
 No markdown. Do not repeat the headline in BODY.`;
@@ -164,7 +168,7 @@ function attributionDirective(input,speaker){
 }
 function field(cleaned,label,next=[]){const look=next.length?`(?=\\s*(?:${next.join('|')})\\s*:|$)`:'$';const m=cleaned.match(new RegExp(`${label}\\s*:\\s*([\\s\\S]*?)${look}`,'i'));return m?m[1].trim():''}
 function parseEnvelope(raw){
-  const labels=['ACHIEVEMENT','ACHIEVEMENT_COPY','ACHIEVEMENT_STING','ACHIEVEMENT_REWARD','ACHIEVEMENT_CONSEQUENCE','SYSTEM_EVENT','SYSTEM_TITLE','SYSTEM_LEVEL','SYSTEM_COPY','SYSTEM_EFFECT','SYSTEM_DURATION','BODY'];
+  const labels=['ACHIEVEMENT','ACHIEVEMENT_COPY','ACHIEVEMENT_STING','ACHIEVEMENT_REWARD','ACHIEVEMENT_CONSEQUENCE','SYSTEM_EVENT','SYSTEM_TITLE','SYSTEM_LEVEL','SYSTEM_COPY','SYSTEM_EFFECT','SYSTEM_DURATION','DOCKET_DISPOSITION','DOCKET_PRECEDENT','DOCKET_TARGET','BODY'];
   const x=String(raw||'').trim().replace(/```(?:text|json)?/gi,'').replace(/```/g,'').replace(/\*\*(HEADLINE|ACHIEVEMENT|ACHIEVEMENT_COPY|ACHIEVEMENT_STING|ACHIEVEMENT_REWARD|ACHIEVEMENT_CONSEQUENCE|SYSTEM_EVENT|SYSTEM_TITLE|SYSTEM_LEVEL|SYSTEM_COPY|SYSTEM_EFFECT|SYSTEM_DURATION|BODY)\*\*/gi,'$1');
   let headline=field(x,'HEADLINE',labels);
   let achievement=field(x,'ACHIEVEMENT',['ACHIEVEMENT_COPY','ACHIEVEMENT_STING','ACHIEVEMENT_REWARD','ACHIEVEMENT_CONSEQUENCE','SYSTEM_EVENT','SYSTEM_TITLE','SYSTEM_LEVEL','SYSTEM_COPY','SYSTEM_EFFECT','SYSTEM_DURATION','BODY']);
@@ -177,9 +181,12 @@ function parseEnvelope(raw){
   let systemLevel=field(x,'SYSTEM_LEVEL',['SYSTEM_COPY','SYSTEM_EFFECT','SYSTEM_DURATION','BODY']);
   let systemCopy=field(x,'SYSTEM_COPY',['SYSTEM_EFFECT','SYSTEM_DURATION','BODY']);
   let systemEffect=field(x,'SYSTEM_EFFECT',['SYSTEM_DURATION','BODY']);
-  let systemDuration=field(x,'SYSTEM_DURATION',['BODY']);
+  let systemDuration=field(x,'SYSTEM_DURATION',['DOCKET_DISPOSITION','DOCKET_PRECEDENT','DOCKET_TARGET','BODY']);
+  let docketDisposition=field(x,'DOCKET_DISPOSITION',['DOCKET_PRECEDENT','DOCKET_TARGET','BODY']);
+  let docketPrecedent=field(x,'DOCKET_PRECEDENT',['DOCKET_TARGET','BODY']);
+  let docketTarget=field(x,'DOCKET_TARGET',['BODY']);
   let body=field(x,'BODY',[]);
-  if(!body&&!/\b(?:HEADLINE|ACHIEVEMENT|ACHIEVEMENT_COPY|ACHIEVEMENT_STING|ACHIEVEMENT_REWARD|ACHIEVEMENT_CONSEQUENCE|SYSTEM_EVENT|SYSTEM_TITLE|SYSTEM_LEVEL|SYSTEM_COPY|SYSTEM_EFFECT|SYSTEM_DURATION|BODY)\s*:/i.test(x))body=x;
+  if(!body&&!/\b(?:HEADLINE|ACHIEVEMENT|ACHIEVEMENT_COPY|ACHIEVEMENT_STING|ACHIEVEMENT_REWARD|ACHIEVEMENT_CONSEQUENCE|SYSTEM_EVENT|SYSTEM_TITLE|SYSTEM_LEVEL|SYSTEM_COPY|SYSTEM_EFFECT|SYSTEM_DURATION|DOCKET_DISPOSITION|DOCKET_PRECEDENT|DOCKET_TARGET|BODY)\s*:/i.test(x))body=x;
   headline=clean(headline.replace(/^["'`]+|["'`]+$/g,''),80)||'THE COUNCIL OBJECTS';
   body=clean(body,1500)||'The Council received the evidence and immediately regretted having jurisdiction.';
   const none=v=>!v||/^none$/i.test(v);
@@ -194,13 +201,19 @@ function parseEnvelope(raw){
   if(none(systemCopy))systemCopy='';
   if(none(systemEffect))systemEffect='';
   if(none(systemDuration))systemDuration='';
+  if(none(docketDisposition))docketDisposition='';
+  if(none(docketPrecedent))docketPrecedent='';
+  if(none(docketTarget))docketTarget='';
   const normalizedType=/^skill$/i.test(systemType)?'skill':/^status$/i.test(systemType)?'status':'';
   const parsedLevel=normalizedType==='skill'?Math.max(1,Math.min(99,parseInt(systemLevel,10)||1)):null;
   return{
     headline,
     commentary:body,
     achievement:achievement?{title:clean(achievement,100),copy:clean(achievementCopy,650),sting:clean(achievementSting,100),reward:clean(achievementReward,180),consequence:clean(achievementConsequence,260)}:null,
-    systemEvent:normalizedType&&systemTitle?{type:normalizedType,title:clean(systemTitle,120),level:parsedLevel,copy:clean(systemCopy,650),effect:clean(systemEffect,320),duration:clean(systemDuration,220)}:null
+    systemEvent:normalizedType&&systemTitle?{type:normalizedType,title:clean(systemTitle,120),level:parsedLevel,copy:clean(systemCopy,650),effect:clean(systemEffect,320),duration:clean(systemDuration,220)}:null,
+    docketDisposition:clean(docketDisposition,40)||null,
+    docketPrecedent:/^yes$/i.test(docketPrecedent)?'YES':/^no$/i.test(docketPrecedent)?'NO':null,
+    docketTarget:clean(docketTarget,100)||null
   };
 }
 function relevantFactionKnowledge(text){const lower=String(text||'').toLowerCase(),names=new Set();for(const [alias,name] of Object.entries(FACTION_ALIASES))if(lower.includes(alias))names.add(name);for(const name of Object.keys(FACTIONS)){const short=name.toLowerCase().replace(/^the\s+/,'');if(lower.includes(name.toLowerCase())||lower.includes(short))names.add(name)}return[...names].slice(0,5).map(name=>({name,knowledge:FACTIONS[name]})).filter(x=>x.knowledge)}
@@ -218,7 +231,7 @@ function sharedStateDirective(shared){
   if(!shared?.bananaHolder)return'GOLDEN BANANA STATE: No shared Banana holder is currently recorded. Do not guess one from historical lore.';
   return `GOLDEN BANANA STATE — AUTHORITATIVE: The current Golden Banana holder is ${shared.bananaHolder}. This shared record overrides old table lore, win streaks, historical champion jokes, and guesses. A normal game win does not transfer the Banana unless the current holder was playing in that game. If asked who holds the Banana, answer from this state.`;
 }
-function commandDirective(command){if(command==='grievance')return'GRIEVANCE MODE: Treat the submission like a formal complaint filed with an irresponsible galactic authority. Decide who deserves ridicule, whether the grievance has merit, and issue a wildly disproportionate but fictional ruling.';if(command==='accuse')return'ACCUSATION MODE: A player is being formally accused of a stated game-night crime. Prosecute or dismiss it with theatrical confidence. Do not invent supporting evidence beyond what was supplied.';return'COUNCIL MODE: The user has summoned the Council for judgment, commentary or intervention. Answer the actual situation they described; do not pretend a faction was just drafted unless the evidence says so.'}
+function commandDirective(command){if(command==='grievance')return'GRIEVANCE MODE: Treat the submission like a formal complaint filed with an irresponsible galactic authority. Decide whether it has merit and issue a ruling. The allegation itself is not proof.';if(command==='appeal')return'APPEAL MODE: Review the cited Council case. You may uphold, modify, vacate or overrule the prior ruling. The appellant has no automatic right to win merely because they are loud.';if(command==='motion')return'MOTION MODE: Decide the requested procedural motion with theatrical confidence. Grant, deny, modify or sanction it as appropriate.';if(command==='injunction')return'INJUNCTION MODE: Decide whether to issue, deny or modify a fictional emergency stay or injunction. Do not invent real legal authority.';if(command==='objection')return'OBJECTION MODE: Rule on the objection. Sustaining, overruling or dismissing it are all available; explain only as much as the joke and evidence need.';if(command==='accuse')return'ACCUSATION MODE: A player is being formally accused of a stated game-night crime. Prosecute or dismiss it with theatrical confidence. Do not invent supporting evidence beyond what was supplied.';return'COUNCIL MODE: The user has summoned the Council for judgment, commentary or intervention. Answer the actual situation they described; do not pretend a faction was just drafted unless the evidence says so.'}
 function fallback({command,invoker,target,message}){const subject=target||invoker||'Contestant';if(command==='accuse')return{headline:'CHARGES HAVE BEEN FILED',commentary:`${subject}, the Council has received the accusation: ${clean(message,260)}. Evidence quality is questionable, confidence is absolute, and appeals have been pre-denied.`,achievement:null,systemEvent:null};if(command==='grievance')return{headline:'GRIEVANCE ACCEPTED, REGRETTABLY',commentary:`The Council acknowledges ${invoker||'this delegation'}'s complaint${target?` against ${target}`:''}. Whether it is valid is secondary; it is now officially everybody's problem.`,achievement:null,systemEvent:null};return{headline:'THE COUNCIL IS LISTENING',commentary:`${invoker||'Contestant'} has summoned an irresponsible amount of authority over: ${clean(message,300)}. The chamber is concerned and, worse, interested.`,achievement:null,systemEvent:null}}
 async function generateDiscordCouncil(input={}){
   const speaker=playerIdentity(input.invoker,input.invokerId||input.authorId);
@@ -235,8 +248,8 @@ async function generateDiscordCouncil(input={}){
   const shared=await sharedCouncilState();
   const machineArc=discordMachineArc(normalizedInput,phase);
   const plain=plainCommentDirective(normalizedInput,phase,achievement.plan.enabled||systemEvent.plan.enabled);
-  const instructions=`${BASE_PERSONA}\n\n${attributionDirective(normalizedInput,speaker)}\n\n${phaseDirective(phase)}\n\n${sharedStateDirective(shared)}\n\n${machineArc.directive}\n\n${commandDirective(normalizedInput.command)}\n\n${plain}\n\n${style.instruction}\n\n${achievement.instruction}\n\n${systemEvent.instruction}\n\nDISCORD OVERRIDE: Shared drafter comedy guidance may mention compact medals. Ignore that formatting here. Discord achievements obey the Achievement Director. Skill and Status notices obey the System Event Director. At most ONE of those notification systems may fire in a single reply.`;
-  const payload={surface:'discord',contextMode:phase,sharedCouncilState:shared,machineArc:{stage:machineArc.stage,interactionOrdinal:machineArc.ordinal},command:normalizedInput.command,invoker:normalizedInput.invoker||'Unknown',invokerDisplay:speaker.discordName,target:normalizedInput.target||null,currentMessage:{author:{canonicalName:speaker.canonicalName,discordName:speaker.discordName,id:speaker.id},content:clean(normalizedInput.message,1600)},message:clean(normalizedInput.message,1600),recentChannelContext:normalizedRecent.map(m=>({authorId:m.authorId,author:m.author,discordAuthor:m.discordAuthor,content:m.content})),tableLore:relevantTableLore(normalizedInput,speaker),gameKnowledge,achievementPlan:{enabled:achievement.plan.enabled,mode:achievement.plan.mode.id,rewardShape:achievement.plan.rewardShape,stingAllowed:achievement.plan.stingAllowed,consequenceAllowed:achievement.plan.consequenceAllowed},systemEventPlan:{enabled:systemEvent.plan.enabled,type:systemEvent.plan.type,mode:systemEvent.plan.mode?.id||null,level:systemEvent.plan.level}};
+  const instructions=`${BASE_PERSONA}\n\n${attributionDirective(normalizedInput,speaker)}\n\n${phaseDirective(phase)}\n\n${sharedStateDirective(shared)}\n\n${docketDirective(normalizedInput.docketIntent,normalizedInput.docketContext)}\n\n${machineArc.directive}\n\n${commandDirective(normalizedInput.command)}\n\n${plain}\n\n${style.instruction}\n\n${achievement.instruction}\n\n${systemEvent.instruction}\n\nDISCORD OVERRIDE: Shared drafter comedy guidance may mention compact medals. Ignore that formatting here. Discord achievements obey the Achievement Director. Skill and Status notices obey the System Event Director. At most ONE of those notification systems may fire in a single reply.`;
+  const payload={surface:'discord',contextMode:phase,sharedCouncilState:shared,docketIntent:normalizedInput.docketIntent||null,docketContext:normalizedInput.docketContext||null,machineArc:{stage:machineArc.stage,interactionOrdinal:machineArc.ordinal},command:normalizedInput.command,invoker:normalizedInput.invoker||'Unknown',invokerDisplay:speaker.discordName,target:normalizedInput.target||null,currentMessage:{author:{canonicalName:speaker.canonicalName,discordName:speaker.discordName,id:speaker.id},content:clean(normalizedInput.message,1600)},message:clean(normalizedInput.message,1600),recentChannelContext:normalizedRecent.map(m=>({authorId:m.authorId,author:m.author,discordAuthor:m.discordAuthor,content:m.content})),tableLore:relevantTableLore(normalizedInput,speaker),gameKnowledge,achievementPlan:{enabled:achievement.plan.enabled,mode:achievement.plan.mode.id,rewardShape:achievement.plan.rewardShape,stingAllowed:achievement.plan.stingAllowed,consequenceAllowed:achievement.plan.consequenceAllowed},systemEventPlan:{enabled:systemEvent.plan.enabled,type:systemEvent.plan.type,mode:systemEvent.plan.mode?.id||null,level:systemEvent.plan.level}};
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8500);
   try{const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model,instructions,input:JSON.stringify(payload),max_output_tokens:820,reasoning:{effort:'none'}}),signal:controller.signal});if(!r.ok)throw new Error(`discord_council_${r.status}`);const parsed=parseEnvelope(outputText(await r.json()));if(!achievement.plan.enabled)parsed.achievement=null;if(achievement.plan.enabled||!systemEvent.plan.enabled)parsed.systemEvent=null;return parsed}catch(e){console.warn('[discord-council] AI fallback',String(e?.name||e?.message||e));return fallback(normalizedInput)}finally{clearTimeout(timer)}
 }
