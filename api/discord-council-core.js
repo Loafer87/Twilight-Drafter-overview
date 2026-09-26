@@ -23,6 +23,14 @@ const TABLE_LORE=[
   'Shane keeps the table on track when he plays and is likely to drag everyone back toward turns, timing, and forward motion when the room gets lost in nonsense.'
 ];
 
+const PLAYER_ALIASES={
+  joshua:'Joshua',josh:'Joshua',
+  chris:'Chris',collins:'Chris',
+  ashley:'Ashley',ash:'Ashley',
+  kevin:'Kevin',halldorslurs:'Kevin',
+  shane:'Shane'
+};
+
 const FACTION_ALIASES={
   arborec:'The Arborec',letnev:'The Barony of Letnev',barony:'The Barony of Letnev',saar:'The Clan of Saar',muaat:'The Embers of Muaat',hacan:'The Emirates of Hacan',sol:'The Federation of Sol',creuss:'The Ghosts of Creuss',ghosts:'The Ghosts of Creuss',l1z1x:'The L1Z1X Mindnet',mentak:'The Mentak Coalition',naalu:'The Naalu Collective',nekro:'The Nekro Virus',sardakk:"Sardakk N'orr",'jol-nar':'The Universities of Jol-Nar','jol nar':'The Universities of Jol-Nar',winnu:'The Winnu',xxcha:'The Xxcha Kingdom',yin:'The Yin Brotherhood',yssaril:'The Yssaril Tribes',argent:'The Argent Flight',empyrean:'The Empyrean',mahact:'The Mahact Gene-Sorcerers','naaz-rokha':'The Naaz-Rokha Alliance','naaz rokha':'The Naaz-Rokha Alliance',nomad:'The Nomad',titans:'The Titans of Ul',cabal:"The Vuil'raith Cabal",'vuilraith':"The Vuil'raith Cabal",keleres:'The Council Keleres','last bastion':'Last Bastion',deepwrought:'The Deepwrought Scholarate','crimson rebellion':'The Crimson Rebellion','ral nel':'The Ral Nel Consortium',firmament:'The Firmament',obsidian:'The Obsidian'
 };
@@ -58,6 +66,57 @@ No markdown. Do not repeat the headline in BODY.`;
 
 function outputText(data){if(typeof data?.output_text==='string')return data.output_text;for(const item of data?.output||[])for(const c of item.content||[])if(c.type==='output_text'&&c.text)return c.text;return''}
 function clean(s,max=4000){return String(s||'').replace(/\u0000/g,'').trim().slice(0,max)}
+function aliasRegex(alias){return new RegExp(`(^|[^a-z0-9])${String(alias).replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\function clean(s,max=4000){return String(s||'').replace(/\u0000/g,'').trim().slice(0,max)}
+')}([^a-z0-9]|$)`,'i')}
+function canonicalPlayerName(raw){
+  const source=clean(raw,100);
+  const lower=source.toLowerCase();
+  if(PLAYER_ALIASES[lower])return PLAYER_ALIASES[lower];
+  for(const [alias,name] of Object.entries(PLAYER_ALIASES))if(aliasRegex(alias).test(lower))return name;
+  return source||'Unknown';
+}
+function playerIdentity(raw,id){
+  const discordName=clean(raw,100)||'Unknown',canonicalName=canonicalPlayerName(discordName);
+  return{canonicalName,discordName,id:clean(id,32)||null,recognized:Object.values(PLAYER_ALIASES).includes(canonicalName)};
+}
+function mentionedPlayers(text){
+  const found=new Set(),value=String(text||'');
+  for(const [alias,name] of Object.entries(PLAYER_ALIASES))if(aliasRegex(alias).test(value))found.add(name);
+  return found;
+}
+function relevantTableLore(input,speaker){
+  const people=new Set();
+  if(speaker?.recognized)people.add(speaker.canonicalName);
+  const current=String(input?.message||''),recent=Array.isArray(input?.recentMessages)?input.recentMessages.slice(-4):[];
+  for(const name of mentionedPlayers(current))people.add(name);
+  for(const row of recent){
+    const author=canonicalPlayerName(row?.author);
+    if(Object.values(PLAYER_ALIASES).includes(author))people.add(author);
+    for(const name of mentionedPlayers(row?.content))people.add(name);
+  }
+  const evidence=[current,...recent.map(x=>String(x?.content||''))].join('\n');
+  if(/wetty\s+dredd|collins\s+mulligan|backsies|i.?m just a plant/i.test(evidence))people.add('Chris');
+  if(/i.?m just a girl/i.test(evidence))people.add('Ashley');
+  if(/golden banana|banana tyrant/i.test(evidence))people.add('Joshua');
+  if(/meme master|mentak cheating|trade goods?.*(?:hoard|pile)|(?:hoard|pile).*trade goods?/i.test(evidence))people.add('Kevin');
+  if(/claim(?:ed|ing)?[^.\n]{0,40}planet|my planet/i.test(evidence))people.add('Shane');
+  const lore=TABLE_LORE.filter(line=>[...people].some(name=>line.startsWith(`${name} `)));
+  if(/\b(?:6-7|6 7|six seven)\b/i.test(evidence)||/(^|\D)67(\D|$)/.test(evidence)){
+    const meme=TABLE_LORE.find(line=>line.startsWith('The phrase "6-7"'));if(meme)lore.push(meme);
+  }
+  return [...new Set(lore)].slice(0,14);
+}
+function attributionDirective(input,speaker){
+  const name=speaker?.canonicalName||'Unknown',display=speaker?.discordName||name;
+  return `AUTHORSHIP LOCK — THIS OVERRIDES COMEDIC ASSOCIATION:
+- The CURRENT Discord message was authored by ${name}${display!==name?` (Discord name: ${display})`:''}. This author binding is authoritative.
+- Never decide who authored the current message from table lore, faction preference, catchphrases, memes, or the subject of the message.
+- If the current message mentions another player, that player is a SUBJECT unless the words explicitly state that player performed an action.
+- Every recentChannelContext row has its own author. Do not merge authors across rows and do not transfer a previous speaker's action to the current speaker.
+- A phrase associated with Chris, Ashley, Kevin, Shane, or Joshua does NOT make that person the author. For example, Kevin can type a Collins Mulligan joke without becoming Chris.
+- Before writing the answer, silently verify every named claim like "X said", "X did", "X asked", "X complained", "X posted", or "X chose" against currentMessage and recentChannelContext. If the evidence does not support the attribution, do not make it.
+- When uncertain about who did something, refer to "the message" or "the current speaker" rather than guessing another player.`;
+}
 function field(cleaned,label,next=[]){const look=next.length?`(?=\\s*(?:${next.join('|')})\\s*:|$)`:'$';const m=cleaned.match(new RegExp(`${label}\\s*:\\s*([\\s\\S]*?)${look}`,'i'));return m?m[1].trim():''}
 function parseEnvelope(raw){
   const labels=['ACHIEVEMENT','ACHIEVEMENT_COPY','ACHIEVEMENT_STING','ACHIEVEMENT_REWARD','ACHIEVEMENT_CONSEQUENCE','SYSTEM_EVENT','SYSTEM_TITLE','SYSTEM_LEVEL','SYSTEM_COPY','SYSTEM_EFFECT','SYSTEM_DURATION','BODY'];
@@ -104,17 +163,20 @@ function mechanicKnowledge(text){const lower=String(text||'').toLowerCase(),out=
 function commandDirective(command){if(command==='grievance')return'GRIEVANCE MODE: Treat the submission like a formal complaint filed with an irresponsible galactic authority. Decide who deserves ridicule, whether the grievance has merit, and issue a wildly disproportionate but fictional ruling.';if(command==='accuse')return'ACCUSATION MODE: A player is being formally accused of a stated game-night crime. Prosecute or dismiss it with theatrical confidence. Do not invent supporting evidence beyond what was supplied.';return'COUNCIL MODE: The user has summoned the Council for judgment, commentary or intervention. Answer the actual situation they described; do not pretend a faction was just drafted unless the evidence says so.'}
 function fallback({command,invoker,target,message}){const subject=target||invoker||'Contestant';if(command==='accuse')return{headline:'CHARGES HAVE BEEN FILED',commentary:`${subject}, the Council has received the accusation: ${clean(message,260)}. Evidence quality is questionable, confidence is absolute, and appeals have been pre-denied.`,achievement:null,systemEvent:null};if(command==='grievance')return{headline:'GRIEVANCE ACCEPTED, REGRETTABLY',commentary:`The Council acknowledges ${invoker||'this delegation'}'s complaint${target?` against ${target}`:''}. Whether it is valid is secondary; it is now officially everybody's problem.`,achievement:null,systemEvent:null};return{headline:'THE COUNCIL IS LISTENING',commentary:`${invoker||'Contestant'} has summoned an irresponsible amount of authority over: ${clean(message,300)}. The chamber is concerned and, worse, interested.`,achievement:null,systemEvent:null}}
 async function generateDiscordCouncil(input={}){
-  const key=process.env.OPENAI_API_KEY,model=process.env.OPENAI_MODEL;if(!key||!model)return fallback(input);
-  const evidence=[input.message,...(input.recentMessages||[]).map(m=>m.content)].filter(Boolean).join('\n');
+  const speaker=playerIdentity(input.invoker,input.invokerId||input.authorId);
+  const normalizedRecent=(input.recentMessages||[]).slice(-8).map(m=>({authorId:clean(m?.authorId,32)||null,author:canonicalPlayerName(m?.author),discordAuthor:clean(m?.author,80)||'Unknown',content:clean(m?.content,500)}));
+  const normalizedInput={...input,invoker:speaker.canonicalName,invokerDisplay:speaker.discordName,invokerId:speaker.id,recentMessages:normalizedRecent};
+  const key=process.env.OPENAI_API_KEY,model=process.env.OPENAI_MODEL;if(!key||!model)return fallback(normalizedInput);
+  const evidence=[normalizedInput.message,...normalizedRecent.map(m=>m.content)].filter(Boolean).join('\n');
   const gameKnowledge={gameFrame:GAME_FRAME,relevantFactions:relevantFactionKnowledge(evidence),mechanics:mechanicKnowledge(evidence)};
-  const styleCtx={seed:`discord|${input.guildId||''}|${input.channelId||''}|${input.interactionId||Date.now()}`,player:input.invoker||'Unknown',pickNumber:3,playerCount:4,faction:gameKnowledge.relevantFactions[0]?.name||''};
+  const styleCtx={seed:`discord|${normalizedInput.guildId||''}|${normalizedInput.channelId||''}|${normalizedInput.interactionId||Date.now()}`,player:normalizedInput.invoker||'Unknown',pickNumber:3,playerCount:4,faction:gameKnowledge.relevantFactions[0]?.name||''};
   const style=comedyBrief(styleCtx,'pick');
-  const achievement=achievementDirective(input);
-  const systemEvent=systemEventDirective(input,achievement.plan.enabled);
-  const instructions=`${BASE_PERSONA}\n\n${commandDirective(input.command)}\n\n${style.instruction}\n\n${achievement.instruction}\n\n${systemEvent.instruction}\n\nDISCORD OVERRIDE: Shared drafter comedy guidance may mention compact medals. Ignore that formatting here. Discord achievements obey the Achievement Director. Skill and Status notices obey the System Event Director. At most ONE of those notification systems may fire in a single reply.`;
-  const payload={surface:'discord',command:input.command,invoker:input.invoker||'Unknown',target:input.target||null,message:clean(input.message,1600),recentChannelContext:(input.recentMessages||[]).slice(-8).map(m=>({author:clean(m.author,80),content:clean(m.content,500)})),tableLore:TABLE_LORE,gameKnowledge,achievementPlan:{enabled:achievement.plan.enabled,mode:achievement.plan.mode.id,rewardShape:achievement.plan.rewardShape,stingAllowed:achievement.plan.stingAllowed,consequenceAllowed:achievement.plan.consequenceAllowed},systemEventPlan:{enabled:systemEvent.plan.enabled,type:systemEvent.plan.type,mode:systemEvent.plan.mode?.id||null,level:systemEvent.plan.level}};
+  const achievement=achievementDirective(normalizedInput);
+  const systemEvent=systemEventDirective(normalizedInput,achievement.plan.enabled);
+  const instructions=`${BASE_PERSONA}\n\n${attributionDirective(normalizedInput,speaker)}\n\n${commandDirective(normalizedInput.command)}\n\n${style.instruction}\n\n${achievement.instruction}\n\n${systemEvent.instruction}\n\nDISCORD OVERRIDE: Shared drafter comedy guidance may mention compact medals. Ignore that formatting here. Discord achievements obey the Achievement Director. Skill and Status notices obey the System Event Director. At most ONE of those notification systems may fire in a single reply.`;
+  const payload={surface:'discord',command:normalizedInput.command,invoker:normalizedInput.invoker||'Unknown',invokerDisplay:speaker.discordName,target:normalizedInput.target||null,currentMessage:{author:{canonicalName:speaker.canonicalName,discordName:speaker.discordName,id:speaker.id},content:clean(normalizedInput.message,1600)},message:clean(normalizedInput.message,1600),recentChannelContext:normalizedRecent.map(m=>({authorId:m.authorId,author:m.author,discordAuthor:m.discordAuthor,content:m.content})),tableLore:relevantTableLore(normalizedInput,speaker),gameKnowledge,achievementPlan:{enabled:achievement.plan.enabled,mode:achievement.plan.mode.id,rewardShape:achievement.plan.rewardShape,stingAllowed:achievement.plan.stingAllowed,consequenceAllowed:achievement.plan.consequenceAllowed},systemEventPlan:{enabled:systemEvent.plan.enabled,type:systemEvent.plan.type,mode:systemEvent.plan.mode?.id||null,level:systemEvent.plan.level}};
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8500);
-  try{const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model,instructions,input:JSON.stringify(payload),max_output_tokens:820,reasoning:{effort:'none'}}),signal:controller.signal});if(!r.ok)throw new Error(`discord_council_${r.status}`);const parsed=parseEnvelope(outputText(await r.json()));if(!achievement.plan.enabled)parsed.achievement=null;if(achievement.plan.enabled||!systemEvent.plan.enabled)parsed.systemEvent=null;return parsed}catch(e){console.warn('[discord-council] AI fallback',String(e?.name||e?.message||e));return fallback(input)}finally{clearTimeout(timer)}
+  try{const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model,instructions,input:JSON.stringify(payload),max_output_tokens:820,reasoning:{effort:'none'}}),signal:controller.signal});if(!r.ok)throw new Error(`discord_council_${r.status}`);const parsed=parseEnvelope(outputText(await r.json()));if(!achievement.plan.enabled)parsed.achievement=null;if(achievement.plan.enabled||!systemEvent.plan.enabled)parsed.systemEvent=null;return parsed}catch(e){console.warn('[discord-council] AI fallback',String(e?.name||e?.message||e));return fallback(normalizedInput)}finally{clearTimeout(timer)}
 }
 function normalizeBoxPrize(value){let prize=clean(value,180).replace(/^BOX\s*:\s*/i,'').trim();if(!prize)return'';if(/\b(?:crate|chest|cache|pack)$/i.test(prize))prize=prize.replace(/\b(?:crate|chest|cache|pack)$/i,'Box');else if(!/\bbox$/i.test(prize))prize=`${prize} Box`;return prize}
 function formatDiscordReply(result){
