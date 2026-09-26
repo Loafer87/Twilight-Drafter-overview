@@ -3,6 +3,82 @@
   const PICK_TRACES=new Map();
   let latestVerdictTrace=null;
   const mulliganUsedByPlayer=new Set();
+  const RULES_KEY='ti4-collins-mulligan-rules-v1';
+  const mulliganRules={dropOrder:false,dropFaction:false};
+
+  function loadMulliganRules(){
+    try{
+      const saved=JSON.parse(localStorage.getItem(RULES_KEY)||'null');
+      if(saved&&typeof saved==='object'){mulliganRules.dropOrder=Boolean(saved.dropOrder);mulliganRules.dropFaction=Boolean(saved.dropFaction)}
+    }catch(e){}
+    try{
+      const p=new URLSearchParams(location.search);
+      if(p.has('cmOrder'))mulliganRules.dropOrder=p.get('cmOrder')==='1';
+      if(p.has('cmFaction'))mulliganRules.dropFaction=p.get('cmFaction')==='1';
+    }catch(e){}
+  }
+  function saveMulliganRules(){try{localStorage.setItem(RULES_KEY,JSON.stringify(mulliganRules))}catch(e){}}
+  function mulliganRuleSummary(){
+    const active=[];if(mulliganRules.dropOrder)active.push('drop one draft position');if(mulliganRules.dropFaction)active.push('burn rejected faction');
+    return active.length?active.join(' + '):'no optional penalties';
+  }
+  function renderMulliganRules(){
+    const host=document.querySelector('#setupScreen .panel:nth-child(2)');if(!host)return;
+    let box=document.querySelector('#mulliganRulesBox');
+    if(!box){
+      box=document.createElement('div');box.id='mulliganRulesBox';box.className='mulligan-rules-box';
+      const seed=host.querySelector('.seedbox');if(seed)host.insertBefore(box,seed);else host.appendChild(box);
+    }
+    box.innerHTML=`<div class="mulligan-rules-head"><div><span>Optional House Rules</span><b>Collins Mulligan Penalties</b></div><small>Each switch is independent. Second Mulligan assassination protocol remains mandatory.</small></div>
+      <label class="mulligan-rule-toggle"><input type="checkbox" id="mulliganDropOrder" ${mulliganRules.dropOrder?'checked':''}><span class="mulligan-switch" aria-hidden="true"></span><span><b>Drop in draft order</b><small>The Mulligan user drops one position. The next delegation drafts first.</small></span></label>
+      <label class="mulligan-rule-toggle"><input type="checkbox" id="mulliganDropFaction" ${mulliganRules.dropFaction?'checked':''}><span class="mulligan-switch" aria-hidden="true"></span><span><b>Drop one faction</b><small>The faction they just rejected is burned from their hand. A player is never reduced below one option.</small></span></label>`;
+    const order=box.querySelector('#mulliganDropOrder'),faction=box.querySelector('#mulliganDropFaction');
+    if(order)order.onchange=()=>{mulliganRules.dropOrder=order.checked;saveMulliganRules();labelMulliganButtons()};
+    if(faction)faction.onchange=()=>{mulliganRules.dropFaction=faction.checked;saveMulliganRules();labelMulliganButtons()};
+  }
+  function syncDraftUrlRules(){
+    if(typeof draftUrl!=='function')return;
+    const baseDraftUrl=draftUrl;
+    draftUrl=function(){
+      const raw=baseDraftUrl();
+      try{const u=new URL(raw);u.searchParams.set('cmOrder',mulliganRules.dropOrder?'1':'0');u.searchParams.set('cmFaction',mulliganRules.dropFaction?'1':'0');return u.toString()}catch(e){return raw}
+    };
+  }
+  function syncSessionOrder(){
+    try{
+      const store=councilLoadStore(),session=councilCurrentSession(store);if(!session)return;
+      const ordered=[];
+      state.assignments.forEach((a,i)=>{
+        const profile=councilFindProfile(store,playerName(a.playerIdx)),seat=profile?session.players.find(p=>p.profileId===profile.id):null;
+        if(seat){seat.order=i+1;seat.speaker=Boolean(a.speaker);ordered.push(seat)}
+      });
+      session.players.forEach(seat=>{if(!ordered.includes(seat))ordered.push(seat)});
+      session.players=ordered;councilSaveStore(store);
+    }catch(e){}
+  }
+  function applyMulliganPenalties(target){
+    const details=[];let idx=state.assignments.findIndex(a=>a.playerIdx===target.playerIdx);if(idx<0)return details;
+    state.assignments.forEach((a,i)=>{if(typeof a.speaker!=='boolean')a.speaker=state.speakerOrder?.[0]===a.playerIdx||i===0});
+    const assignment=state.assignments[idx];
+    if(mulliganRules.dropFaction){
+      const before=assignment.options.length;
+      if(before>1&&assignment.options.some(f=>f.name===target.faction)){
+        assignment.options=assignment.options.filter(f=>f.name!==target.faction);
+        details.push(`${target.faction} burned`);
+      }else if(before<=1)details.push('faction penalty waived — one option minimum');
+    }
+    if(mulliganRules.dropOrder&&idx<state.assignments.length-1){
+      const [moved]=state.assignments.splice(idx,1);state.assignments.splice(idx+1,0,moved);
+      state.assignments.forEach((a,i)=>a.pos=i);
+      details.push('dropped one draft position');
+      state.current=idx;
+    }else{
+      state.assignments.forEach((a,i)=>a.pos=i);
+      state.current=state.assignments.findIndex(a=>a.playerIdx===target.playerIdx);
+    }
+    syncSessionOrder();
+    return details;
+  }
 
   function clean(value){return String(value||'').replace(/\s+/g,' ').trim()}
   function removeRemembered(list,value,key){
@@ -33,9 +109,9 @@
   }
   function labelMulliganButtons(){
     const pick=$('#undoBtn');
-    if(pick){pick.textContent='↶ Collins Mulligan';pick.title='Undo the last locked faction. Each player gets one Mulligan per draft. A second attempt on the same player is medically inadvisable.';pick.setAttribute('aria-label','Collins Mulligan — undo last locked faction')}
+    if(pick){pick.textContent='↶ Collins Mulligan';pick.title=`Undo the last locked faction. Each player gets one Mulligan per draft. Active house rules: ${mulliganRuleSummary()}. A second attempt on the same player is medically inadvisable.`;pick.setAttribute('aria-label','Collins Mulligan — undo last locked faction')}
     const final=$('#undoFinal');
-    if(final){final.textContent='↶ Collins Mulligan';final.title='Undo the final locked faction. Each player gets one Mulligan per draft. Do not test the Council twice.';final.setAttribute('aria-label','Collins Mulligan — undo final locked faction')}
+    if(final){final.textContent='↶ Collins Mulligan';final.title=`Undo the final locked faction. Each player gets one Mulligan per draft. Active house rules: ${mulliganRuleSummary()}. Do not test the Council twice.`;final.setAttribute('aria-label','Collins Mulligan — undo final locked faction')}
   }
   function ensureAssassinationUi(){
     if(!document.querySelector('#councilMulliganAssassinationStyle')){
@@ -85,8 +161,13 @@
     const key=String(target.playerIdx);
     if(mulliganUsedByPlayer.has(key)){assassinateSecondMulligan(target);return false}
     const changed=Boolean(action());
-    if(changed)mulliganUsedByPlayer.add(key);
-    return changed;
+    if(!changed)return false;
+    mulliganUsedByPlayer.add(key);
+    const penalties=applyMulliganPenalties(target);
+    state.selected=null;renderPick();
+    const suffix=penalties.length?' • '+penalties.join(' • '):'';
+    toast('COLLINS MULLIGAN GRANTED'+suffix);
+    return true;
   }
 
   const baseRemote=councilRemoteReaction;
@@ -115,7 +196,7 @@
     const final=$('#undoFinal');
     if(final)final.onclick=()=>requestMulligan(()=>{
       if(!state.picks.length)return false;
-      const last=state.picks.pop();councilForgetPick(last.memoryId);state.current=state.players-1;state.assignments[state.current].chosen=null;state.selected=null;renderPick();toast('COLLINS MULLIGAN GRANTED • previous choice expunged from Council memory');return true;
+      const last=state.picks.pop();councilForgetPick(last.memoryId);const idx=state.assignments.findIndex(a=>a.playerIdx===last.playerIdx);if(idx>=0)state.assignments[idx].chosen=null;state.selected=null;return true;
     });
     return out;
   };
@@ -123,21 +204,24 @@
   const baseUndoPick=undoPick;
   undoPick=function(){
     return requestMulligan(()=>{
-      const hadPick=Boolean(state?.picks?.length);if(!hadPick)return false;
-      baseUndoPick();
-      toast('COLLINS MULLIGAN GRANTED • previous choice expunged from Council memory');
-      return true;
+      if(!state?.picks?.length)return false;
+      const last=state.picks.pop();councilForgetPick(last.memoryId);
+      const idx=state.assignments.findIndex(a=>a.playerIdx===last.playerIdx);if(idx>=0)state.assignments[idx].chosen=null;
+      state.selected=null;return true;
     });
   };
 
   const baseResetSetup=resetSetup;
-  resetSetup=function(){mulliganUsedByPlayer.clear();ensureAssassinationUi().classList.remove('open');return baseResetSetup()};
+  resetSetup=function(){mulliganUsedByPlayer.clear();ensureAssassinationUi().classList.remove('open');const out=baseResetSetup();renderMulliganRules();return out};
 
   window.__councilMulliganDebug={
     pickTraceCount:()=>PICK_TRACES.size,
     hasVerdictTrace:()=>Boolean(latestVerdictTrace),
     uses:()=>[...mulliganUsedByPlayer].map(Number),
     usedByPlayer:()=>[...mulliganUsedByPlayer].map(key=>({playerIdx:Number(key),player:playerName(Number(key))})),
+    rules:()=>({...mulliganRules}),
     recent:()=>({headlines:[...councilRecentHeadlines],achievements:[...councilRecentAchievements],shapes:[...councilRecentPerformanceShapes],bodyPatterns:[...councilRecentBodyPatterns],motifs:[...councilRecentComedyMotifs]})
   };
+
+  loadMulliganRules();saveMulliganRules();renderMulliganRules();syncDraftUrlRules();
 })();
