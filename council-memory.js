@@ -56,7 +56,7 @@ function councilRebuildBanana(store){
   const ordered=[...(store.sessions||[])].filter(s=>s.status==='complete'&&s.winnerId).sort((a,b)=>(a.completedAt||a.startedAt||0)-(b.completedAt||b.startedAt||0));
   for(const s of ordered){
     const when=Number(s.completedAt||s.startedAt||0);
-    if(!holderId||!anchorAt||when<anchorAt){delete s.bananaAtStake;delete s.bananaHolderBeforeId;delete s.bananaHolderAfterId;continue}
+    if(!holderId||!anchorAt||when<anchorAt)continue
     const before=holderId,atStake=Boolean((s.players||[]).some(p=>p.profileId===before));
     s.bananaAtStake=atStake;s.bananaHolderBeforeId=before;
     if(atStake&&s.winnerId)holderId=s.winnerId;
@@ -69,7 +69,6 @@ function councilRebuildBanana(store){
 function councilSetBananaHolder(profileId){
   const store=councilLoadStore(),profile=profileId?councilFindProfile(store,profileId):null;
   store.meta=store.meta||{};store.meta.bananaAnchorHolderId=profile?.id||null;store.meta.bananaAnchorAt=Date.now();store.meta.bananaHolderId=profile?.id||null;store.meta.bananaHolderName=profile?.displayName||null;
-  (store.sessions||[]).forEach(s=>{delete s.bananaAtStake;delete s.bananaHolderBeforeId;delete s.bananaHolderAfterId});
   councilSaveStore(store);return profile;
 }
 function councilBananaPreviewForSession(session,store=councilLoadStore()){
