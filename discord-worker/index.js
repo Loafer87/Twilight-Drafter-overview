@@ -15,13 +15,13 @@ if(!TOKEN){console.error('[gateway] DISCORD_BOT_TOKEN is required');process.exit
 
 let ws=null,seq=null,sessionId=null,resumeGatewayUrl=null,botId=null;
 let heartbeatTimer=null,heartbeatAck=true,reconnectTimer=null,reconnectAttempt=0,stopping=false;
-const seen=new Set(),inFlight=new Set(),lastAutonomousByChannel=new Map();
+const seen=new Set(),inFlight=new Set(),lastAutonomousByChannel=new Map(),councilInteractionsByChannel=new Map();
 
 function clean(v,max=2000){return String(v||'').replace(/\u0000/g,'').trim().slice(0,max)}
 function remember(id){if(!id)return false;if(seen.has(id))return true;seen.add(id);if(seen.size>500){const first=seen.values().next().value;seen.delete(first)}return false}
 function canonical(body={}){
   return JSON.stringify({
-    guildId:clean(body.guildId,32),channelId:clean(body.channelId,32),messageId:clean(body.messageId,32),authorId:clean(body.authorId,32),authorName:clean(body.authorName,100),content:clean(body.content,1800),
+    guildId:clean(body.guildId,32),channelId:clean(body.channelId,32),messageId:clean(body.messageId,32),authorId:clean(body.authorId,32),authorName:clean(body.authorName,100),councilInteractionOrdinal:Number(body.councilInteractionOrdinal||0),content:clean(body.content,1800),
     recentMessages:Array.isArray(body.recentMessages)?body.recentMessages.slice(-10).map(m=>({id:clean(m?.id,32),author:clean(m?.author,100),content:clean(m?.content,600)})):[]
   });
 }
@@ -90,7 +90,8 @@ async function askCouncil(m,isExplicit){
     const recentMessages=await fetchRecent(m.channel_id,m.id);
     let content=isExplicit?stripSummon(m.content):clean(m.content,1800);
     if(!content)content='You were summoned. Judge the recent conversation and decide whether anything here deserves your attention.';
-    const body={guildId:m.guild_id,channelId:m.channel_id,messageId:m.id,authorId:m.author?.id||'',authorName:m.member?.nick||m.author?.global_name||m.author?.username||'Unknown',content,recentMessages};
+    const councilInteractionOrdinal=(councilInteractionsByChannel.get(m.channel_id)||0)+1;councilInteractionsByChannel.set(m.channel_id,councilInteractionOrdinal);
+    const body={guildId:m.guild_id,channelId:m.channel_id,messageId:m.id,authorId:m.author?.id||'',authorName:m.member?.nick||m.author?.global_name||m.author?.username||'Unknown',councilInteractionOrdinal,content,recentMessages};
     const timestamp=String(Date.now());
     const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20_000);
     let r;
